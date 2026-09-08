@@ -137,6 +137,16 @@
       display: none;
     }
 
+    /* Status Banner for Auto-loaded CSV */
+    .status-banner {
+      max-width: 650px;
+      margin: -0.75rem auto 1.25rem auto;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--accent);
+      display: none;
+    }
+
     /* Scanner Viewport */
     .scanner-wrapper {
       max-width: 500px;
@@ -352,6 +362,8 @@
     </button>
   </div>
 
+  <div id="statusBanner" class="status-banner"></div>
+
   <!-- Camera Container -->
   <div id="scannerContainer" class="scanner-wrapper">
     <div id="reader"></div>
@@ -394,19 +406,48 @@
     const toggleQrBtn = document.getElementById('toggleQrBtn');
     const downloadLogBtn = document.getElementById('downloadLogBtn');
     const scannerContainer = document.getElementById('scannerContainer');
+    const statusBanner = document.getElementById('statusBanner');
 
-    // Load CSV File
+    // Auto-load previously saved CSV from localStorage on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedCSV = localStorage.getItem('ieoc_saved_csv');
+      const savedFileName = localStorage.getItem('ieoc_csv_filename');
+
+      if (savedCSV) {
+        parseCSV(savedCSV);
+        filterData();
+        showStatusBanner(`Loaded saved database: <strong>${savedFileName || 'inventory.csv'}</strong> (${items.length} items)`);
+      }
+    });
+
+    // Handle Manual CSV File Selection
     fileInput.addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
       reader.onload = function(evt) {
-        parseCSV(evt.target.result);
+        const csvContent = evt.target.result;
+        
+        // Save to LocalStorage
+        try {
+          localStorage.setItem('ieoc_saved_csv', csvContent);
+          localStorage.setItem('ieoc_csv_filename', file.name);
+        } catch(e) {
+          console.warn("Storage quota exceeded, unable to save CSV locally.");
+        }
+
+        parseCSV(csvContent);
         filterData();
+        showStatusBanner(`Successfully loaded: <strong>${file.name}</strong> (${items.length} items)`);
       };
       reader.readAsText(file);
     });
+
+    function showStatusBanner(msg) {
+      statusBanner.innerHTML = msg;
+      statusBanner.style.display = 'block';
+    }
 
     // CSV Parser
     function parseCSV(text) {
@@ -487,7 +528,7 @@
       if (e.target === modal) modal.classList.remove('active');
     });
 
-    // Enhanced Log Tracking Logic
+    // Log Tracking Logic
     function logSearch(term, filteredResults) {
       const currentKey = `${term}_${filteredResults.length}`;
       if (!term || currentKey === lastLoggedKey) return;
@@ -499,7 +540,6 @@
         searchHistory.push(`[${timestamp}] Search Term: "${term}" | Matches: 0`);
       } else {
         filteredResults.forEach(item => {
-          // Replace linebreaks inside descriptions so each log entry sits cleanly on its own block
           const cleanDesc = item.description.replace(/\r?\n|\r/g, ' ');
           searchHistory.push(`[${timestamp}] ID: #${item.id} | Description: "${cleanDesc}" | (Term: "${term}")`);
         });
@@ -511,7 +551,6 @@
       let term = searchInput.value.toLowerCase().trim();
       const mode = searchMode.value;
 
-      // Clean up common QR prefixes like #3 or ID3 -> 3
       term = term.replace(/^#|^id/i, '');
 
       if (!term) {
@@ -541,7 +580,7 @@
     searchInput.addEventListener('input', filterData);
     searchMode.addEventListener('change', filterData);
 
-    // Download Search History Log File
+    // Download Search History Log
     downloadLogBtn.addEventListener('click', () => {
       if (searchHistory.length === 0) {
         alert("No search items logged yet.");
