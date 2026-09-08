@@ -380,7 +380,7 @@
   <script>
     let items = [];
     let searchHistory = [];
-    let lastLoggedTerm = "";
+    let lastLoggedKey = "";
     let html5QrcodeScanner = null;
 
     const fileInput = document.getElementById('csvFileInput');
@@ -487,12 +487,22 @@
       if (e.target === modal) modal.classList.remove('active');
     });
 
-    // Log tracking logic
-    function logSearch(term) {
-      if (term && term !== lastLoggedTerm) {
-        const timestamp = new Date().toLocaleString();
-        searchHistory.push(`[${timestamp}] Searched: "${term}"`);
-        lastLoggedTerm = term;
+    // Enhanced Log Tracking Logic
+    function logSearch(term, filteredResults) {
+      const currentKey = `${term}_${filteredResults.length}`;
+      if (!term || currentKey === lastLoggedKey) return;
+
+      lastLoggedKey = currentKey;
+      const timestamp = new Date().toLocaleString();
+
+      if (filteredResults.length === 0) {
+        searchHistory.push(`[${timestamp}] Search Term: "${term}" | Matches: 0`);
+      } else {
+        filteredResults.forEach(item => {
+          // Replace linebreaks inside descriptions so each log entry sits cleanly on its own block
+          const cleanDesc = item.description.replace(/\r?\n|\r/g, ' ');
+          searchHistory.push(`[${timestamp}] ID: #${item.id} | Description: "${cleanDesc}" | (Term: "${term}")`);
+        });
       }
     }
 
@@ -509,8 +519,6 @@
         return;
       }
 
-      logSearch(term);
-
       let filtered = [];
 
       if (mode === 'id') {
@@ -526,6 +534,7 @@
         }
       }
 
+      logSearch(term, filtered);
       renderGrid(filtered);
     }
 
@@ -535,17 +544,17 @@
     // Download Search History Log File
     downloadLogBtn.addEventListener('click', () => {
       if (searchHistory.length === 0) {
-        alert("No searches recorded yet.");
+        alert("No search items logged yet.");
         return;
       }
 
-      const logText = "=== IEOC Inventory Search History Log ===\n\n" + searchHistory.join("\n");
+      const logText = "=== IEOC Inventory Searched Items Log ===\n\n" + searchHistory.join("\n\n");
       const blob = new Blob([logText], { type: "text/plain" });
       const link = document.createElement("a");
       
       const dateStr = new Date().toISOString().slice(0,10);
       link.href = URL.createObjectURL(blob);
-      link.download = `Search_Log_${dateStr}.txt`;
+      link.download = `Searched_Items_Log_${dateStr}.txt`;
       link.click();
       URL.revokeObjectURL(link.href);
     });
