@@ -98,7 +98,7 @@
 
     /* Controls Bar */
     .file-upload-wrapper {
-      max-width: 600px;
+      max-width: 650px;
       margin: 0 auto 1.5rem auto;
       display: flex;
       flex-wrap: wrap;
@@ -106,29 +106,29 @@
       gap: 0.75rem;
     }
 
-    .custom-file-upload, .qr-btn {
+    .custom-file-upload, .qr-btn, .log-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      padding: 0.65rem 1.25rem;
+      padding: 0.65rem 1rem;
       cursor: pointer;
       background-color: var(--card-bg);
       color: var(--accent);
       border: 2px dashed var(--accent);
       border-radius: 12px;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       transition: all 0.2s ease;
-      flex: 1 1 140px;
+      flex: 1 1 120px;
       text-align: center;
     }
 
-    .qr-btn {
+    .qr-btn, .log-btn {
       border-style: solid;
     }
 
-    .custom-file-upload:hover, .qr-btn:hover {
+    .custom-file-upload:hover, .qr-btn:hover, .log-btn:hover {
       background-color: var(--accent);
       color: var(--bg-color);
     }
@@ -344,7 +344,11 @@
     <input type="file" id="csvFileInput" accept=".csv">
 
     <button id="toggleQrBtn" class="qr-btn">
-      📷 Scan QR / Barcode
+      📷 Scan QR
+    </button>
+
+    <button id="downloadLogBtn" class="log-btn">
+      📥 Download Log
     </button>
   </div>
 
@@ -375,6 +379,8 @@
 
   <script>
     let items = [];
+    let searchHistory = [];
+    let lastLoggedTerm = "";
     let html5QrcodeScanner = null;
 
     const fileInput = document.getElementById('csvFileInput');
@@ -386,6 +392,7 @@
     const modalDesc = document.getElementById('modalDesc');
     const closeModal = document.getElementById('closeModal');
     const toggleQrBtn = document.getElementById('toggleQrBtn');
+    const downloadLogBtn = document.getElementById('downloadLogBtn');
     const scannerContainer = document.getElementById('scannerContainer');
 
     // Load CSV File
@@ -480,6 +487,15 @@
       if (e.target === modal) modal.classList.remove('active');
     });
 
+    // Log tracking logic
+    function logSearch(term) {
+      if (term && term !== lastLoggedTerm) {
+        const timestamp = new Date().toLocaleString();
+        searchHistory.push(`[${timestamp}] Searched: "${term}"`);
+        lastLoggedTerm = term;
+      }
+    }
+
     // Search Filtering
     function filterData() {
       let term = searchInput.value.toLowerCase().trim();
@@ -492,6 +508,8 @@
         renderGrid(items);
         return;
       }
+
+      logSearch(term);
 
       let filtered = [];
 
@@ -514,6 +532,24 @@
     searchInput.addEventListener('input', filterData);
     searchMode.addEventListener('change', filterData);
 
+    // Download Search History Log File
+    downloadLogBtn.addEventListener('click', () => {
+      if (searchHistory.length === 0) {
+        alert("No searches recorded yet.");
+        return;
+      }
+
+      const logText = "=== IEOC Inventory Search History Log ===\n\n" + searchHistory.join("\n");
+      const blob = new Blob([logText], { type: "text/plain" });
+      const link = document.createElement("a");
+      
+      const dateStr = new Date().toISOString().slice(0,10);
+      link.href = URL.createObjectURL(blob);
+      link.download = `Search_Log_${dateStr}.txt`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
     // QR Scanner Implementation
     toggleQrBtn.addEventListener('click', () => {
       if (scannerContainer.classList.contains('active')) {
@@ -531,12 +567,11 @@
       });
 
       html5QrcodeScanner.render((decodedText) => {
-        // On successful scan: filter results only (no auto-modal popup)
         searchInput.value = decodedText;
         filterData();
-        stopScanner(); // Close camera view after scan
+        stopScanner();
       }, (errorMessage) => {
-        // Continuous scan attempt - ignore errors
+        // Continuous scan attempt
       });
     }
 
