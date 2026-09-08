@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<!-- Mobile App Capabilities -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IEOC Inventory">
+
+<!-- Web App Manifest for Android & Chrome -->
+<link rel="manifest" href="data:application/manifest+json,{
+  \"name\": \"ENI Stock Catalog\",
+  \"short_name\": \"Catalog\",
+  \"start_url\": \"/\",
+  \"display\": \"standalone\",
+  \"background_color\": \"#0f172a\",
+  \"theme_color\": \"#0f172a\"
+}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ieoc Sap Inventory</title>
+  
+  <!-- HTML5 QR Code Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      background-image: 
+        linear-gradient(rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.88)), 
+        url('https://companieslogo.com/img/orig/E-c310aaa5.png');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-attachment: fixed;
+      background-size: 850px auto;
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    @media (min-width: 640px) {
+      body {
+        padding: 2rem;
+      }
+    }
+
+    header {
+      max-width: 1200px;
+      margin: 0 auto 1.5rem auto;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+
+    @media (min-width: 640px) {
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+      }
+    }
+
+    /* Controls Bar */
+    .file-upload-wrapper {
+      max-width: 600px;
+      margin: 0 auto 1.5rem auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .custom-file-upload, .qr-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.25rem;
+      cursor: pointer;
+      background-color: var(--card-bg);
+      color: var(--accent);
+      border: 2px dashed var(--accent);
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      flex: 1 1 140px;
+      text-align: center;
+    }
+
+    .qr-btn {
+      border-style: solid;
+    }
+
+    .custom-file-upload:hover, .qr-btn:hover {
+      background-color: var(--accent);
+      color: var(--bg-color);
+    }
+
+    #csvFileInput {
+      display: none;
+    }
+
+    /* Scanner Viewport */
+    .scanner-wrapper {
+      max-width: 500px;
+      margin: 0 auto 1.5rem auto;
+      display: none;
+      background-color: var(--card-bg);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .scanner-wrapper.active {
+      display: block;
+    }
+
+    #reader {
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    /* Search Container Mobile Optimization */
+    .search-container {
+      position: sticky;
+      top: 0.75rem;
+      z-index: 10;
+      max-width: 650px;
+      margin: 0 auto 1.5rem auto;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background-color: rgba(30, 41, 59, 0.95);
+      padding: 0.35rem 0.5rem;
+      border-radius: 9999px;
+      border: 2px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 0;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      border-radius: 9999px;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    @media (min-width: 640px) {
+      .search-input {
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+      }
+    }
+
+    .search-mode {
+      background-color: var(--card-bg);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 0.5rem 0.6rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      max-width: 45%;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @media (min-width: 640px) {
+      .search-mode {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        max-width: none;
+      }
+    }
+
+    .grid-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+    }
+
+    .card-id {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      white-space: pre-line;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      z-index: 100;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      border-radius: 16px;
+      max-width: 550px;
+      width: 90%;
+      position: relative;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .close-btn:hover {
+      color: var(--text-main);
+    }
+
+    .modal-id {
+      font-size: 1.25rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .modal-desc {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text-main);
+      white-space: pre-line;
+      font-family: monospace;
+      background-color: rgba(15, 23, 42, 0.6);
+      padding: 1rem;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>IEOC SAP Inventory</h1>
+    <p style="color: var(--text-muted)">search by id, description or SAP Code</p>
+  </header>
+
+  <!-- Control Buttons -->
+  <div class="file-upload-wrapper">
+    <label for="csvFileInput" class="custom-file-upload">
+      📁 Load CSV
+    </label>
+    <input type="file" id="csvFileInput" accept=".csv">
+
+    <button id="toggleQrBtn" class="qr-btn">
+      📷 Scan QR / Barcode
+    </button>
+  </div>
+
+  <!-- Camera Container -->
+  <div id="scannerContainer" class="scanner-wrapper">
+    <div id="reader"></div>
+  </div>
+
+  <div class="search-container">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search ID or keywords...">
+    <select id="searchMode" class="search-mode">
+      <option value="auto">⚡ Smart Auto</option>
+      <option value="id"># Exact ID Only</option>
+      <option value="desc">📝 Description Only</option>
+    </select>
+  </div>
+
+  <main class="grid-container" id="grid"></main>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeModal">&times;</button>
+      <div class="modal-id" id="modalId"></div>
+      <div class="modal-desc" id="modalDesc"></div>
+    </div>
+  </div>
+
+  <script>
+    let items = [];
+    let html5QrcodeScanner = null;
+
+    const fileInput = document.getElementById('csvFileInput');
+    const searchInput = document.getElementById('searchInput');
+    const searchMode = document.getElementById('searchMode');
+    const grid = document.getElementById('grid');
+    const modal = document.getElementById('modal');
+    const modalId = document.getElementById('modalId');
+    const modalDesc = document.getElementById('modalDesc');
+    const closeModal = document.getElementById('closeModal');
+    const toggleQrBtn = document.getElementById('toggleQrBtn');
+    const scannerContainer = document.getElementById('scannerContainer');
+
+    // Load CSV File
+    fileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        parseCSV(evt.target.result);
+        filterData();
+      };
+      reader.readAsText(file);
+    });
+
+    // CSV Parser
+    function parseCSV(text) {
+      items = [];
+      const lines = [];
+      let row = [];
+      let cell = '';
+      let insideQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (char === '"') {
+          if (insideQuotes && nextChar === '"') {
+            cell += '"';
+            i++;
+          } else {
+            insideQuotes = !insideQuotes;
+          }
+        } else if (char === ',' && !insideQuotes) {
+          row.push(cell.trim());
+          cell = '';
+        } else if ((char === '\r' || char === '\n') && !insideQuotes) {
+          if (char === '\r' && nextChar === '\n') i++;
+          row.push(cell.trim());
+          if (row.length > 0 && row.some(c => c !== '')) lines.push(row);
+          row = [];
+          cell = '';
+        } else {
+          cell += char;
+        }
+      }
+      if (cell || row.length > 0) {
+        row.push(cell.trim());
+        lines.push(row);
+      }
+
+      const startIdx = lines.length > 0 && isNaN(lines[0][0]) ? 1 : 0;
+
+      for (let i = startIdx; i < lines.length; i++) {
+        const r = lines[i];
+        if (r.length >= 2) {
+          const id = r[0];
+          let desc = r[1];
+          if (desc.includes('%')) {
+            try { desc = decodeURIComponent(desc); } catch(e) {}
+          }
+          items.push({ id: id, description: desc });
+        }
+      }
+    }
+
+    // Render Cards
+    function renderGrid(data) {
+      grid.innerHTML = '';
+      data.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-id">#${item.id}</div>
+          <div class="card-desc">${item.description}</div>
+        `;
+        card.addEventListener('click', () => openModal(item));
+        grid.appendChild(card);
+      });
+    }
+
+    // Modal
+    function openModal(item) {
+      modalId.textContent = `#${item.id}`;
+      modalDesc.textContent = item.description;
+      modal.classList.add('active');
+    }
+
+    closeModal.addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+
+    // Search Filtering
+    function filterData() {
+      let term = searchInput.value.toLowerCase().trim();
+      const mode = searchMode.value;
+
+      // Clean up common QR prefixes like #3 or ID3 -> 3
+      term = term.replace(/^#|^id/i, '');
+
+      if (!term) {
+        renderGrid(items);
+        return;
+      }
+
+      let filtered = [];
+
+      if (mode === 'id') {
+        filtered = items.filter(item => String(item.id).toLowerCase() === term);
+      } else if (mode === 'desc') {
+        filtered = items.filter(item => item.description.toLowerCase().includes(term));
+      } else {
+        const exactIdMatches = items.filter(item => String(item.id).toLowerCase() === term);
+        if (exactIdMatches.length > 0) {
+          filtered = exactIdMatches;
+        } else {
+          filtered = items.filter(item => item.description.toLowerCase().includes(term));
+        }
+      }
+
+      renderGrid(filtered);
+    }
+
+    searchInput.addEventListener('input', filterData);
+    searchMode.addEventListener('change', filterData);
+
+    // QR Scanner Implementation
+    toggleQrBtn.addEventListener('click', () => {
+      if (scannerContainer.classList.contains('active')) {
+        stopScanner();
+      } else {
+        startScanner();
+      }
+    });
+
+    function startScanner() {
+      scannerContainer.classList.add('active');
+      html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+        fps: 10, 
+        qrbox: { width: 220, height: 220 } 
+      });
+
+      html5QrcodeScanner.render((decodedText) => {
+        // On successful scan: filter results only (no auto-modal popup)
+        searchInput.value = decodedText;
+        filterData();
+        stopScanner(); // Close camera view after scan
+      }, (errorMessage) => {
+        // Continuous scan attempt - ignore errors
+      });
+    }
+
+    function stopScanner() {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear().then(() => {
+          scannerContainer.classList.remove('active');
+        }).catch(error => {
+          console.error("Failed to clear scanner", error);
+          scannerContainer.classList.remove('active');
+        });
+      } else {
+        scannerContainer.classList.remove('active');
+      }
+    }
+  </script>
+</body>
+</html>
