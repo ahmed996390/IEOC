@@ -300,6 +300,8 @@
       position: relative;
       transform: scale(0.95);
       transition: transform 0.2s;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     .modal-overlay.active .modal-content {
@@ -324,18 +326,31 @@
     .modal-id {
       font-size: 1.25rem;
       color: var(--accent);
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
 
-    .modal-desc {
+    .modal-section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-top: 1rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .modal-desc, .modal-note {
       font-size: 0.95rem;
       line-height: 1.6;
       color: var(--text-main);
       white-space: pre-line;
       font-family: monospace;
       background-color: rgba(15, 23, 42, 0.6);
-      padding: 1rem;
+      padding: 0.85rem;
       border-radius: 8px;
+    }
+
+    .modal-note {
+      border-left: 3px solid var(--accent);
     }
   </style>
 </head>
@@ -343,7 +358,7 @@
 
   <header>
     <h1>IEOC SAP Inventory</h1>
-    <p style="color: var(--text-muted)">search by id, description or SAP Code</p>
+    <p style="color: var(--text-muted)">search by id, description, SAP Code or transactions notes</p>
   </header>
 
   <!-- Control Buttons -->
@@ -370,11 +385,11 @@
   </div>
 
   <div class="search-container">
-    <input type="text" id="searchInput" class="search-input" placeholder="Search ID or keywords...">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search ID, description or notes...">
     <select id="searchMode" class="search-mode">
       <option value="auto">⚡ Smart Auto</option>
       <option value="id"># Exact ID Only</option>
-      <option value="desc">📝 Description Only</option>
+      <option value="desc">📝 Description/Notes</option>
     </select>
   </div>
 
@@ -385,7 +400,14 @@
     <div class="modal-content">
       <button class="close-btn" id="closeModal">&times;</button>
       <div class="modal-id" id="modalId"></div>
+      
+      <div class="modal-section-title">Description</div>
       <div class="modal-desc" id="modalDesc"></div>
+
+      <div id="modalNoteSection" style="display: none;">
+        <div class="modal-section-title">Transactions / Notes</div>
+        <div class="modal-note" id="modalNote"></div>
+      </div>
     </div>
   </div>
 
@@ -402,6 +424,8 @@
     const modal = document.getElementById('modal');
     const modalId = document.getElementById('modalId');
     const modalDesc = document.getElementById('modalDesc');
+    const modalNote = document.getElementById('modalNote');
+    const modalNoteSection = document.getElementById('modalNoteSection');
     const closeModal = document.getElementById('closeModal');
     const toggleQrBtn = document.getElementById('toggleQrBtn');
     const downloadLogBtn = document.getElementById('downloadLogBtn');
@@ -449,7 +473,7 @@
       statusBanner.style.display = 'block';
     }
 
-    // CSV Parser
+    // CSV Parser (Reads Column 3 for hidden notes)
     function parseCSV(text) {
       items = [];
       const lines = [];
@@ -493,33 +517,50 @@
         if (r.length >= 2) {
           const id = r[0];
           let desc = r[1];
+          let note = r[2] || ''; // Column 3 handles the transaction note internally
+
           if (desc.includes('%')) {
             try { desc = decodeURIComponent(desc); } catch(e) {}
           }
-          items.push({ id: id, description: desc });
+          if (note.includes('%')) {
+            try { note = decodeURIComponent(note); } catch(e) {}
+          }
+
+          items.push({ id: id, description: desc, note: note });
         }
       }
     }
 
-    // Render Cards
+    // Render Clean Cards (No notes visible on the outside)
     function renderGrid(data) {
       grid.innerHTML = '';
       data.forEach(item => {
         const card = document.createElement('div');
         card.className = 'card';
+        
         card.innerHTML = `
-          <div class="card-id">#${item.id}</div>
-          <div class="card-desc">${item.description}</div>
+          <div>
+            <div class="card-id">#${item.id}</div>
+            <div class="card-desc">${item.description}</div>
+          </div>
         `;
         card.addEventListener('click', () => openModal(item));
         grid.appendChild(card);
       });
     }
 
-    // Modal
+    // Modal (Displays Description and reveals Notes only when card is pressed)
     function openModal(item) {
       modalId.textContent = `#${item.id}`;
       modalDesc.textContent = item.description;
+      
+      if (item.note && item.note.trim() !== '') {
+        modalNote.textContent = item.note;
+        modalNoteSection.style.display = 'block';
+      } else {
+        modalNoteSection.style.display = 'none';
+      }
+
       modal.classList.add('active');
     }
 
@@ -541,12 +582,13 @@
       } else {
         filteredResults.forEach(item => {
           const cleanDesc = item.description.replace(/\r?\n|\r/g, ' ');
-          searchHistory.push(`[${timestamp}] ID: #${item.id} | Description: "${cleanDesc}" | (Term: "${term}")`);
+          const cleanNote = (item.note || '').replace(/\r?\n|\r/g, ' ');
+          searchHistory.push(`[${timestamp}] ID: #${item.id} | Desc: "${cleanDesc}" | Note: "${cleanNote}" | (Term: "${term}")`);
         });
       }
     }
 
-    // Search Filtering
+    // Search Filtering (Still searches hidden notes so you can find parts by their transaction keywords)
     function filterData() {
       let term = searchInput.value.toLowerCase().trim();
       const mode = searchMode.value;
@@ -563,13 +605,13 @@
       if (mode === 'id') {
         filtered = items.filter(item => String(item.id).toLowerCase() === term);
       } else if (mode === 'desc') {
-        filtered = items.filter(item => item.description.toLowerCase().includes(term));
+        filtered = items.filter(item => item.description.toLowerCase().includes(term) || (item.note && item.note.toLowerCase().includes(term)));
       } else {
         const exactIdMatches = items.filter(item => String(item.id).toLowerCase() === term);
         if (exactIdMatches.length > 0) {
           filtered = exactIdMatches;
         } else {
-          filtered = items.filter(item => item.description.toLowerCase().includes(term));
+          filtered = items.filter(item => item.description.toLowerCase().includes(term) || (item.note && item.note.toLowerCase().includes(term)));
         }
       }
 
