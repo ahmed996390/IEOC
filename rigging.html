@@ -30,6 +30,7 @@
       
       --mark-color: #22c55e;
       --whatsapp-color: #25d366;
+      --copy-color: #a855f7;
       --alert-expired: #ef4444;
       --alert-warning: #eab308;
     }
@@ -68,7 +69,7 @@
 
     /* Controls Bar */
     .file-upload-wrapper {
-      max-width: 750px;
+      max-width: 850px;
       margin: 0 auto 1.5rem auto;
       display: flex;
       flex-wrap: wrap;
@@ -76,7 +77,7 @@
       gap: 0.75rem;
     }
 
-    .custom-file-upload, .log-btn, .whatsapp-btn {
+    .custom-file-upload, .log-btn, .whatsapp-btn, .copy-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -90,7 +91,7 @@
       font-weight: 600;
       font-size: 0.85rem;
       transition: all 0.2s ease;
-      flex: 1 1 140px;
+      flex: 1 1 150px;
       text-align: center;
     }
 
@@ -104,6 +105,12 @@
       color: var(--whatsapp-color);
     }
 
+    .copy-btn {
+      border-style: solid;
+      border-color: var(--copy-color);
+      color: var(--copy-color);
+    }
+
     .custom-file-upload:hover, .log-btn:hover {
       background-color: var(--accent);
       color: var(--bg-color);
@@ -111,6 +118,11 @@
 
     .whatsapp-btn:hover {
       background-color: var(--whatsapp-color);
+      color: #ffffff;
+    }
+
+    .copy-btn:hover {
+      background-color: var(--copy-color);
       color: #ffffff;
     }
 
@@ -367,6 +379,26 @@
       background-color: var(--mark-color);
       color: #0f172a;
     }
+
+    /* WhatsApp Share Choice Modal */
+    .wa-choice-btn {
+      display: block;
+      width: 100%;
+      padding: 0.85rem 1rem;
+      margin-top: 0.75rem;
+      border-radius: 10px;
+      border: none;
+      background-color: var(--whatsapp-color);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-align: center;
+      transition: opacity 0.2s;
+    }
+    .wa-choice-btn:hover {
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
@@ -389,6 +421,10 @@
 
     <button id="whatsappShareBtn" class="whatsapp-btn">
       💬 Share via WhatsApp
+    </button>
+
+    <button id="copyTextBtn" class="copy-btn">
+      📋 Copy Text Table
     </button>
   </div>
 
@@ -423,9 +459,26 @@
     </div>
   </div>
 
+  <!-- WhatsApp Choice Modal -->
+  <div class="modal-overlay" id="whatsappModal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <button class="close-btn" id="closeWhatsappModal">&times;</button>
+      <div class="modal-id" style="margin-bottom: 0.25rem;">Share via WhatsApp</div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Choose how you want to share your marked log:</p>
+      
+      <button id="waShareTextBtn" class="wa-choice-btn">
+        💬 1st Option: Share Clean Text
+      </button>
+
+      <button id="waShareFileBtn" class="wa-choice-btn" style="background-color: #0284c7;">
+        📎 2nd Option: Share CSV/Excel File
+      </button>
+    </div>
+  </div>
+
   <script>
     let items = [];
-    let markedItems = []; // Array preserving selection chronological order
+    let markedItems = [];
     let activeModalItem = null;
 
     const fileInput = document.getElementById('csvFileInput');
@@ -441,7 +494,13 @@
     const markBtn = document.getElementById('markBtn');
     const downloadLogBtn = document.getElementById('downloadLogBtn');
     const whatsappShareBtn = document.getElementById('whatsappShareBtn');
+    const copyTextBtn = document.getElementById('copyTextBtn');
     const statusBanner = document.getElementById('statusBanner');
+
+    const whatsappModal = document.getElementById('whatsappModal');
+    const closeWhatsappModal = document.getElementById('closeWhatsappModal');
+    const waShareTextBtn = document.getElementById('waShareTextBtn');
+    const waShareFileBtn = document.getElementById('waShareFileBtn');
 
     window.addEventListener('DOMContentLoaded', () => {
       const savedCSV = localStorage.getItem('rigging_saved_csv');
@@ -712,13 +771,7 @@
     searchInput.addEventListener('input', filterData);
     searchMode.addEventListener('change', filterData);
 
-    // Download Marked Items Excel-Compatible CSV Log (Without Description column)
-    downloadLogBtn.addEventListener('click', () => {
-      if (markedItems.length === 0) {
-        alert("No items have been marked yet! Click the star on a card or open a card to mark items.");
-        return;
-      }
-
+    function generateCSVContent() {
       let csvRows = [];
       csvRows.push(['ID', 'Serial', 'SWL', 'NEXT EXAMINATION DATE'].map(field => `"${field}"`).join(','));
 
@@ -739,24 +792,10 @@
         }
       });
 
-      const csvContent = csvRows.join('\r\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      
-      const dateStr = new Date().toISOString().slice(0,10);
-      link.href = URL.createObjectURL(blob);
-      link.download = `Marked_Rigging_Log_${dateStr}.csv`;
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
+      return csvRows.join('\r\n');
+    }
 
-    // Share via WhatsApp Button Handler
-    whatsappShareBtn.addEventListener('click', () => {
-      if (markedItems.length === 0) {
-        alert("No items have been marked yet! Click the star on a card or open a card to mark items.");
-        return;
-      }
-
+    function generateFormattedTextTable() {
       let textLines = ["*Rigging Inventory Marked Log* 📋\n"];
       markedItems.forEach((id, index) => {
         const itemObj = items.find(i => i.id === id);
@@ -767,10 +806,93 @@
           textLines.push(`${index + 1}- Serial: *${itemObj.id}* | SWL: ${swlClean} | Next Exam: ${examDateStr}`);
         }
       });
+      return textLines.join("\n");
+    }
 
-      const finalMessage = textLines.join("\n");
+    // Download Excel Log Button
+    downloadLogBtn.addEventListener('click', () => {
+      if (markedItems.length === 0) {
+        alert("No items have been marked yet! Click the star on a card or open a card to mark items.");
+        return;
+      }
+
+      const csvContent = generateCSVContent();
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      
+      const dateStr = new Date().toISOString().slice(0,10);
+      link.href = URL.createObjectURL(blob);
+      link.download = `Marked_Rigging_Log_${dateStr}.csv`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    // Open WhatsApp Choice Modal
+    whatsappShareBtn.addEventListener('click', () => {
+      if (markedItems.length === 0) {
+        alert("No items have been marked yet! Click the star on a card or open a card to mark items.");
+        return;
+      }
+      whatsappModal.classList.add('active');
+    });
+
+    closeWhatsappModal.addEventListener('click', () => whatsappModal.classList.remove('active'));
+    whatsappModal.addEventListener('click', (e) => {
+      if (e.target === whatsappModal) whatsappModal.classList.remove('active');
+    });
+
+    // Option 1: Share Clean Text via WhatsApp
+    waShareTextBtn.addEventListener('click', () => {
+      whatsappModal.classList.remove('active');
+      const finalMessage = generateFormattedTextTable();
       const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(finalMessage)}`;
       window.open(whatsappUrl, '_blank');
+    });
+
+    // Option 2: Share CSV/Excel File via WhatsApp (using native share sheet)
+    waShareFileBtn.addEventListener('click', async () => {
+      whatsappModal.classList.remove('active');
+      const dateStr = new Date().toISOString().slice(0,10);
+      const fileName = `Marked_Rigging_Log_${dateStr}.csv`;
+      const csvContent = generateCSVContent();
+      const file = new File([csvContent], fileName, { type: 'text/csv' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'Rigging Inventory Log',
+            text: 'Here is the marked rigging inventory log file:',
+            files: [file]
+          });
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      // Fallback if file sharing is not supported by the browser
+      alert("Direct file sharing is not supported on this browser/device. We have downloaded the CSV file for you instead—you can now attach it manually in WhatsApp!");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    // Copy Text Table Button
+    copyTextBtn.addEventListener('click', () => {
+      if (markedItems.length === 0) {
+        alert("No items have been marked yet! Click the star on a card or open a card to mark items.");
+        return;
+      }
+
+      const textTable = generateFormattedTextTable().replace(/\*/g, '');
+      navigator.clipboard.writeText(textTable).then(() => {
+        alert("Cleanly formatted table text copied to clipboard!");
+      }).catch(err => {
+        alert("Failed to copy text.");
+      });
     });
   </script>
 </body>
