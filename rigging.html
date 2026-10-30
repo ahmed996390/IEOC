@@ -144,7 +144,7 @@
       top: 0.75rem;
       z-index: 10;
       max-width: 650px;
-      margin: 0 auto 1.5rem auto;
+      margin: 0 auto 0.5rem auto;
       display: flex;
       align-items: center;
       gap: 0.35rem;
@@ -177,6 +177,58 @@
       font-weight: 600;
       outline: none;
       cursor: pointer;
+    }
+
+    .filter-actions {
+      max-width: 650px;
+      margin: 0 auto 1.5rem auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      padding: 0 0.5rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .filter-btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .mark-all-btn {
+      background: none;
+      border: 1px solid var(--mark-color);
+      color: var(--mark-color);
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .mark-all-btn:hover {
+      background-color: var(--mark-color);
+      color: #0f172a;
+    }
+
+    .unmark-all-btn {
+      background: none;
+      border: 1px solid var(--alert-expired);
+      color: var(--alert-expired);
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .unmark-all-btn:hover {
+      background-color: var(--alert-expired);
+      color: #ffffff;
     }
 
     .grid-container {
@@ -405,7 +457,7 @@
 
   <header>
     <h1>Rigging Inventory</h1>
-    <p style="color: var(--text-muted)">Search by Serial No, description or certificate</p>
+    <p style="color: var(--text-muted)">Search by ID, description or certificate</p>
   </header>
 
   <!-- Control Buttons -->
@@ -431,12 +483,20 @@
   <div id="statusBanner" class="status-banner"></div>
 
   <div class="search-container">
-    <input type="text" id="searchInput" class="search-input" placeholder="Search Serial No, description or cert...">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search ID, description or cert...">
     <select id="searchMode" class="search-mode">
       <option value="auto">⚡ Smart Auto</option>
-      <option value="id"># Serial No Only</option>
+      <option value="id"># ID Only</option>
       <option value="desc">📝 Description/Cert</option>
     </select>
+  </div>
+  
+  <div class="filter-actions">
+    <div id="filterCount"></div>
+    <div class="filter-btn-group">
+      <button id="markAllFilteredBtn" class="mark-all-btn" style="display: none;">⭐ Mark All</button>
+      <button id="unmarkAllFilteredBtn" class="unmark-all-btn" style="display: none;">❌ Unmark All</button>
+    </div>
   </div>
 
   <main class="grid-container" id="grid"></main>
@@ -479,11 +539,15 @@
   <script>
     let items = [];
     let markedItems = [];
+    let currentFilteredItems = [];
     let activeModalItem = null;
 
     const fileInput = document.getElementById('csvFileInput');
     const searchInput = document.getElementById('searchInput');
     const searchMode = document.getElementById('searchMode');
+    const filterCountEl = document.getElementById('filterCount');
+    const markAllFilteredBtn = document.getElementById('markAllFilteredBtn');
+    const unmarkAllFilteredBtn = document.getElementById('unmarkAllFilteredBtn');
     const grid = document.getElementById('grid');
     const modal = document.getElementById('modal');
     const modalId = document.getElementById('modalId');
@@ -655,7 +719,7 @@
         
         card.innerHTML = `
           <div class="card-header-row">
-            <div class="card-id">Serial: #${item.id}</div>
+            <div class="card-id">ID: #${item.id}</div>
             <button class="card-star-btn" title="Toggle Mark" data-id="${item.id}">
               ${isMarked ? (markIndex + 1) : '☆'}
             </button>
@@ -691,7 +755,7 @@
 
     function openModal(item) {
       activeModalItem = item;
-      modalId.textContent = `Serial: #${item.id}`;
+      modalId.textContent = `ID: #${item.id}`;
       modalDesc.textContent = item.description;
       
       if (item.certName && item.certName.trim() !== '') {
@@ -745,14 +809,11 @@
 
       term = term.replace(/^#|^id/i, '');
 
-      if (!term) {
-        renderGrid(items);
-        return;
-      }
-
       let filtered = [];
 
-      if (mode === 'id') {
+      if (!term) {
+        filtered = items;
+      } else if (mode === 'id') {
         filtered = items.filter(item => String(item.id).toLowerCase() === term);
       } else if (mode === 'desc') {
         filtered = items.filter(item => item.description.toLowerCase().includes(term) || (item.certName && item.certName.toLowerCase().includes(term)));
@@ -765,27 +826,72 @@
         }
       }
 
+      currentFilteredItems = filtered;
+
+      if (term) {
+        filterCountEl.textContent = `Found ${filtered.length} matching item(s) out of ${items.length}`;
+        markAllFilteredBtn.style.display = 'inline-block';
+        unmarkAllFilteredBtn.style.display = 'inline-block';
+      } else {
+        filterCountEl.textContent = items.length > 0 ? `Showing all ${items.length} items` : '';
+        markAllFilteredBtn.style.display = 'none';
+        unmarkAllFilteredBtn.style.display = 'none';
+      }
+
       renderGrid(filtered);
     }
 
     searchInput.addEventListener('input', filterData);
     searchMode.addEventListener('change', filterData);
 
+    markAllFilteredBtn.addEventListener('click', () => {
+      if (currentFilteredItems.length === 0) return;
+      
+      currentFilteredItems.forEach(item => {
+        if (!markedItems.includes(item.id)) {
+          markedItems.push(item.id);
+        }
+      });
+
+      filterData();
+    });
+
+    unmarkAllFilteredBtn.addEventListener('click', () => {
+      if (currentFilteredItems.length === 0) return;
+      
+      currentFilteredItems.forEach(item => {
+        const index = markedItems.indexOf(item.id);
+        if (index > -1) {
+          markedItems.splice(index, 1);
+        }
+      });
+
+      filterData();
+    });
+
+    function getCertificateDisplay(itemObj) {
+      let cert = itemObj.certName || '';
+      return cert || 'N/A';
+    }
+
     function generateCSVContent() {
       let csvRows = [];
-      csvRows.push(['ID', 'Serial', 'SWL', 'NEXT EXAMINATION DATE'].map(field => `"${field}"`).join(','));
+      // Columns: Serial, ID, SWL, NEXT EXAMINATION DATE, CERTIFICATE
+      csvRows.push(['Serial', 'ID', 'SWL', 'NEXT EXAMINATION DATE', 'CERTIFICATE'].map(field => `"${field}"`).join(','));
 
       markedItems.forEach((id, index) => {
         const itemObj = items.find(i => i.id === id);
         if (itemObj) {
           const swlClean = (itemObj.swl || '').replace(/"/g, '""');
           const examDateStr = extractField(itemObj.description, "NEXT\\s+EXAMINATION\\s+DATE");
+          const certClean = getCertificateDisplay(itemObj).replace(/"/g, '""');
 
           const rowData = [
             index + 1,
             itemObj.id,
             swlClean,
-            examDateStr
+            examDateStr,
+            certClean
           ];
 
           csvRows.push(rowData.map(val => `"${val}"`).join(','));
@@ -802,8 +908,10 @@
         if (itemObj) {
           const swlClean = itemObj.swl || 'N/A';
           const examDateStr = extractField(itemObj.description, "NEXT\\s+EXAMINATION\\s+DATE") || 'N/A';
+          const certClean = getCertificateDisplay(itemObj);
           
-          textLines.push(`${index + 1}- Serial: *${itemObj.id}* | SWL: ${swlClean} | Next Exam: ${examDateStr}`);
+          // Format: Serial: 1 | ID: 12342 | SWL: ... | Next Exam: ... | Cert: ...
+          textLines.push(`Serial: ${index + 1} | ID: *${itemObj.id}* | SWL: ${swlClean} | Next Exam: ${examDateStr} | Cert: ${certClean}`);
         }
       });
       return textLines.join("\n");
