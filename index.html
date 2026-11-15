@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <!-- App Icons for iOS & Android Home Screen -->
 <link rel="apple-touch-icon" sizes="180x180" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
 <link rel="icon" type="image/png" sizes="192x192" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
@@ -9,12 +8,12 @@
 <!-- Mobile App Capabilities -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="IEOC Inventory">
+<meta name="apple-mobile-web-app-title" content="Inventory Catalog">
 
 <!-- Web App Manifest for Android & Chrome -->
 <link rel="manifest" href="data:application/manifest+json,{
-  \"name\": \"IEOC SAP Inventory\",
-  \"short_name\": \"IEOC Catalog\",
+  \"name\": \"Inventory Management\",
+  \"short_name\": \"Inventory\",
   \"start_url\": \"/\",
   \"display\": \"standalone\",
   \"background_color\": \"#0f172a\",
@@ -35,8 +34,10 @@
 }">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ieoc Sap Inventory</title>
+  <title>Inventory Catalog</title>
   
+  <!-- SheetJS Library with Cell Comments Support -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- HTML5 QR Code Scanner Library -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
@@ -48,6 +49,23 @@
       --text-muted: #94a3b8;
       --accent: #38bdf8;
       --border: #334155;
+      --danger: #f43f5e;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      
+      /* IEOC Orange Theme */
+      --ieoc-card-bg: #1e293b;
+      --ieoc-border: #f97316;
+      --ieoc-marked-bg: #431407;
+      --ieoc-marked-border: #fb923c;
+      --ieoc-accent: #fb923c;
+
+      /* PTB Blue Theme */
+      --ptb-card-bg: #0f172a;
+      --ptb-border: #3b82f6;
+      --ptb-marked-bg: #172554;
+      --ptb-marked-border: #60a5fa;
+      --ptb-accent: #60a5fa;
     }
 
     * {
@@ -98,15 +116,16 @@
 
     /* Controls Bar */
     .file-upload-wrapper {
-      max-width: 650px;
+      max-width: 1100px;
       margin: 0 auto 1.5rem auto;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 0.75rem;
+      align-items: center;
     }
 
-    .custom-file-upload, .qr-btn, .log-btn {
+    .custom-file-upload, .qr-btn, .csv-select, .remove-btn, .export-btn, .filter-marked-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -120,24 +139,59 @@
       font-weight: 600;
       font-size: 0.85rem;
       transition: all 0.2s ease;
-      flex: 1 1 120px;
+      flex: 1 1 140px;
       text-align: center;
     }
 
-    .qr-btn, .log-btn {
+    .qr-btn, .csv-select, .export-btn, .filter-marked-btn {
       border-style: solid;
+      border-color: var(--border);
     }
 
-    .custom-file-upload:hover, .qr-btn:hover, .log-btn:hover {
+    .export-btn {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .export-btn:hover {
+      background-color: var(--success);
+      color: #fff;
+    }
+
+    .filter-marked-btn.active-filter {
+      background-color: var(--border);
+      border-color: var(--text-main);
+      color: #fff;
+    }
+
+    .csv-select {
+      outline: none;
+      color: var(--text-main);
+    }
+
+    .remove-btn {
+      border-style: solid;
+      border-color: var(--danger);
+      color: var(--danger);
+      flex: 0 1 auto;
+    }
+
+    .custom-file-upload:hover, .qr-btn:hover, .csv-select:hover, .filter-marked-btn:hover {
       background-color: var(--accent);
       color: var(--bg-color);
+      border-color: var(--accent);
     }
 
-    #csvFileInput {
+    .remove-btn:hover {
+      background-color: var(--danger);
+      color: #fff;
+    }
+
+    #excelFileInput {
       display: none;
     }
 
-    /* Status Banner for Auto-loaded CSV */
+    /* Status Banner */
     .status-banner {
       max-width: 650px;
       margin: -0.75rem auto 1.25rem auto;
@@ -168,12 +222,12 @@
       overflow: hidden;
     }
 
-    /* Search Container Mobile Optimization */
+    /* Search Container */
     .search-container {
       position: sticky;
       top: 0.75rem;
       z-index: 10;
-      max-width: 650px;
+      max-width: 680px;
       margin: 0 auto 1.5rem auto;
       display: flex;
       align-items: center;
@@ -197,13 +251,6 @@
       outline: none;
     }
 
-    @media (min-width: 640px) {
-      .search-input {
-        padding: 0.75rem 1.25rem;
-        font-size: 1rem;
-      }
-    }
-
     .search-mode {
       background-color: var(--card-bg);
       color: var(--accent);
@@ -214,60 +261,125 @@
       font-weight: 600;
       outline: none;
       cursor: pointer;
-      max-width: 45%;
+      max-width: 48%;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    @media (min-width: 640px) {
-      .search-mode {
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-        max-width: none;
-      }
     }
 
     .grid-container {
       max-width: 1200px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.25rem;
     }
 
+    /* Card Themes */
     .card {
       background-color: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 1.25rem;
-      cursor: pointer;
-      transition: transform 0.2s, border-color 0.2s;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      gap: 0.75rem;
+      cursor: pointer;
     }
 
     .card:hover {
       transform: translateY(-4px);
-      border-color: var(--accent);
     }
 
-    .card-id {
-      font-size: 0.875rem;
+    /* IEOC Card Styling (Orange Theme) */
+    .card.ieoc {
+      border-color: rgba(249, 115, 22, 0.4);
+    }
+    .card.ieoc:hover {
+      border-color: var(--ieoc-border);
+    }
+    .card.ieoc.marked {
+      background-color: var(--ieoc-marked-bg);
+      border: 2px solid var(--ieoc-marked-border);
+      box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);
+    }
+    .card.ieoc .card-sn, .card.ieoc .card-source, .card.ieoc .sub-title {
+      color: var(--ieoc-accent) !important;
+    }
+
+    /* PTB Card Styling (Blue Theme) */
+    .card.ptb {
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+    .card.ptb:hover {
+      border-color: var(--ptb-border);
+    }
+    .card.ptb.marked {
+      background-color: var(--ptb-marked-bg);
+      border: 2px solid var(--ptb-marked-border);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+    }
+    .card.ptb .card-sn, .card.ptb .card-source, .card.ptb .sub-title {
+      color: var(--ptb-accent) !important;
+    }
+
+    .card-checkbox {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 22px;
+      height: 22px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 2rem;
+    }
+
+    .card-sn {
+      font-size: 0.95rem;
       font-weight: 700;
-      color: var(--accent);
-      margin-bottom: 0.5rem;
+    }
+
+    .card-source {
+      font-size: 0.7rem;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-weight: 600;
+      display: inline-block;
+      margin-top: 0.2rem;
     }
 
     .card-desc {
       color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.5;
+      font-size: 0.85rem;
+      line-height: 1.4;
       display: -webkit-box;
-      -webkit-line-clamp: 4;
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      white-space: pre-line;
+    }
+
+    .card-grid-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      padding-top: 0.6rem;
+    }
+
+    .card-grid-info span b {
+      color: var(--text-main);
     }
 
     /* Modal Styling */
@@ -295,7 +407,7 @@
       border: 1px solid var(--border);
       padding: 1.5rem;
       border-radius: 16px;
-      max-width: 550px;
+      max-width: 600px;
       width: 90%;
       position: relative;
       transform: scale(0.95);
@@ -323,57 +435,82 @@
       color: var(--text-main);
     }
 
-    .modal-id {
-      font-size: 1.25rem;
+    .modal-title {
+      font-size: 1.15rem;
       color: var(--accent);
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.25rem;
     }
 
-    .modal-section-title {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin-top: 1rem;
-      margin-bottom: 0.35rem;
-    }
-
-    .modal-desc, .modal-note {
-      font-size: 0.95rem;
-      line-height: 1.6;
-      color: var(--text-main);
-      white-space: pre-line;
-      font-family: monospace;
+    .modal-description-box {
       background-color: rgba(15, 23, 42, 0.6);
-      padding: 0.85rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--text-main);
+    }
+
+    .modal-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .modal-item-box {
+      background-color: rgba(15, 23, 42, 0.6);
+      padding: 0.75rem;
       border-radius: 8px;
     }
 
-    .modal-note {
-      border-left: 3px solid var(--accent);
+    .modal-item-box label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    .modal-item-box div {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
     }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>IEOC SAP Inventory</h1>
-    <p style="color: var(--text-muted)">search by id, description, SAP Code or transactions notes</p>
+    <h1>Inventory Management Catalog</h1>
+    <p style="color: var(--text-muted)">IEOC (Orange) & PTB (Blue) Inventory System</p>
   </header>
 
   <!-- Control Buttons -->
   <div class="file-upload-wrapper">
-    <label for="csvFileInput" class="custom-file-upload">
-      📁 Load CSV
+    <label for="excelFileInput" class="custom-file-upload">
+      📊 Load Excel (.xlsx)
     </label>
-    <input type="file" id="csvFileInput" accept=".csv">
+    <input type="file" id="excelFileInput" accept=".xlsx, .xls" multiple>
+
+    <select id="tabSelector" class="csv-select">
+      <option value="all">📂 View All Loaded Tabs</option>
+    </select>
+
+    <button id="filterMarkedBtn" class="filter-marked-btn" title="Toggle view for marked items only">
+      📌 View Marked Only
+    </button>
+
+    <button id="exportSelectedBtn" class="export-btn">
+      📥 Export & Share via WhatsApp
+    </button>
+
+    <button id="removeExcelBtn" class="remove-btn" title="Remove selected data">
+      🗑️ Clear Data
+    </button>
 
     <button id="toggleQrBtn" class="qr-btn">
       📷 Scan QR
-    </button>
-
-    <button id="downloadLogBtn" class="log-btn">
-      📥 Download Log
     </button>
   </div>
 
@@ -385,11 +522,12 @@
   </div>
 
   <div class="search-container">
-    <input type="text" id="searchInput" class="search-input" placeholder="Search ID, description or notes...">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search (e.g. ieoc, ptb, stock, write off, out stock)...">
     <select id="searchMode" class="search-mode">
       <option value="auto">⚡ Smart Auto</option>
-      <option value="id"># Exact ID Only</option>
-      <option value="desc">📝 Description/Notes</option>
+      <option value="sn"># SN / Item Only</option>
+      <option value="sap"># SAP Code Only</option>
+      <option value="desc">📄 Description / Bin</option>
     </select>
   </div>
 
@@ -399,248 +537,752 @@
   <div class="modal-overlay" id="modal">
     <div class="modal-content">
       <button class="close-btn" id="closeModal">&times;</button>
-      <div class="modal-id" id="modalId"></div>
-      
-      <div class="modal-section-title">Description</div>
-      <div class="modal-desc" id="modalDesc"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-right: 1.5rem;">
+        <div class="modal-title" id="modalTitle">Item Details</div>
+        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--accent);">
+          <input type="checkbox" id="modalCheckbox" style="width: 18px; height: 18px; accent-color: var(--accent);"> Select for Export
+        </label>
+      </div>
+      <div id="modalSource" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; background: rgba(255, 255, 255, 0.08); padding: 0.3rem 0.6rem; border-radius: 6px; display: inline-block;"></div>
 
-      <div id="modalNoteSection" style="display: none;">
-        <div class="modal-section-title">Transactions / Notes</div>
-        <div class="modal-note" id="modalNote"></div>
+      <div class="modal-description-box">
+        <label style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Description</label>
+        <div id="modalDescVal" style="font-family: system-ui;">-</div>
+      </div>
+
+      <div class="modal-details-grid" id="modalGrid">
+        <!-- Filled dynamically -->
+      </div>
+
+      <div id="modalCommentSection" style="margin-top: 0.75rem; background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--warning); padding: 0.75rem; border-radius: 8px; display: none;">
+        <label style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--warning); display: block; margin-bottom: 0.2rem;">Comment / Cell Note (Physical Qty. Ea.Jt.)</label>
+        <div id="modalCommentVal" style="font-size: 0.9rem; color: var(--text-main); white-space: pre-line; line-height: 1.5;"></div>
       </div>
     </div>
   </div>
 
   <script>
-    let items = [];
-    let searchHistory = [];
-    let lastLoggedKey = "";
+    let loadedDataMap = {}; 
+    let selectedItemIds = new Set(); 
+    let viewMarkedOnly = false; 
     let html5QrcodeScanner = null;
+    let currentModalItemKey = null;
 
-    const fileInput = document.getElementById('csvFileInput');
+    const IEOC_TABS = ["sap stock", "write off", "ieoc out of sap"];
+
+    const fileInput = document.getElementById('excelFileInput');
+    const tabSelector = document.getElementById('tabSelector');
+    const removeExcelBtn = document.getElementById('removeExcelBtn');
+    const exportSelectedBtn = document.getElementById('exportSelectedBtn');
+    const filterMarkedBtn = document.getElementById('filterMarkedBtn');
     const searchInput = document.getElementById('searchInput');
     const searchMode = document.getElementById('searchMode');
     const grid = document.getElementById('grid');
     const modal = document.getElementById('modal');
-    const modalId = document.getElementById('modalId');
-    const modalDesc = document.getElementById('modalDesc');
-    const modalNote = document.getElementById('modalNote');
-    const modalNoteSection = document.getElementById('modalNoteSection');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSource = document.getElementById('modalSource');
+    const modalDescVal = document.getElementById('modalDescVal');
+    const modalGrid = document.getElementById('modalGrid');
+    const modalCheckbox = document.getElementById('modalCheckbox');
+    const modalCommentSection = document.getElementById('modalCommentSection');
+    const modalCommentVal = document.getElementById('modalCommentVal');
     const closeModal = document.getElementById('closeModal');
     const toggleQrBtn = document.getElementById('toggleQrBtn');
-    const downloadLogBtn = document.getElementById('downloadLogBtn');
     const scannerContainer = document.getElementById('scannerContainer');
     const statusBanner = document.getElementById('statusBanner');
 
-    // Auto-load previously saved CSV from localStorage on page load
     window.addEventListener('DOMContentLoaded', () => {
-      const savedCSV = localStorage.getItem('ieoc_saved_csv');
-      const savedFileName = localStorage.getItem('ieoc_csv_filename');
-
-      if (savedCSV) {
-        parseCSV(savedCSV);
-        filterData();
-        showStatusBanner(`Loaded saved database: <strong>${savedFileName || 'inventory.csv'}</strong> (${items.length} items)`);
+      const savedData = localStorage.getItem('inventory_excel_data_map');
+      const savedSelections = localStorage.getItem('inventory_selected_items');
+      if (savedData) {
+        try {
+          loadedDataMap = JSON.parse(savedData);
+          updateTabSelector();
+          filterData();
+          const totalCount = getTotalItemsCount();
+          if (totalCount > 0) {
+            showStatusBanner(`Restored inventory containing <strong>${totalCount}</strong> records.`);
+          }
+        } catch(e) {
+          localStorage.removeItem('inventory_excel_data_map');
+        }
+      }
+      if (savedSelections) {
+        try {
+          selectedItemIds = new Set(JSON.parse(savedSelections));
+          updateFilterButtonText();
+        } catch(e) {}
       }
     });
 
-    // Handle Manual CSV File Selection
-    fileInput.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+    function saveSelectionsToStorage() {
+      try {
+        localStorage.setItem('inventory_selected_items', JSON.stringify(Array.from(selectedItemIds)));
+      } catch(e) {}
+    }
 
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const csvContent = evt.target.result;
-        
-        // Save to LocalStorage
-        try {
-          localStorage.setItem('ieoc_saved_csv', csvContent);
-          localStorage.setItem('ieoc_csv_filename', file.name);
-        } catch(e) {
-          console.warn("Storage quota exceeded, unable to save CSV locally.");
-        }
-
-        parseCSV(csvContent);
-        filterData();
-        showStatusBanner(`Successfully loaded: <strong>${file.name}</strong> (${items.length} items)`);
-      };
-      reader.readAsText(file);
-    });
+    function updateFilterButtonText() {
+      if (viewMarkedOnly) {
+        filterMarkedBtn.textContent = `📌 Showing Marked (${selectedItemIds.size})`;
+      } else {
+        filterMarkedBtn.textContent = "📌 View Marked Only";
+      }
+    }
 
     function showStatusBanner(msg) {
       statusBanner.innerHTML = msg;
       statusBanner.style.display = 'block';
+      setTimeout(() => { statusBanner.style.display = 'none'; }, 5000);
     }
 
-    // CSV Parser (Reads Column 3 for hidden notes)
-    function parseCSV(text) {
-      items = [];
-      const lines = [];
-      let row = [];
-      let cell = '';
-      let insideQuotes = false;
+    fileInput.addEventListener('change', function(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
 
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const nextChar = text[i + 1];
+      let filesProcessed = 0;
+      const totalFiles = files.length;
 
-        if (char === '"') {
-          if (insideQuotes && nextChar === '"') {
-            cell += '"';
-            i++;
-          } else {
-            insideQuotes = !insideQuotes;
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        const fileNameLower = file.name.toLowerCase();
+        const isPtb = fileNameLower.includes('ptb');
+
+        reader.onload = function(evt) {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array', cellComments: true });
+
+            workbook.SheetNames.forEach(sheetName => {
+              const cleanSheetName = sheetName.trim().toLowerCase();
+              
+              if (isPtb) {
+                if (cleanSheetName === 'stock file' || cleanSheetName.includes('stock file')) {
+                  const worksheet = workbook.Sheets[sheetName];
+                  const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                  const tabKey = `PTB - ${sheetName} (${file.name})`;
+
+                  const parsedItems = jsonRows.map((row, idx) => normalizePtbRow(row, worksheet, tabKey, idx));
+                  const validItems = parsedItems.filter(item => item.sapCode || item.sn || item.description || item.partSerNo);
+
+                  if (validItems.length > 0) {
+                    loadedDataMap[tabKey] = validItems;
+                  }
+                }
+              } else {
+                if (IEOC_TABS.some(t => cleanSheetName.includes(t))) {
+                  const worksheet = workbook.Sheets[sheetName];
+                  const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                  
+                  const tabKey = `IEOC - ${sheetName} (${file.name})`;
+                  const isSapStock = cleanSheetName.includes('sap stock');
+                  const isWriteOff = cleanSheetName.includes('write off');
+                  const isOutOfSap = cleanSheetName.includes('out of sap');
+
+                  const parsedItems = jsonRows.map((row, idx) => normalizeIeocRow(row, worksheet, tabKey, isSapStock, isWriteOff, isOutOfSap, idx));
+                  const validItems = parsedItems.filter(item => item.sapCode || item.sn || item.description || item.itemNo || item.material || item.title);
+
+                  if (validItems.length > 0) {
+                    loadedDataMap[tabKey] = validItems;
+                  }
+                }
+              }
+            });
+
+            filesProcessed++;
+            if (filesProcessed === totalFiles) {
+              saveToStorage();
+              updateTabSelector();
+              filterData();
+              showStatusBanner(`Successfully loaded inventory. Total records: ${getTotalItemsCount()}`);
+            }
+          } catch(err) {
+            alert("Error parsing Excel file: " + file.name);
           }
-        } else if (char === ',' && !insideQuotes) {
-          row.push(cell.trim());
-          cell = '';
-        } else if ((char === '\r' || char === '\n') && !insideQuotes) {
-          if (char === '\r' && nextChar === '\n') i++;
-          row.push(cell.trim());
-          if (row.length > 0 && row.some(c => c !== '')) lines.push(row);
-          row = [];
-          cell = '';
-        } else {
-          cell += char;
+        };
+        reader.readAsArrayBuffer(file);
+      });
+
+      fileInput.value = '';
+    });
+
+    function normalizeIeocRow(row, worksheet, sourceTabName, isSapStock, isWriteOff, isOutOfSap, index) {
+      const getValAndCell = (keys) => {
+        for (let k of keys) {
+          const foundKey = Object.keys(row).find(rk => rk.trim().toLowerCase() === k.toLowerCase());
+          if (foundKey !== undefined && row[foundKey] !== undefined) {
+            let matchedCellRef = "";
+            for (let cellRef in worksheet) {
+              if (cellRef[0] === '!') continue;
+              const colLetter = cellRef.replace(/[0-9]/g, '');
+              const rowNum = parseInt(cellRef.replace(/[^0-9]/g, ''), 10);
+              
+              if (rowNum === index + 2) {
+                const headerCell = worksheet[colLetter + '1'];
+                if (headerCell && headerCell.v && String(headerCell.v).trim().toLowerCase() === foundKey.toLowerCase()) {
+                  matchedCellRef = cellRef;
+                  break;
+                }
+              }
+            }
+
+            let commentText = "";
+            if (matchedCellRef && worksheet[matchedCellRef] && worksheet[matchedCellRef].c && worksheet[matchedCellRef].c.length > 0) {
+              commentText = worksheet[matchedCellRef].c.map(c => c.t).join("\n");
+            }
+
+            return { val: String(row[foundKey]).trim(), comment: commentText };
+          }
         }
-      }
-      if (cell || row.length > 0) {
-        row.push(cell.trim());
-        lines.push(row);
-      }
+        return { val: "", comment: "" };
+      };
 
-      const startIdx = lines.length > 0 && isNaN(lines[0][0]) ? 1 : 0;
-
-      for (let i = startIdx; i < lines.length; i++) {
-        const r = lines[i];
-        if (r.length >= 2) {
-          const id = r[0];
-          let desc = r[1];
-          let note = r[2] || ''; // Column 3 handles the transaction note internally
-
-          if (desc.includes('%')) {
-            try { desc = decodeURIComponent(desc); } catch(e) {}
-          }
-          if (note.includes('%')) {
-            try { note = decodeURIComponent(note); } catch(e) {}
-          }
-
-          items.push({ id: id, description: desc, note: note });
+      const qtyEaJtResult = getValAndCell(['physical qty. ea.\jt.', 'physical qty ea jt', 'qty by ea', 'physical qty ea', 'ea/jt', 'quantity jt\\ea', 'quantity jt/ea']);
+      
+      const getVal = (keys) => {
+        for (let k of keys) {
+          const foundKey = Object.keys(row).find(rk => rk.trim().toLowerCase() === k.toLowerCase());
+          if (foundKey !== undefined && row[foundKey] !== undefined) return String(row[foundKey]).trim();
         }
+        return "";
+      };
+
+      const uniqueKey = `${sourceTabName}_${index}_${getVal(['sap code', 'item', 'material', 'sn']) || index}`;
+
+      return {
+        _uniqueKey: uniqueKey,
+        _sourceTab: sourceTabName,
+        isPtb: false,
+        isSapStock: isSapStock,
+        isWriteOff: isWriteOff,
+        isOutOfSap: isOutOfSap,
+        itemNo: getVal(['item', 'item no', 'no']),
+        sn: getVal(['sn', 'p/n \\ sn', 'p/n \\sn', 'serial no', 'serial number', 's.n.', 'p/n / sn']),
+        title: getVal(['title']),
+        material: getVal(['material']),
+        plant: getVal(['plant', 'plt']),
+        storageLocation: getVal(['storage location', 'storage loc', 'sloc', 'storage_location']),
+        sapCode: getVal(['sap code', 'sapcode', 'sap item', 'item code', 'code']),
+        description: getVal(['description', 'desc', 'material description']),
+        concession: getVal(['concession', 'concession name']),
+        um: getVal(['um', 'uom', 'unit']),
+        bin: getVal(['bin', 'bin location', 'shelf']),
+        sapQty: getVal(['sap qty', 'sap quantity', 'sap_qty', 'system qty']),
+        physicalQty: getVal(['physical qty', 'phyical qty', 'physical quantity', 'phy_qty']),
+        physicalQtyEaJt: qtyEaJtResult.val,
+        comment: qtyEaJtResult.comment
+      };
+    }
+
+    function normalizePtbRow(row, worksheet, sourceTabName, index) {
+      const getVal = (keys) => {
+        for (let k of keys) {
+          const foundKey = Object.keys(row).find(rk => rk.trim().toLowerCase() === k.toLowerCase());
+          if (foundKey !== undefined && row[foundKey] !== undefined) return String(row[foundKey]).trim();
+        }
+        return "";
+      };
+
+      const uniqueKey = `${sourceTabName}_${index}_${getVal(['sap. code', 'sap code', 'sn']) || index}`;
+
+      return {
+        _uniqueKey: uniqueKey,
+        _sourceTab: sourceTabName,
+        isPtb: true,
+        sn: getVal(['sn', 'serial no', 'serial number']),
+        sapCode: getVal(['sap. code', 'sap code', 'sapcode']),
+        description: getVal(['material description', 'description', 'desc']),
+        status: getVal(['status']),
+        vendor: getVal(['vendor']),
+        matlGroup: getVal(['matl group', 'material group']),
+        partSerNo: getVal(['part.\\ser. no,', 'part/ser. no', 'part.ser. no', 'part ser no']),
+        um: getVal(['unt.', 'unt', 'uom', 'unit']),
+        quantity: getVal(['quantity', 'qty']),
+        location: getVal(['location', 'bin', 'loc'])
+      };
+    }
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem('inventory_excel_data_map', JSON.stringify(loadedDataMap));
+      } catch(e) {}
+    }
+
+    function getTotalItemsCount() {
+      return Object.values(loadedDataMap).reduce((acc, curr) => acc + (curr ? curr.length : 0), 0);
+    }
+
+    function updateTabSelector() {
+      const currentSelection = tabSelector.value;
+      tabSelector.innerHTML = '<option value="all">📂 View All Loaded Tabs (' + getTotalItemsCount() + ' items)</option>';
+      
+      Object.keys(loadedDataMap).forEach(tabKey => {
+        const opt = document.createElement('option');
+        opt.value = tabKey;
+        opt.textContent = `📑 ${tabKey} (${loadedDataMap[tabKey].length})`;
+        tabSelector.appendChild(opt);
+      });
+
+      if (currentSelection && (currentSelection === 'all' || loadedDataMap[currentSelection])) {
+        tabSelector.value = currentSelection;
+      } else {
+        tabSelector.value = 'all';
       }
     }
 
-    // Render Clean Cards (No notes visible on the outside)
+    tabSelector.addEventListener('change', filterData);
+
+    removeExcelBtn.addEventListener('click', () => {
+      if (Object.keys(loadedDataMap).length === 0) {
+        alert("No data currently loaded.");
+        return;
+      }
+
+      if (confirm("Are you sure you want to clear all loaded inventory data?")) {
+        loadedDataMap = {};
+        selectedItemIds.clear();
+        localStorage.removeItem('inventory_excel_data_map');
+        localStorage.removeItem('inventory_selected_items');
+        updateTabSelector();
+        filterData();
+        showStatusBanner("All inventory data has been cleared.");
+      }
+    });
+
+    function getActiveItems() {
+      const selectedTab = tabSelector.value;
+      if (selectedTab === 'all') {
+        let combined = [];
+        Object.values(loadedDataMap).forEach(tabItems => {
+          if (Array.isArray(tabItems)) combined = combined.concat(tabItems);
+        });
+        return combined;
+      } else {
+        return loadedDataMap[selectedTab] || [];
+      }
+    }
+
+    filterMarkedBtn.addEventListener('click', () => {
+      viewMarkedOnly = !viewMarkedOnly;
+      if (viewMarkedOnly) {
+        filterMarkedBtn.classList.add('active-filter');
+      } else {
+        filterMarkedBtn.classList.remove('active-filter');
+      }
+      updateFilterButtonText();
+      filterData();
+    });
+
     function renderGrid(data) {
       grid.innerHTML = '';
+      if (!data || data.length === 0) {
+        const emptyMsg = viewMarkedOnly ? "No items currently marked. Select items using the checkboxes to view them here." : "No inventory records found. Load an Excel file (IEOC or PTB).";
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">${emptyMsg}</div>`;
+        return;
+      }
+
       data.forEach(item => {
         const card = document.createElement('div');
-        card.className = 'card';
+        const isChecked = selectedItemIds.has(item._uniqueKey);
         
+        const themeClass = item.isPtb ? 'ptb' : 'ieoc';
+        card.className = isChecked ? `card ${themeClass} marked` : `card ${themeClass}`;
+
+        let mainTitle = '';
+        let subInfo = '';
+        let infoFieldsHtml = '';
+
+        if (item.isPtb) {
+          mainTitle = `SN: ${item.sn || 'N/A'}`;
+          subInfo = `<div class="sub-title" style="font-size: 0.85rem; margin-top: 0.2rem; font-weight: 600;">SAP Code: ${item.sapCode || '-'}</div>`;
+          infoFieldsHtml = `
+            <span>Status: <b>${item.status || '-'}</b></span>
+            <span>Vendor: <b>${item.vendor || '-'}</b></span>
+            <span>Matl Group: <b>${item.matlGroup || '-'}</b></span>
+            <span>Part/Ser: <b>${item.partSerNo || '-'}</b></span>
+            <span>UNT: <b>${item.um || '-'}</b></span>
+            <span>Quantity: <b>${item.quantity || '0'}</b></span>
+            <span style="grid-column: 1/-1;">Location: <b>${item.location || '-'}</b></span>
+          `;
+        } else if (item.isWriteOff) {
+          mainTitle = `SN: ${item.sn || 'N/A'}`;
+          subInfo = `<div class="sub-title" style="font-size: 0.85rem; margin-top: 0.2rem; font-weight: 600;">Title: ${item.title || '-'}</div>`;
+          infoFieldsHtml = `
+            <span>Plant: <b>${item.plant || '-'}</b></span>
+            <span>Storage Loc: <b>${item.storageLocation || '-'}</b></span>
+            <span>Material: <b>${item.material || '-'}</b></span>
+            <span>UoM: <b>${item.um || '-'}</b></span>
+            <span>Bin: <b>${item.bin || '-'}</b></span>
+            <span>Phy Qty: <b>${item.physicalQty || '0'}</b></span>
+          `;
+        } else if (item.isOutOfSap) {
+          mainTitle = `Item: ${item.itemNo || 'N/A'}`;
+          subInfo = `<div class="sub-title" style="font-size: 0.85rem; margin-top: 0.2rem; font-weight: 600;">SAP Code: ${item.sapCode || '-'}</div>`;
+          infoFieldsHtml = `
+            <span>P/N \\ SN: <b>${item.sn || '-'}</b></span>
+            <span>Concession: <b>${item.concession || '-'}</b></span>
+            <span>Bin Location: <b>${item.bin || '-'}</b></span>
+            <span>Physical Qty Ea.Jt: <b>${item.physicalQtyEaJt || '0'}</b></span>
+          `;
+        } else {
+          mainTitle = `SN: ${item.sn || 'N/A'}`;
+          subInfo = `<div class="sub-title" style="font-size: 0.85rem; margin-top: 0.2rem; font-weight: 600;">SAP Code: ${item.sapCode || '-'}</div>`;
+          infoFieldsHtml = `
+            <span>Plant: <b>${item.plant || '-'}</b></span>
+            <span>Storage Loc: <b>${item.storageLocation || '-'}</b></span>
+            <span>Bin: <b>${item.bin || '-'}</b></span>
+            <span>UM: <b>${item.um || '-'}</b></span>
+            <span>SAP Qty: <b>${item.sapQty || '0'}</b></span>
+            <span>Physical QTY: <b>${item.physicalQty || '0'}</b></span>
+          `;
+        }
+
         card.innerHTML = `
+          <input type="checkbox" class="card-checkbox" data-key="${item._uniqueKey}" ${isChecked ? 'checked' : ''} title="Select item for export">
           <div>
-            <div class="card-id">#${item.id}</div>
-            <div class="card-desc">${item.description}</div>
+            <div class="card-header">
+              <div class="card-sn">${mainTitle}</div>
+            </div>
+            <div class="card-source" title="${item._sourceTab}">📑 ${item._sourceTab}</div>
+            ${subInfo}
+            <div class="card-desc" style="margin-top: 0.3rem;">${item.description || 'No description provided'}</div>
+          </div>
+          <div class="card-grid-info">
+            ${infoFieldsHtml}
           </div>
         `;
+
+        const checkbox = card.querySelector('.card-checkbox');
+        checkbox.addEventListener('click', (e) => e.stopPropagation());
+        checkbox.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            selectedItemIds.add(item._uniqueKey);
+            card.classList.add('marked');
+          } else {
+            selectedItemIds.delete(item._uniqueKey);
+            card.classList.remove('marked');
+          }
+          saveSelectionsToStorage();
+          updateFilterButtonText();
+          if (viewMarkedOnly) {
+            filterData();
+          }
+        });
+
         card.addEventListener('click', () => openModal(item));
         grid.appendChild(card);
       });
     }
 
-    // Modal (Displays Description and reveals Notes only when card is pressed)
     function openModal(item) {
-      modalId.textContent = `#${item.id}`;
-      modalDesc.textContent = item.description;
+      currentModalItemKey = item._uniqueKey;
+      modalTitle.textContent = item.isPtb ? `SN: ${item.sn || 'N/A'}` : (item.isOutOfSap ? `Item: ${item.itemNo || 'N/A'}` : `SN: ${item.sn || 'N/A'}`);
+      modalSource.textContent = `📑 Source Tab: ${item._sourceTab}`;
+      modalDescVal.textContent = item.description || '-';
+      modalCheckbox.checked = selectedItemIds.has(item._uniqueKey);
       
-      if (item.note && item.note.trim() !== '') {
-        modalNote.textContent = item.note;
-        modalNoteSection.style.display = 'block';
+      let fields = [];
+      if (item.isPtb) {
+        fields = [
+          { label: 'SN', val: item.sn },
+          { label: 'SAP. CODE', val: item.sapCode },
+          { label: 'Status', val: item.status },
+          { label: 'Vendor', val: item.vendor },
+          { label: 'Matl Group', val: item.matlGroup },
+          { label: 'Part.\Ser. No,', val: item.partSerNo },
+          { label: 'UNT.', val: item.um },
+          { label: 'Quantity', val: item.quantity },
+          { label: 'Location', val: item.location }
+        ];
+      } else if (item.isWriteOff) {
+        fields = [
+          { label: 'SN', val: item.sn },
+          { label: 'Title', val: item.title },
+          { label: 'Plant', val: item.plant },
+          { label: 'Storage Location', val: item.storageLocation },
+          { label: 'Material', val: item.material },
+          { label: 'UM', val: item.um },
+          { label: 'BIN', val: item.bin },
+          { label: 'Physical QTY', val: item.physicalQty },
+          { label: 'Physical Qty. Ea.Jt.', val: item.physicalQtyEaJt }
+        ];
+      } else if (item.isOutOfSap) {
+        fields = [
+          { label: 'Item', val: item.itemNo },
+          { label: 'P/N \\ SN', val: item.sn },
+          { label: 'SAP Code', val: item.sapCode },
+          { label: 'Concession', val: item.concession },
+          { label: 'Bin Location', val: item.bin },
+          { label: 'Physical Qty. Ea.Jt.', val: item.physicalQtyEaJt }
+        ];
       } else {
-        modalNoteSection.style.display = 'none';
+        fields = [
+          { label: 'SN', val: item.sn },
+          { label: 'Plant', val: item.plant },
+          { label: 'Storage Location', val: item.storageLocation },
+          { label: 'Sap Code', val: item.sapCode },
+          { label: 'UM', val: item.um },
+          { label: 'BIN', val: item.bin },
+          { label: 'SAP Qty', val: item.sapQty },
+          { label: 'Physical QTY', val: item.physicalQty },
+          { label: 'Physical Qty. Ea.Jt.', val: item.physicalQtyEaJt }
+        ];
+      }
+
+      modalGrid.innerHTML = '';
+      fields.forEach(f => {
+        const box = document.createElement('div');
+        box.className = 'modal-item-box';
+        box.innerHTML = `<label>${f.label}</label><div>${f.val || '-'}</div>`;
+        modalGrid.appendChild(box);
+      });
+
+      if (item.comment && item.comment.trim() !== '') {
+        modalCommentVal.textContent = item.comment;
+        modalCommentSection.style.display = 'block';
+      } else {
+        modalCommentSection.style.display = 'none';
       }
 
       modal.classList.add('active');
     }
+
+    modalCheckbox.addEventListener('change', (e) => {
+      if (!currentModalItemKey) return;
+      if (e.target.checked) {
+        selectedItemIds.add(currentModalItemKey);
+      } else {
+        selectedItemIds.delete(currentModalItemKey);
+      }
+      saveSelectionsToStorage();
+      updateFilterButtonText();
+      renderGrid(viewMarkedOnly ? getActiveItems().filter(i => selectedItemIds.has(i._uniqueKey)) : getActiveItems());
+    });
 
     closeModal.addEventListener('click', () => modal.classList.remove('active'));
     modal.addEventListener('click', (e) => {
       if (e.target === modal) modal.classList.remove('active');
     });
 
-    // Log Tracking Logic
-    function logSearch(term, filteredResults) {
-      const currentKey = `${term}_${filteredResults.length}`;
-      if (!term || currentKey === lastLoggedKey) return;
-
-      lastLoggedKey = currentKey;
-      const timestamp = new Date().toLocaleString();
-
-      if (filteredResults.length === 0) {
-        searchHistory.push(`[${timestamp}] Search Term: "${term}" | Matches: 0`);
-      } else {
-        filteredResults.forEach(item => {
-          const cleanDesc = item.description.replace(/\r?\n|\r/g, ' ');
-          const cleanNote = (item.note || '').replace(/\r?\n|\r/g, ' ');
-          searchHistory.push(`[${timestamp}] ID: #${item.id} | Desc: "${cleanDesc}" | Note: "${cleanNote}" | (Term: "${term}")`);
-        });
+    exportSelectedBtn.addEventListener('click', () => {
+      if (selectedItemIds.size === 0) {
+        alert("No items selected. Please select items using the checkboxes on the cards.");
+        return;
       }
-    }
 
-    // Search Filtering (Still searches hidden notes so you can find parts by their transaction keywords)
+      let selectedItemsList = [];
+      Object.values(loadedDataMap).forEach(tabItems => {
+        tabItems.forEach(item => {
+          if (selectedItemIds.has(item._uniqueKey)) {
+            selectedItemsList.push(item);
+          }
+        });
+      });
+
+      let groups = {
+        "PTB Stock": [],
+        "SAP Stock": [],
+        "Write off": [],
+        "IEOC OUT OF SAP": [],
+        "Other": []
+      };
+
+      selectedItemsList.forEach(item => {
+        const tabLower = item._sourceTab.toLowerCase();
+        if (item.isPtb || tabLower.includes('ptb')) {
+          groups["PTB Stock"].push(item);
+        } else if (item.isWriteOff || tabLower.includes('write off')) {
+          groups["Write off"].push(item);
+        } else if (item.isOutOfSap || tabLower.includes('out of sap')) {
+          groups["IEOC OUT OF SAP"].push(item);
+        } else if (item.isSapStock || tabLower.includes('sap stock')) {
+          groups["SAP Stock"].push(item);
+        } else {
+          groups["Other"].push(item);
+        }
+      });
+
+      const wb = XLSX.utils.book_new();
+
+      const headerStyle = {
+        font: { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 11 },
+        fill: { fgColor: { rgb: "1F4E78" } },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: {
+          top: { style: "thin", color: { rgb: "000000" } },
+          bottom: { style: "thin", color: { rgb: "000000" } },
+          left: { style: "thin", color: { rgb: "000000" } },
+          right: { style: "thin", color: { rgb: "000000" } }
+        }
+      };
+
+      const cellStyle = {
+        font: { name: "Calibri", sz: 11 },
+        alignment: { vertical: "center", wrapText: true },
+        border: {
+          top: { style: "thin", color: { rgb: "D9D9D9" } },
+          bottom: { style: "thin", color: { rgb: "D9D9D9" } },
+          left: { style: "thin", color: { rgb: "D9D9D9" } },
+          right: { style: "thin", color: { rgb: "D9D9D9" } }
+        }
+      };
+
+      Object.keys(groups).forEach(groupName => {
+        const itemsInGroup = groups[groupName];
+        if (itemsInGroup.length > 0) {
+          const exportRows = itemsInGroup.map(i => {
+            if (i.isPtb) {
+              return {
+                "SN": i.sn || "",
+                "SAP. CODE": i.sapCode || "",
+                "Material description": i.description || "",
+                "Status": i.status || "",
+                "Vendor": i.vendor || "",
+                "Matl group": i.matlGroup || "",
+                "Part.\Ser. No,.": i.partSerNo || "",
+                "UNT.": i.um || "",
+                "Quantity": i.quantity || "",
+                "location": i.location || "",
+                "Source Sheet": i._sourceTab
+              };
+            } else {
+              return {
+                "SN": i.sn || "",
+                "Item": i.itemNo || "",
+                "Title": i.title || "",
+                "Plant": i.plant || "",
+                "Storage Location": i.storageLocation || "",
+                "Material": i.material || "",
+                "Sap Code": i.sapCode || "",
+                "Description": i.description || "",
+                "Concession": i.concession || "",
+                "UM": i.um || "",
+                "BIN": i.bin || "",
+                "SAP Qty": i.sapQty || "",
+                "Physical QTY": i.physicalQty || "",
+                "Physical Qty. Ea.Jt.": i.physicalQtyEaJt || "",
+                "Comment (Cell Note)": i.comment || "",
+                "Source Sheet": i._sourceTab
+              };
+            }
+          });
+
+          const ws = XLSX.utils.json_to_sheet(exportRows);
+          const range = XLSX.utils.decode_range(ws['!ref']);
+          const colWidths = [];
+
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            let maxWidth = 10;
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+              const cellAddress = { c: C, r: R };
+              const cellRef = XLSX.utils.encode_cell(cellAddress);
+              if (!ws[cellRef]) continue;
+
+              if (R === 0) {
+                ws[cellRef].s = headerStyle;
+              } else {
+                ws[cellRef].s = cellStyle;
+              }
+
+              const valStr = String(ws[cellRef].v || "");
+              if (valStr.length > maxWidth) {
+                maxWidth = Math.min(valStr.length + 3, 40);
+              }
+            }
+            colWidths.push({ wch: maxWidth });
+          }
+
+          ws['!cols'] = colWidths;
+          ws['!rows'] = [{ hpt: 24 }];
+
+          XLSX.utils.book_append_sheet(wb, ws, groupName);
+        }
+      });
+
+      const dateStr = new Date().toISOString().slice(0,10);
+      const fileName = `Selected_Inventory_Export_${dateStr}.xlsx`;
+      
+      XLSX.writeFile(wb, fileName);
+
+      const whatsappText = encodeURIComponent(`Hello, here is the exported inventory report (${selectedItemIds.size} items selected) exported on ${dateStr}. Please find the downloaded file: ${fileName}`);
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${whatsappText}`;
+      
+      setTimeout(() => {
+        window.open(whatsappUrl, '_blank');
+      }, 500);
+    });
+
     function filterData() {
+      let activeItems = getActiveItems();
+
+      if (viewMarkedOnly) {
+        activeItems = activeItems.filter(item => selectedItemIds.has(item._uniqueKey));
+      }
+
       let term = searchInput.value.toLowerCase().trim();
       const mode = searchMode.value;
 
-      term = term.replace(/^#|^id/i, '');
+      // Handle specific search prefixes/keywords requested:
+      // "ieoc", "ptb", "stock" (SAP stock), "write off", "out stock" (IEOC OUT OF SAP)
+      if (term.startsWith('ieoc')) {
+        activeItems = activeItems.filter(item => !item.isPtb);
+        term = term.replace('ieoc', '').trim();
+      } else if (term.startsWith('ptb')) {
+        activeItems = activeItems.filter(item => item.isPtb);
+        term = term.replace('ptb', '').trim();
+      } else if (term.startsWith('stock')) {
+        activeItems = activeItems.filter(item => !item.isPtb && item.isSapStock);
+        term = term.replace('stock', '').trim();
+      } else if (term.startsWith('write off')) {
+        activeItems = activeItems.filter(item => !item.isPtb && item.isWriteOff);
+        term = term.replace('write off', '').trim();
+      } else if (term.startsWith('out stock')) {
+        activeItems = activeItems.filter(item => !item.isPtb && item.isOutOfSap);
+        term = term.replace('out stock', '').trim();
+      }
 
       if (!term) {
-        renderGrid(items);
+        renderGrid(activeItems);
         return;
       }
 
       let filtered = [];
 
-      if (mode === 'id') {
-        filtered = items.filter(item => String(item.id).toLowerCase() === term);
+      if (mode === 'sn') {
+        filtered = activeItems.filter(item => String(item.sn).toLowerCase().includes(term) || String(item.itemNo).toLowerCase().includes(term));
+      } else if (mode === 'sap') {
+        filtered = activeItems.filter(item => String(item.sapCode).toLowerCase().includes(term) || String(item.material).toLowerCase().includes(term));
       } else if (mode === 'desc') {
-        filtered = items.filter(item => item.description.toLowerCase().includes(term) || (item.note && item.note.toLowerCase().includes(term)));
+        filtered = activeItems.filter(item => 
+          String(item.description).toLowerCase().includes(term) || 
+          String(item.bin).toLowerCase().includes(term) ||
+          String(item.title).toLowerCase().includes(term) ||
+          String(item.location).toLowerCase().includes(term)
+        );
       } else {
-        const exactIdMatches = items.filter(item => String(item.id).toLowerCase() === term);
-        if (exactIdMatches.length > 0) {
-          filtered = exactIdMatches;
-        } else {
-          filtered = items.filter(item => item.description.toLowerCase().includes(term) || (item.note && item.note.toLowerCase().includes(term)));
-        }
+        filtered = activeItems.filter(item => {
+          return (
+            String(item.sapCode).toLowerCase().includes(term) ||
+            String(item.itemNo).toLowerCase().includes(term) ||
+            String(item.material).toLowerCase().includes(term) ||
+            String(item.sn).toLowerCase().includes(term) ||
+            String(item.title).toLowerCase().includes(term) ||
+            String(item.description).toLowerCase().includes(term) ||
+            String(item.bin).toLowerCase().includes(term) ||
+            String(item.plant).toLowerCase().includes(term) ||
+            String(item.storageLocation).toLowerCase().includes(term) ||
+            String(item.concession).toLowerCase().includes(term) ||
+            String(item.vendor).toLowerCase().includes(term) ||
+            String(item.location).toLowerCase().includes(term)
+          );
+        });
       }
 
-      logSearch(term, filtered);
       renderGrid(filtered);
     }
 
     searchInput.addEventListener('input', filterData);
     searchMode.addEventListener('change', filterData);
 
-    // Download Search History Log
-    downloadLogBtn.addEventListener('click', () => {
-      if (searchHistory.length === 0) {
-        alert("No search items logged yet.");
-        return;
-      }
-
-      const logText = "=== IEOC Inventory Searched Items Log ===\n\n" + searchHistory.join("\n\n");
-      const blob = new Blob([logText], { type: "text/plain" });
-      const link = document.createElement("a");
-      
-      const dateStr = new Date().toISOString().slice(0,10);
-      link.href = URL.createObjectURL(blob);
-      link.download = `Searched_Items_Log_${dateStr}.txt`;
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
-
-    // QR Scanner Implementation
     toggleQrBtn.addEventListener('click', () => {
       if (scannerContainer.classList.contains('active')) {
         stopScanner();
@@ -660,17 +1302,14 @@
         searchInput.value = decodedText;
         filterData();
         stopScanner();
-      }, (errorMessage) => {
-        // Continuous scan attempt
-      });
+      }, (errorMessage) => {});
     }
 
     function stopScanner() {
       if (html5QrcodeScanner) {
         html5QrcodeScanner.clear().then(() => {
           scannerContainer.classList.remove('active');
-        }).catch(error => {
-          console.error("Failed to clear scanner", error);
+        }).catch(() => {
           scannerContainer.classList.remove('active');
         });
       } else {
