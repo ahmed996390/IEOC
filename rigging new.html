@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<!-- App Icons for iOS & Android Home Screen -->
+<link rel="apple-touch-icon" sizes="180x180" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
+
+<!-- Mobile App Capabilities -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rigging Inventory">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rigging Inventory</title>
+
+  <!-- SheetJS Library for Excel (.xlsx / .xls) parsing & export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --card-expired-bg: rgba(239, 68, 68, 0.15);
+      --card-warning-bg: rgba(234, 179, 8, 0.15);
+      --card-marked-bg: rgba(34, 197, 94, 0.15);
+
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --border: #334155;
+      
+      --mark-color: #22c55e;
+      --whatsapp-color: #25d366;
+      --copy-color: #a855f7;
+      --alert-expired: #ef4444;
+      --alert-warning: #eab308;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 1rem;
+      padding-bottom: 6rem;
+    }
+
+    @media (min-width: 640px) {
+      body {
+        padding: 2rem;
+        padding-bottom: 6rem;
+      }
+    }
+
+    header {
+      max-width: 1200px;
+      margin: 0 auto 1.25rem auto;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      margin-bottom: 0.25rem;
+      color: var(--accent);
+    }
+
+    @media (min-width: 640px) {
+      h1 {
+        font-size: 2.25rem;
+      }
+    }
+
+    /* Fixed Bottom Navigation Tab Bar */
+    .nav-tabs {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.5rem 0.75rem;
+      z-index: 1000;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+    }
+
+    .nav-tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.5rem 0.25rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+
+    @media (min-width: 768px) {
+      .nav-tab-btn {
+        flex-direction: row;
+        justify-content: center;
+        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+      }
+    }
+
+    .nav-tab-btn:hover {
+      color: var(--text-main);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-tab-btn.active {
+      color: var(--bg-color);
+      background-color: var(--accent);
+    }
+
+    .tab-content {
+      display: none;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Action Panels (Tab 2 & Tab 3) */
+    .action-panel {
+      max-width: 720px;
+      margin: 0 auto 1.5rem auto;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .custom-file-upload, .log-btn, .whatsapp-btn, .copy-btn, .danger-btn, .tab-select {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      background-color: var(--card-bg);
+      color: var(--accent);
+      border: 2px dashed var(--accent);
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+    }
+
+    .log-btn, .tab-select {
+      border-style: solid;
+    }
+
+    .tab-select {
+      color: var(--text-main);
+      border-color: var(--border);
+      outline: none;
+    }
+
+    .whatsapp-btn {
+      border-style: solid;
+      border-color: var(--whatsapp-color);
+      color: var(--whatsapp-color);
+    }
+
+    .copy-btn {
+      border-style: solid;
+      border-color: var(--copy-color);
+      color: var(--copy-color);
+    }
+
+    .danger-btn {
+      border-style: solid;
+      border-color: var(--alert-expired);
+      color: var(--alert-expired);
+      background: transparent;
+    }
+
+    .custom-file-upload:hover, .log-btn:hover, .tab-select:hover {
+      background-color: var(--accent);
+      color: var(--bg-color);
+    }
+
+    .whatsapp-btn:hover {
+      background-color: var(--whatsapp-color);
+      color: #ffffff;
+    }
+
+    .copy-btn:hover {
+      background-color: var(--copy-color);
+      color: #ffffff;
+    }
+
+    .danger-btn:hover {
+      background-color: var(--alert-expired);
+      color: #ffffff;
+    }
+
+    #excelFileInput {
+      display: none;
+    }
+
+    .status-banner {
+      max-width: 650px;
+      margin: 0 auto 1rem auto;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.6rem;
+      border-radius: 8px;
+      display: none;
+    }
+
+    /* Sticky Search & Filter Header in Tab 1 */
+    .sticky-controls {
+      position: sticky;
+      top: 0.5rem;
+      z-index: 20;
+      max-width: 680px;
+      margin: 0 auto 0.75rem auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      background-color: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 0.4rem 0;
+    }
+
+    .search-container {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background-color: rgba(30, 41, 59, 0.95);
+      padding: 0.35rem 0.5rem;
+      border-radius: 9999px;
+      border: 2px solid var(--border);
+    }
+
+    .search-container:focus-within {
+      border-color: var(--accent);
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 0;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      border-radius: 9999px;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .search-mode {
+      background-color: var(--card-bg);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 0.5rem 0.6rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .filter-actions {
+      max-width: 680px;
+      margin: 0 auto 1.25rem auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      padding: 0 0.5rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .filter-btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .mark-all-btn {
+      background: none;
+      border: 1px solid var(--mark-color);
+      color: var(--mark-color);
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .mark-all-btn:hover {
+      background-color: var(--mark-color);
+      color: #0f172a;
+    }
+
+    .unmark-all-btn {
+      background: none;
+      border: 1px solid var(--alert-expired);
+      color: var(--alert-expired);
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .unmark-all-btn:hover {
+      background-color: var(--alert-expired);
+      color: #ffffff;
+    }
+
+    .grid-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.65rem;
+      position: relative;
+      content-visibility: auto;
+      contain-intrinsic-size: 240px;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+    }
+
+    .card.expired {
+      background-color: var(--card-expired-bg);
+      border-color: var(--alert-expired);
+    }
+
+    .card.expiring-soon {
+      background-color: var(--card-warning-bg);
+      border-color: var(--alert-warning);
+    }
+
+    .card.marked {
+      background-color: var(--card-marked-bg) !important;
+      border-color: var(--mark-color) !important;
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .card-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .card-id {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .card-tab-badge {
+      display: inline-block;
+      width: fit-content;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      background-color: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+    }
+
+    .card-star-btn {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      min-width: 40px;
+      height: 40px;
+      padding: 0 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .card-star-btn:hover {
+      background-color: rgba(34, 197, 94, 0.3);
+      color: var(--mark-color);
+      border-color: var(--mark-color);
+    }
+
+    .card.marked .card-star-btn {
+      color: #0f172a;
+      background-color: var(--mark-color);
+      border-color: var(--mark-color);
+    }
+
+    .card-desc {
+      color: var(--text-main);
+      font-size: 0.88rem;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-fields-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.45rem 0.75rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      padding-top: 0.65rem;
+    }
+
+    .card-field-item {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .card-field-item.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .card-field-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .card-field-value {
+      color: var(--text-main);
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    /* Load More Button Container */
+    .load-more-container {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1.25rem 0;
+    }
+
+    .load-more-btn {
+      padding: 0.75rem 1.75rem;
+      background-color: var(--accent);
+      color: var(--bg-color);
+      border: none;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+    }
+
+    .load-more-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    /* Summary Card in Tab 3 */
+    .summary-box {
+      max-width: 720px;
+      margin: 0 auto;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .summary-box h4 {
+      color: var(--accent);
+      margin-bottom: 0.65rem;
+      font-size: 1rem;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      z-index: 1100;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      border-radius: 16px;
+      max-width: 580px;
+      width: 90%;
+      position: relative;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .close-btn:hover {
+      color: var(--text-main);
+    }
+
+    .modal-id {
+      font-size: 1.25rem;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    .modal-section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-top: 0.85rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .modal-desc {
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: var(--text-main);
+      white-space: pre-line;
+      background-color: rgba(15, 23, 42, 0.6);
+      padding: 0.85rem;
+      border-radius: 8px;
+    }
+
+    .modal-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.85rem;
+    }
+
+    .modal-detail-box {
+      background-color: rgba(15, 23, 42, 0.6);
+      padding: 0.75rem;
+      border-radius: 8px;
+    }
+
+    .modal-detail-box label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    .modal-detail-box div {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-main);
+      word-break: break-word;
+    }
+
+    .modal-detail-box a {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    .mark-btn {
+      margin-top: 1.25rem;
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: none;
+      background-color: #334155;
+      color: var(--text-main);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .mark-btn.is-marked {
+      background-color: var(--mark-color);
+      color: #0f172a;
+    }
+
+    /* WhatsApp Share Choice Modal */
+    .wa-choice-btn {
+      display: block;
+      width: 100%;
+      padding: 0.85rem 1rem;
+      margin-top: 0.75rem;
+      border-radius: 10px;
+      border: none;
+      background-color: var(--whatsapp-color);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-align: center;
+      transition: opacity 0.2s;
+    }
+    .wa-choice-btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Rigging Inventory</h1>
+    <p style="color: var(--text-muted)">Wire Slings &amp; Webbing Slings Catalog</p>
+  </header>
+
+  <div id="statusBanner" class="status-banner"></div>
+
+  <!-- Fixed Bottom Navigation Tab Bar -->
+  <nav class="nav-tabs">
+    <button class="nav-tab-btn active" onclick="switchTab(1)">
+      <span>📦</span> Inventory
+    </button>
+    <button class="nav-tab-btn" onclick="switchTab(2)">
+      <span>⭐</span> Marked <span id="markedCountBadge">0</span>
+    </button>
+    <button class="nav-tab-btn" onclick="switchTab(3)">
+      <span>📁</span> Files &amp; Import
+    </button>
+  </nav>
+
+  <!-- TAB 1: INVENTORY CATALOG -->
+  <div id="tab1" class="tab-content active">
+    <div class="sticky-controls">
+      <div style="display: flex; justify-content: center;">
+        <select id="tabFilterSelect" class="tab-select" style="max-width: 100%; padding: 0.6rem 1rem;">
+          <option value="all">📂 All Tabs (Wire &amp; Webbing)</option>
+          <option value="wire slings">🔗 Wire Slings</option>
+          <option value="webbing slings">🎗️ Webbing Slings</option>
+        </select>
+      </div>
+
+      <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search SN, ID, description, SWL, location, or cert...">
+        <select id="searchMode" class="search-mode">
+          <option value="auto">⚡ Smart Auto</option>
+          <option value="id"># ID / SN Only</option>
+          <option value="desc">📝 Description / Loc / Cert</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="filter-actions">
+      <div id="filterCount"></div>
+      <div class="filter-btn-group">
+        <button id="markAllFilteredBtn" class="mark-all-btn" style="display: none;">⭐ Mark All</button>
+        <button id="unmarkAllFilteredBtn" class="unmark-all-btn" style="display: none;">❌ Unmark All</button>
+      </div>
+    </div>
+
+    <main class="grid-container" id="gridInventory"></main>
+  </div>
+
+  <!-- TAB 2: MARKED ITEMS -->
+  <div id="tab2" class="tab-content">
+    <div class="action-panel">
+      <h3>Marked Rigging Items</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Review marked slings, download as Excel, copy formatted text, or share via WhatsApp.</p>
+
+      <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center; flex-wrap: wrap;">
+        <button id="downloadLogBtn" class="log-btn" style="max-width: 190px;">
+          📥 Download Excel Log
+        </button>
+
+        <button id="whatsappShareBtn" class="whatsapp-btn" style="max-width: 195px;">
+          💬 Share via WhatsApp
+        </button>
+
+        <button id="copyTextBtn" class="copy-btn" style="max-width: 185px;">
+          📋 Copy Text Table
+        </button>
+
+        <button id="unmarkAllTab2Btn" class="danger-btn" style="max-width: 165px;">
+          🧹 Unmark All
+        </button>
+      </div>
+    </div>
+
+    <main class="grid-container" id="gridMarked"></main>
+  </div>
+
+  <!-- TAB 3: FILES & IMPORT -->
+  <div id="tab3" class="tab-content">
+    <div class="action-panel">
+      <h3>Files &amp; Import Management</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">
+        Import an Excel workbook (<code>.xlsx</code> / <code>.xls</code>) containing <b>Wire slings</b> and <b>Webbing slings</b> tabs. Loading a new file overwrites existing data.
+      </p>
+
+      <label for="excelFileInput" class="custom-file-upload">
+        📊 Load / Overwrite Excel File (.xlsx)
+      </label>
+      <input type="file" id="excelFileInput" accept=".xlsx, .xls">
+
+      <button id="clearDataBtn" class="danger-btn">
+        🗑️ Clear Loaded Data
+      </button>
+    </div>
+
+    <div class="summary-box">
+      <h4>Loaded Workbook Summary</h4>
+      <div id="loadedSummaryText" style="font-size: 0.9rem; color: var(--text-muted);">
+        No Excel file currently loaded.
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeModal">&times;</button>
+      <div class="modal-id" id="modalId"></div>
+      <div id="modalTabBadge" class="card-tab-badge" style="margin-bottom: 0.5rem;"></div>
+      
+      <div class="modal-section-title">Description</div>
+      <div class="modal-desc" id="modalDesc"></div>
+
+      <div class="modal-details-grid" id="modalDetailsGrid"></div>
+
+      <button id="markBtn" class="mark-btn">⭐ Mark Item for Log</button>
+    </div>
+  </div>
+
+  <!-- WhatsApp Choice Modal -->
+  <div class="modal-overlay" id="whatsappModal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <button class="close-btn" id="closeWhatsappModal">&times;</button>
+      <div class="modal-id" style="margin-bottom: 0.25rem;">Share via WhatsApp</div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Choose how you want to share your marked log:</p>
+      
+      <button id="waShareTextBtn" class="wa-choice-btn">
+        💬 1st Option: Share Clean Text
+      </button>
+
+      <button id="waShareFileBtn" class="wa-choice-btn" style="background-color: #0284c7;">
+        📎 2nd Option: Share Excel File (.xlsx)
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let items = [];
+    let markedItems = []; // Stores unique item keys (_key)
+    let currentFilteredItems = [];
+    let activeModalItem = null;
+    let currentTab = 1;
+
+    // Pagination & Performance Constants
+    const BATCH_SIZE = 50;
+    let inventoryRenderLimit = BATCH_SIZE;
+    let markedRenderLimit = BATCH_SIZE;
+    let searchDebounceTimer = null;
+
+    const ALLOWED_TABS = ['wire slings', 'webbing slings'];
+
+    const fileInput = document.getElementById('excelFileInput');
+    const clearDataBtn = document.getElementById('clearDataBtn');
+    const loadedSummaryText = document.getElementById('loadedSummaryText');
+    const markedCountBadge = document.getElementById('markedCountBadge');
+    const tabFilterSelect = document.getElementById('tabFilterSelect');
+    const searchInput = document.getElementById('searchInput');
+    const searchMode = document.getElementById('searchMode');
+    const filterCountEl = document.getElementById('filterCount');
+    const markAllFilteredBtn = document.getElementById('markAllFilteredBtn');
+    const unmarkAllFilteredBtn = document.getElementById('unmarkAllFilteredBtn');
+    const unmarkAllTab2Btn = document.getElementById('unmarkAllTab2Btn');
+    const gridInventory = document.getElementById('gridInventory');
+    const gridMarked = document.getElementById('gridMarked');
+    const modal = document.getElementById('modal');
+    const modalId = document.getElementById('modalId');
+    const modalTabBadge = document.getElementById('modalTabBadge');
+    const modalDesc = document.getElementById('modalDesc');
+    const modalDetailsGrid = document.getElementById('modalDetailsGrid');
+    const closeModal = document.getElementById('closeModal');
+    const markBtn = document.getElementById('markBtn');
+    const downloadLogBtn = document.getElementById('downloadLogBtn');
+    const whatsappShareBtn = document.getElementById('whatsappShareBtn');
+    const copyTextBtn = document.getElementById('copyTextBtn');
+    const statusBanner = document.getElementById('statusBanner');
+
+    const whatsappModal = document.getElementById('whatsappModal');
+    const closeWhatsappModal = document.getElementById('closeWhatsappModal');
+    const waShareTextBtn = document.getElementById('waShareTextBtn');
+    const waShareFileBtn = document.getElementById('waShareFileBtn');
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedItems = localStorage.getItem('rigging_excel_items');
+      const savedFileName = localStorage.getItem('rigging_excel_filename');
+      const savedMarked = localStorage.getItem('rigging_marked_keys');
+
+      if (savedMarked) {
+        try {
+          markedItems = JSON.parse(savedMarked) || [];
+        } catch (e) {}
+      }
+
+      if (savedItems) {
+        try {
+          items = JSON.parse(savedItems) || [];
+          updateMarkedBadge();
+          updateSummaryBox(savedFileName);
+          filterData(true);
+          if (items.length > 0) {
+            showStatusBanner(`Restored database: <strong>${savedFileName || 'Rigging Workbook'}</strong> (${items.length} items)`);
+          }
+        } catch (e) {
+          localStorage.removeItem('rigging_excel_items');
+        }
+      }
+    });
+
+    function switchTab(tabNum) {
+      currentTab = tabNum;
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab-btn').forEach(el => el.classList.remove('active'));
+
+      document.getElementById(`tab${tabNum}`).classList.add('active');
+      document.querySelectorAll('.nav-tab-btn')[tabNum - 1].classList.add('active');
+
+      if (tabNum === 1) {
+        filterData(false);
+      } else if (tabNum === 2) {
+        renderMarkedTab(false);
+      } else if (tabNum === 3) {
+        updateSummaryBox(localStorage.getItem('rigging_excel_filename'));
+      }
+    }
+
+    function saveMarkedToStorage() {
+      try {
+        localStorage.setItem('rigging_marked_keys', JSON.stringify(markedItems));
+      } catch (e) {}
+      updateMarkedBadge();
+    }
+
+    function updateMarkedBadge() {
+      markedCountBadge.textContent = markedItems.length;
+    }
+
+    function updateSummaryBox(fileName) {
+      if (!items || items.length === 0) {
+        loadedSummaryText.innerHTML = 'No Excel file currently loaded.';
+        return;
+      }
+      const wireCount = items.filter(i => i.tabCategory === 'wire slings').length;
+      const webbingCount = items.filter(i => i.tabCategory === 'webbing slings').length;
+
+      loadedSummaryText.innerHTML = `
+        <ul style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.35rem; color: var(--text-main);">
+          <li><b>File Name:</b> ${fileName || 'Loaded Workbook'}</li>
+          <li><b>Wire slings:</b> ${wireCount} items</li>
+          <li><b>Webbing slings:</b> ${webbingCount} items</li>
+          <li><b>Total Loaded:</b> ${items.length} items</li>
+        </ul>
+      `;
+    }
+
+    fileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (items.length > 0) {
+        if (!confirm(`Loading "${file.name}" will overwrite your currently loaded inventory (${items.length} items). Continue?`)) {
+          fileInput.value = '';
+          return;
+        }
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: false });
+
+          const parsed = [];
+          const importedSheetNames = [];
+
+          workbook.SheetNames.forEach(sheetName => {
+            const cleanSheet = sheetName.trim().toLowerCase();
+            if (ALLOWED_TABS.includes(cleanSheet)) {
+              importedSheetNames.push(sheetName.trim());
+              const worksheet = workbook.Sheets[sheetName];
+              const sheetItems = parseWorksheet(worksheet, sheetName.trim(), cleanSheet);
+              parsed.push(...sheetItems);
+            }
+          });
+
+          if (importedSheetNames.length === 0) {
+            alert('No "Wire slings" or "Webbing slings" tabs were found in this Excel file.');
+            return;
+          }
+
+          items = parsed;
+          markedItems = [];
+          inventoryRenderLimit = BATCH_SIZE;
+          markedRenderLimit = BATCH_SIZE;
+
+          try {
+            localStorage.setItem('rigging_excel_items', JSON.stringify(items));
+            localStorage.setItem('rigging_excel_filename', file.name);
+            localStorage.removeItem('rigging_marked_keys');
+          } catch (err) {}
+
+          updateMarkedBadge();
+          updateSummaryBox(file.name);
+          switchTab(1);
+          showStatusBanner(
+            `Successfully loaded <strong>${file.name}</strong> — Tabs: <strong>${importedSheetNames.join(', ')}</strong> (${items.length} items)`
+          );
+        } catch (err) {
+          alert('Error reading Excel file: ' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      fileInput.value = '';
+    });
+
+    clearDataBtn.addEventListener('click', () => {
+      if (items.length === 0) {
+        alert('No loaded data to clear.');
+        return;
+      }
+      if (confirm('Are you sure you want to clear all loaded inventory and marked items?')) {
+        items = [];
+        markedItems = [];
+        inventoryRenderLimit = BATCH_SIZE;
+        markedRenderLimit = BATCH_SIZE;
+        localStorage.removeItem('rigging_excel_items');
+        localStorage.removeItem('rigging_excel_filename');
+        localStorage.removeItem('rigging_marked_keys');
+        updateMarkedBadge();
+        updateSummaryBox(null);
+        filterData(true);
+        renderMarkedTab(true);
+        showStatusBanner('All loaded rigging inventory data has been cleared.');
+      }
+    });
+
+    function showStatusBanner(msg) {
+      statusBanner.innerHTML = msg;
+      statusBanner.style.display = 'block';
+      setTimeout(() => { statusBanner.style.display = 'none'; }, 5000);
+    }
+
+    function normalizeHeader(str) {
+      return String(str || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+    }
+
+    function formatExcelDate(val) {
+      if (val === undefined || val === null || val === '') return '';
+      if (typeof val === 'number' && val > 20000 && val < 90000) {
+        const parsed = XLSX.SSF.parse_date_code(val);
+        if (parsed) {
+          const dd = String(parsed.d).padStart(2, '0');
+          const mm = String(parsed.m).padStart(2, '0');
+          const yyyy = parsed.y;
+          return `${dd}-${mm}-${yyyy}`;
+        }
+      }
+      return String(val).trim();
+    }
+
+    function parseDateObject(dateStr) {
+      if (!dateStr) return null;
+      const clean = String(dateStr).trim();
+      const dmy = clean.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+      if (dmy) {
+        return new Date(`${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}T00:00:00`);
+      }
+      const ymd = clean.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+      if (ymd) {
+        return new Date(`${ymd[1]}-${ymd[2].padStart(2, '0')}-${ymd[3].padStart(2, '0')}T00:00:00`);
+      }
+      const parsed = new Date(clean);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function parseWorksheet(worksheet, sheetName, tabCategory) {
+      const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: true });
+      if (!rows || rows.length === 0) return [];
+
+      let headerRowIdx = 0;
+      for (let r = 0; r < Math.min(rows.length, 10); r++) {
+        const rowNorm = rows[r].map(normalizeHeader);
+        if (
+          rowNorm.includes('sn') ||
+          rowNorm.includes('id') ||
+          rowNorm.includes('description') ||
+          rowNorm.some(h => h.includes('swl'))
+        ) {
+          headerRowIdx = r;
+          break;
+        }
+      }
+
+      const headers = rows[headerRowIdx].map(normalizeHeader);
+
+      const findColIndex = (candidates) => {
+        for (const c of candidates) {
+          const idx = headers.findIndex(h => h === c);
+          if (idx !== -1) return idx;
+        }
+        for (const c of candidates) {
+          const idx = headers.findIndex(h => h.includes(c));
+          if (idx !== -1) return idx;
+        }
+        return -1;
+      };
+
+      const colSn = findColIndex(['sn', 's/n', 'serial', 'serial no']);
+      const colDesc = findColIndex(['description', 'desc']);
+      const colSwl = findColIndex(['swl (ton)', 'swl(ton)', 'swl']);
+      const colId = findColIndex(['id', 'item id', 'tag id']);
+      const colCert = findColIndex(['certificates', 'certificate', 'cert']);
+      const colCertDate = findColIndex(['date of certificate', 'certificate date', 'cert date']);
+      const colNextExam = findColIndex(['next examination date', 'next exam date', 'examination date']);
+      const colLocation = findColIndex(['current location', 'location', 'loc']);
+
+      const result = [];
+
+      for (let r = headerRowIdx + 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row || row.every(cell => String(cell).trim() === '')) continue;
+
+        const getCell = (idx) => (idx !== -1 && row[idx] !== undefined ? String(row[idx]).trim() : '');
+        const getDateCell = (idx) => (idx !== -1 && row[idx] !== undefined ? formatExcelDate(row[idx]) : '');
+
+        let certUrl = '';
+        if (colCert !== -1) {
+          const cellAddr = XLSX.utils.encode_cell({ c: colCert, r: r });
+          const cellObj = worksheet[cellAddr];
+          if (cellObj && cellObj.l && cellObj.l.Target) {
+            certUrl = cellObj.l.Target;
+          }
+        }
+
+        const sn = getCell(colSn);
+        const description = getCell(colDesc);
+        const swl = getCell(colSwl);
+        const id = getCell(colId);
+        const certificates = getCell(colCert);
+        const dateOfCertificate = getDateCell(colCertDate);
+        const nextExaminationDate = getDateCell(colNextExam);
+        const currentLocation = getCell(colLocation);
+
+        if (!sn && !id && !description && !certificates) continue;
+
+        // Precompute timestamp & lowercase search index once during import for lag-free filtering
+        const examDateObj = parseDateObject(nextExaminationDate);
+        const examTimestamp = examDateObj ? examDateObj.getTime() : null;
+        const _searchBlob = `${id} ${sn} ${description} ${swl} ${certificates} ${dateOfCertificate} ${nextExaminationDate} ${currentLocation}`.toLowerCase();
+
+        result.push({
+          _key: `${tabCategory}_${r}_${id || sn || r}`,
+          _examTimestamp: examTimestamp,
+          _searchBlob: _searchBlob,
+          tabName: sheetName,
+          tabCategory: tabCategory,
+          sn,
+          description,
+          swl,
+          id,
+          certificates,
+          certUrl,
+          dateOfCertificate,
+          nextExaminationDate,
+          currentLocation
+        });
+      }
+
+      return result;
+    }
+
+    function createCardElement(item, todayTime, thirtyDaysTime) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      
+      if (item._examTimestamp !== null) {
+        if (item._examTimestamp < todayTime) {
+          card.classList.add('expired');
+        } else if (item._examTimestamp <= thirtyDaysTime) {
+          card.classList.add('expiring-soon');
+        }
+      }
+
+      const markIndex = markedItems.indexOf(item._key);
+      const isMarked = markIndex > -1;
+      if (isMarked) {
+        card.classList.add('marked');
+      }
+      
+      card.innerHTML = `
+        <div>
+          <div class="card-header-row">
+            <div class="card-title-group">
+              <div class="card-id">SN: ${item.sn || '-'} &nbsp;|&nbsp; ID: ${item.id || '-'}</div>
+              <span class="card-tab-badge">${item.tabName}</span>
+            </div>
+            <button class="card-star-btn" title="Toggle Mark" data-key="${item._key}">
+              ${isMarked ? (markIndex + 1) : '☆'}
+            </button>
+          </div>
+          <div class="card-desc" style="margin-top: 0.45rem;">${item.description || 'No description'}</div>
+        </div>
+
+        <div class="card-fields-grid">
+          <div class="card-field-item">
+            <span class="card-field-label">SWL (Ton)</span>
+            <span class="card-field-value">${item.swl || '-'}</span>
+          </div>
+          <div class="card-field-item">
+            <span class="card-field-label">Certificates</span>
+            <span class="card-field-value">${item.certificates || '-'}</span>
+          </div>
+          <div class="card-field-item">
+            <span class="card-field-label">Date of Certificate</span>
+            <span class="card-field-value">${item.dateOfCertificate || '-'}</span>
+          </div>
+          <div class="card-field-item">
+            <span class="card-field-label">Next Examination Date</span>
+            <span class="card-field-value">${item.nextExaminationDate || '-'}</span>
+          </div>
+          <div class="card-field-item full-width">
+            <span class="card-field-label">Current Location</span>
+            <span class="card-field-value">${item.currentLocation || '-'}</span>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.card-star-btn')) return;
+        openModal(item);
+      });
+
+      const starBtn = card.querySelector('.card-star-btn');
+      starBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMark(item._key);
+      });
+
+      return card;
+    }
+
+    function renderGrid(data, containerEl, emptyMessage, renderLimit, onLoadMore) {
+      containerEl.innerHTML = '';
+      if (!data || data.length === 0) {
+        containerEl.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">${emptyMessage}</div>`;
+        return;
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayTime = today.getTime();
+      const thirtyDaysTime = todayTime + (30 * 24 * 60 * 60 * 1000);
+
+      const visibleSlice = data.slice(0, renderLimit);
+      const fragment = document.createDocumentFragment();
+
+      visibleSlice.forEach(item => {
+        fragment.appendChild(createCardElement(item, todayTime, thirtyDaysTime));
+      });
+
+      if (data.length > renderLimit) {
+        const remaining = data.length - renderLimit;
+        const nextBatch = Math.min(BATCH_SIZE, remaining);
+
+        const loadMoreWrapper = document.createElement('div');
+        loadMoreWrapper.className = 'load-more-container';
+        loadMoreWrapper.innerHTML = `
+          <div style="font-size: 0.82rem; color: var(--text-muted);">
+            Showing <b>${visibleSlice.length}</b> of <b>${data.length}</b> items
+          </div>
+          <button type="button" class="load-more-btn">
+            ⬇️ View More (+${nextBatch} of ${remaining} remaining)
+          </button>
+        `;
+
+        loadMoreWrapper.querySelector('.load-more-btn').addEventListener('click', onLoadMore);
+        fragment.appendChild(loadMoreWrapper);
+      }
+
+      containerEl.appendChild(fragment);
+    }
+
+    function toggleMark(key) {
+      const index = markedItems.indexOf(key);
+      if (index > -1) {
+        markedItems.splice(index, 1);
+      } else {
+        markedItems.push(key);
+      }
+      saveMarkedToStorage();
+      updateMarkButtonState();
+      if (currentTab === 1) filterData(false);
+      if (currentTab === 2) renderMarkedTab(false);
+    }
+
+    function renderMarkedTab(resetLimit = false) {
+      if (resetLimit) markedRenderLimit = BATCH_SIZE;
+      const selected = getMarkedItemObjects();
+      renderGrid(
+        selected,
+        gridMarked,
+        'No marked items yet. Tap the star button on any item in the Inventory tab to mark it.',
+        markedRenderLimit,
+        () => {
+          markedRenderLimit += BATCH_SIZE;
+          renderMarkedTab(false);
+        }
+      );
+    }
+
+    function openModal(item) {
+      activeModalItem = item;
+      modalId.textContent = `SN: ${item.sn || '-'} | ID: ${item.id || '-'}`;
+      modalTabBadge.textContent = item.tabName;
+      modalDesc.textContent = item.description || '-';
+
+      let certDisplayHtml = item.certificates || '-';
+      let url = item.certUrl;
+      if (!url && item.certificates && (item.certificates.startsWith('http://') || item.certificates.startsWith('https://') || item.certificates.startsWith('www.'))) {
+        url = item.certificates.startsWith('www.') ? 'https://' + item.certificates : item.certificates;
+      }
+      if (url) {
+        const cleanUrl = url.startsWith('www.') ? 'https://' + url : url;
+        certDisplayHtml = `<a href="${cleanUrl}" target="_blank" rel="noopener">🔗 ${item.certificates || cleanUrl}</a>`;
+      }
+
+      const fields = [
+        { label: 'SN', value: item.sn || '-' },
+        { label: 'ID', value: item.id || '-' },
+        { label: 'SWL (Ton)', value: item.swl || '-' },
+        { label: 'Certificates', value: certDisplayHtml },
+        { label: 'Date of Certificate', value: item.dateOfCertificate || '-' },
+        { label: 'Next Examination Date', value: item.nextExaminationDate || '-' },
+        { label: 'Current Location', value: item.currentLocation || '-', full: true }
+      ];
+
+      modalDetailsGrid.innerHTML = '';
+      fields.forEach(f => {
+        const box = document.createElement('div');
+        box.className = 'modal-detail-box';
+        if (f.full) box.style.gridColumn = '1 / -1';
+        box.innerHTML = `<label>${f.label}</label><div>${f.value}</div>`;
+        modalDetailsGrid.appendChild(box);
+      });
+
+      updateMarkButtonState();
+      modal.classList.add('active');
+    }
+
+    function updateMarkButtonState() {
+      if (!activeModalItem) return;
+      const index = markedItems.indexOf(activeModalItem._key);
+      if (index > -1) {
+        markBtn.textContent = `✓ Marked (#${index + 1}) (Click to Unmark)`;
+        markBtn.classList.add('is-marked');
+      } else {
+        markBtn.textContent = "⭐ Mark Item for Log";
+        markBtn.classList.remove('is-marked');
+      }
+    }
+
+    markBtn.addEventListener('click', () => {
+      if (!activeModalItem) return;
+      toggleMark(activeModalItem._key);
+    });
+
+    closeModal.addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+
+    function filterData(resetLimit = true) {
+      if (resetLimit) inventoryRenderLimit = BATCH_SIZE;
+
+      let term = searchInput.value.toLowerCase().trim();
+      const mode = searchMode.value;
+      const selectedTab = tabFilterSelect.value;
+
+      term = term.replace(/^#|^id\s*|^sn\s*/i, '');
+
+      let baseItems = items;
+      if (selectedTab !== 'all') {
+        baseItems = items.filter(item => item.tabCategory === selectedTab);
+      }
+
+      let filtered = [];
+
+      if (!term) {
+        filtered = baseItems;
+      } else if (mode === 'id') {
+        filtered = baseItems.filter(item =>
+          String(item.id).toLowerCase().includes(term) ||
+          String(item.sn).toLowerCase().includes(term)
+        );
+      } else if (mode === 'desc') {
+        filtered = baseItems.filter(item =>
+          String(item.description).toLowerCase().includes(term) ||
+          String(item.currentLocation).toLowerCase().includes(term) ||
+          String(item.certificates).toLowerCase().includes(term)
+        );
+      } else {
+        const exactIdMatches = baseItems.filter(item =>
+          String(item.id).toLowerCase() === term ||
+          String(item.sn).toLowerCase() === term
+        );
+        if (exactIdMatches.length > 0) {
+          filtered = exactIdMatches;
+        } else {
+          filtered = baseItems.filter(item =>
+            item._searchBlob
+              ? item._searchBlob.includes(term)
+              : (
+                  String(item.id).toLowerCase().includes(term) ||
+                  String(item.sn).toLowerCase().includes(term) ||
+                  String(item.description).toLowerCase().includes(term) ||
+                  String(item.swl).toLowerCase().includes(term) ||
+                  String(item.certificates).toLowerCase().includes(term) ||
+                  String(item.dateOfCertificate).toLowerCase().includes(term) ||
+                  String(item.nextExaminationDate).toLowerCase().includes(term) ||
+                  String(item.currentLocation).toLowerCase().includes(term)
+                )
+          );
+        }
+      }
+
+      currentFilteredItems = filtered;
+      const visibleCount = Math.min(filtered.length, inventoryRenderLimit);
+
+      if (term || selectedTab !== 'all') {
+        filterCountEl.textContent = `Showing ${visibleCount} of ${filtered.length} matching item(s) (Total: ${items.length})`;
+        markAllFilteredBtn.style.display = 'inline-block';
+        unmarkAllFilteredBtn.style.display = 'inline-block';
+      } else {
+        filterCountEl.textContent = items.length > 0 ? `Showing ${visibleCount} of ${items.length} items` : '';
+        markAllFilteredBtn.style.display = 'none';
+        unmarkAllFilteredBtn.style.display = 'none';
+      }
+
+      renderGrid(
+        filtered,
+        gridInventory,
+        'No rigging items found. Go to the "Files & Import" tab to load an Excel file with "Wire slings" or "Webbing slings" tabs.',
+        inventoryRenderLimit,
+        () => {
+          inventoryRenderLimit += BATCH_SIZE;
+          filterData(false);
+        }
+      );
+    }
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        filterData(true);
+      }, 250);
+    });
+
+    searchMode.addEventListener('change', () => filterData(true));
+    tabFilterSelect.addEventListener('change', () => filterData(true));
+
+    markAllFilteredBtn.addEventListener('click', () => {
+      if (currentFilteredItems.length === 0) return;
+      currentFilteredItems.forEach(item => {
+        if (!markedItems.includes(item._key)) {
+          markedItems.push(item._key);
+        }
+      });
+      saveMarkedToStorage();
+      filterData(false);
+    });
+
+    unmarkAllFilteredBtn.addEventListener('click', () => {
+      if (currentFilteredItems.length === 0) return;
+      currentFilteredItems.forEach(item => {
+        const index = markedItems.indexOf(item._key);
+        if (index > -1) {
+          markedItems.splice(index, 1);
+        }
+      });
+      saveMarkedToStorage();
+      filterData(false);
+    });
+
+    unmarkAllTab2Btn.addEventListener('click', () => {
+      if (markedItems.length === 0) {
+        alert('No items are currently marked.');
+        return;
+      }
+      if (confirm('Are you sure you want to unmark all items?')) {
+        markedItems = [];
+        saveMarkedToStorage();
+        renderMarkedTab(true);
+      }
+    });
+
+    function getMarkedItemObjects() {
+      const itemMap = new Map(items.map(i => [i._key, i]));
+      return markedItems.map(key => itemMap.get(key)).filter(Boolean);
+    }
+
+    function buildExportWorkbook() {
+      const selected = getMarkedItemObjects();
+      const rows = selected.map(item => ({
+        "Tab": item.tabName,
+        "SN": item.sn || "",
+        "Description": item.description || "",
+        "SWL (Ton)": item.swl || "",
+        "ID": item.id || "",
+        "Certificates": item.certificates || "",
+        "Date of Certificate": item.dateOfCertificate || "",
+        "Next Examination date": item.nextExaminationDate || "",
+        "Current location": item.currentLocation || ""
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "Marked Rigging Log");
+      return wb;
+    }
+
+    function generateFormattedTextTable() {
+      const selected = getMarkedItemObjects();
+      let textLines = ["*Rigging Inventory Marked Log* 📋\n"];
+      selected.forEach((item, index) => {
+        textLines.push(
+          `${index + 1}. SN: *${item.sn || 'N/A'}* | ID: *${item.id || 'N/A'}* | ${item.description || 'N/A'} | SWL (Ton): ${item.swl || 'N/A'} | Cert: ${item.certificates || 'N/A'} | Cert Date: ${item.dateOfCertificate || 'N/A'} | Next Exam: ${item.nextExaminationDate || 'N/A'} | Location: ${item.currentLocation || 'N/A'}`
+        );
+      });
+      return textLines.join("\n");
+    }
+
+    // Download Excel Log Button
+    downloadLogBtn.addEventListener('click', () => {
+      if (markedItems.length === 0) {
+        alert("No items have been marked yet!");
+        return;
+      }
+
+      const wb = buildExportWorkbook();
+      const dateStr = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `Marked_Rigging_Log_${dateStr}.xlsx`);
+    });
+
+    // Open WhatsApp Choice Modal
+    whatsappShareBtn.addEventListener('click', () => {
+      if (markedItems.length === 0) {
+        alert("No items have been marked yet!");
+        return;
+      }
+      whatsappModal.classList.add('active');
+    });
+
+    closeWhatsappModal.addEventListener('click', () => whatsappModal.classList.remove('active'));
+    whatsappModal.addEventListener('click', (e) => {
+      if (e.target === whatsappModal) whatsappModal.classList.remove('active');
+    });
+
+    // Option 1: Share Clean Text via WhatsApp
+    waShareTextBtn.addEventListener('click', () => {
+      whatsappModal.classList.remove('active');
+      const finalMessage = generateFormattedTextTable();
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(finalMessage)}`;
+      window.open(whatsappUrl, '_blank');
+    });
+
+    // Option 2: Share Excel File via Native Share Sheet
+    waShareFileBtn.addEventListener('click', async () => {
+      whatsappModal.classList.remove('active');
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const fileName = `Marked_Rigging_Log_${dateStr}.xlsx`;
+      const wb = buildExportWorkbook();
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const file = new File(
+        [wbout],
+        fileName,
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'Rigging Inventory Log',
+            text: 'Here is the marked rigging inventory log file:',
+            files: [file]
+          });
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      alert("Direct file sharing is not supported on this browser/device. The Excel file has been downloaded so you can attach it manually in WhatsApp!");
+      XLSX.writeFile(wb, fileName);
+    });
+
+    // Copy Text Table Button
+    copyTextBtn.addEventListener('click', () => {
+      if (markedItems.length === 0) {
+        alert("No items have been marked yet!");
+        return;
+      }
+
+      const textTable = generateFormattedTextTable().replace(/\*/g, '');
+      navigator.clipboard.writeText(textTable).then(() => {
+        alert("Cleanly formatted table text copied to clipboard!");
+      }).catch(() => {
+        alert("Failed to copy text.");
+      });
+    });
+  </script>
+</body>
+</html>
