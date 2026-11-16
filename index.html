@@ -763,7 +763,7 @@
       </button>
 
       <button id="waShareFileBtn" class="wa-choice-btn" style="background-color: #0284c7;">
-        📎 2nd Option: Share Excel File
+        📎 2nd Option: Share CSV/Excel File
       </button>
     </div>
   </div>
@@ -1369,7 +1369,13 @@
       const dynamicQtyHeaders = new Set();
       selectedItemsList.forEach(item => {
         if (item.allQtyCols) {
-          Object.keys(item.allQtyCols).forEach(colName => dynamicQtyHeaders.add(colName));
+          Object.keys(item.allQtyCols).forEach(colName => {
+            const lower = colName.trim().toLowerCase();
+            // Exclude Physical QTY and Physical Qty. Ea.Jt. from dynamic list since they are placed explicitly right after
+            if (lower !== 'physical qty' && lower !== 'phyical qty' && !lower.includes('ea') && !lower.includes('jt')) {
+              dynamicQtyHeaders.add(colName);
+            }
+          });
         }
       });
 
@@ -1386,14 +1392,20 @@
           "Description": i.description || ""
         };
 
+        // Add Quantity column(s)
         dynamicQtyHeaders.forEach(qtyHeader => {
           if (i.allQtyCols && i.allQtyCols[qtyHeader] !== undefined) {
             rowObj[qtyHeader] = i.allQtyCols[qtyHeader];
           } else {
-            rowObj[qtyHeader] = "";
+            rowObj[qtyHeader] = i.quantity || i.sapQty || "";
           }
         });
 
+        // Explicitly add Physical QTY and Physical Qty. Ea.Jt. right after Quantity
+        rowObj["Physical QTY"] = i.physicalQty || "";
+        rowObj["Physical Qty. Ea.Jt."] = i.physicalQtyEaJt || "";
+
+        // Remaining requested columns
         rowObj["Plant"] = i.plant || "";
         rowObj["Storage Location"] = i.storageLocation || i.location || "";
         rowObj["Tab Name"] = i._tabName || "";
@@ -1441,12 +1453,12 @@
         }
         const qtyStr = qtyParts.length > 0 ? qtyParts.join(', ') : (item.quantity || item.physicalQty || '0');
 
-        textLines.push(`${idx + 1}. SN: *${sn}* | Code: *${code}* | ${desc} | Qty: ${qtyStr} | Plant: ${item.plant || 'N/A'} | Loc: ${loc} | Tab: ${tab}`);
+        textLines.push(`${idx + 1}. SN: *${sn}* | Code: *${code}* | ${desc} | Qty: ${qtyStr} | Physical QTY: ${item.physicalQty || 'N/A'} | Physical Qty. Ea.Jt.: ${item.physicalQtyEaJt || 'N/A'} | Plant: ${item.plant || 'N/A'} | Loc: ${loc} | Tab: ${tab}`);
       });
       return textLines.join("\n");
     }
 
-    // Direct Excel Download Button
+    // Direct Excel (.xlsx) Download Button
     exportSelectedBtn.addEventListener('click', () => {
       const selectedItemsList = getSelectedItemsList();
       if (selectedItemsList.length === 0) {
@@ -1483,26 +1495,23 @@
       window.open(whatsappUrl, '_blank');
     });
 
-    // Option 2: Share Excel File directly via Native Share Sheet (like rigging.html)
+    // Option 2: Share CSV/Excel File directly via Native Share Sheet
     waShareFileBtn.addEventListener('click', async () => {
       whatsappModal.classList.remove('active');
       const selectedItemsList = getSelectedItemsList();
       const wb = buildExportWorkbook(selectedItemsList);
       const dateStr = new Date().toISOString().slice(0, 10);
-      const fileName = `Selected_Inventory_${dateStr}.xlsx`;
+      const fileName = `Selected_Inventory_${dateStr}.csv`;
 
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      const file = new File(
-        [wbout],
-        fileName,
-        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-      );
+      const ws = wb.Sheets["Exported Inventory"];
+      const csvContent = "\uFEFF" + XLSX.utils.sheet_to_csv(ws);
+      const file = new File([csvContent], fileName, { type: 'text/csv' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
             title: 'Inventory Export',
-            text: 'Here is the marked inventory Excel file:',
+            text: 'Here is the marked inventory file:',
             files: [file]
           });
           return;
@@ -1511,9 +1520,14 @@
         }
       }
 
-      // Fallback if file sharing is not supported by the browser/device
-      alert("Direct file sharing is not supported on this browser/device. We have downloaded the Excel file for you instead—you can now attach it manually in WhatsApp!");
-      XLSX.writeFile(wb, fileName);
+      // Fallback if direct file sharing is not supported
+      alert("Direct file sharing is not supported on this browser/device. We have downloaded the CSV file for you instead—you can now attach it manually in WhatsApp!");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(link.href);
     });
 
     function filterData() {
