@@ -8,11 +8,11 @@
 <!-- Mobile App Capabilities -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Inventory Catalog">
+<meta name="apple-mobile-web-app-title" content="Damietta yard inventory">
 
 <!-- Web App Manifest for Android & Chrome -->
 <link rel="manifest" href="data:application/manifest+json,{
-  \"name\": \"Inventory Management\",
+  \"name\": \"Damietta yard inventory\",
   \"short_name\": \"Inventory\",
   \"start_url\": \"/\",
   \"display\": \"standalone\",
@@ -34,7 +34,7 @@
 }">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventory Catalog</title>
+  <title>Damietta yard inventory</title>
   
   <!-- SheetJS Library with Cell Comments Support -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -184,7 +184,7 @@
 
     /* Controls & Buttons */
     .action-panel {
-      max-width: 650px;
+      max-width: 720px;
       margin: 0 auto 1.5rem auto;
       background-color: var(--card-bg);
       border: 1px solid var(--border);
@@ -198,7 +198,7 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
-    .custom-file-upload, .qr-btn, .csv-select, .remove-btn, .export-btn, .whatsapp-btn, .action-btn {
+    .custom-file-upload, .qr-btn, .csv-select, .remove-btn, .export-btn, .csv-export-btn, .whatsapp-btn, .action-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -217,7 +217,7 @@
       text-align: center;
     }
 
-    .qr-btn, .csv-select, .export-btn, .whatsapp-btn, .action-btn {
+    .qr-btn, .csv-select, .export-btn, .csv-export-btn, .whatsapp-btn, .action-btn {
       border-style: solid;
       border-color: var(--border);
     }
@@ -230,6 +230,17 @@
     .export-btn:hover {
       background-color: var(--success);
       color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .csv-export-btn {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .csv-export-btn:hover {
+      background-color: var(--accent);
+      color: var(--bg-color);
       transform: translateY(-2px);
     }
 
@@ -711,7 +722,7 @@
 <body>
 
   <header>
-    <h1>Inventory Management Catalog</h1>
+    <h1>Damietta yard inventory</h1>
     <p style="color: var(--text-muted)">IEOC & PTB Inventory System</p>
   </header>
 
@@ -723,7 +734,7 @@
       <span>📦</span> Catalog & Scan
     </button>
     <button class="nav-tab-btn" onclick="switchTab(2)">
-      <span>📌</span> Marked (<span id="markedCountBadge">0</span>)
+      <span>📌</span> Marked <span id="markedCountBadge">0</span>
     </button>
     <button class="nav-tab-btn" onclick="switchTab(3)">
       <span>📁</span> Files & Import
@@ -767,16 +778,19 @@
   <div id="tab2" class="tab-content">
     <div class="action-panel">
       <h3>Marked Items Management</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted);">Review items you selected, adjust quantities, download as Excel, or share via WhatsApp.</p>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Review items you selected, adjust quantities, download as Excel or CSV, or share via WhatsApp.</p>
       
       <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center; flex-wrap: wrap;">
-        <button id="exportSelectedBtn" class="export-btn" style="max-width: 200px;">
-          📥 Download Excel
+        <button id="exportExcelBtn" class="export-btn" style="max-width: 175px;">
+          📊 Download Excel
         </button>
-        <button id="whatsappShareBtn" class="whatsapp-btn" style="max-width: 210px;">
+        <button id="exportCsvBtn" class="csv-export-btn" style="max-width: 175px;">
+          📄 Download CSV
+        </button>
+        <button id="whatsappShareBtn" class="whatsapp-btn" style="max-width: 195px;">
           💬 Share via WhatsApp
         </button>
-        <button id="unmarkAllBtn" class="remove-btn" style="max-width: 180px; border-color: var(--warning); color: var(--warning);">
+        <button id="unmarkAllBtn" class="remove-btn" style="max-width: 165px; border-color: var(--warning); color: var(--warning);">
           🧹 Unmark All
         </button>
       </div>
@@ -842,7 +856,7 @@
 
   <!-- WhatsApp Choice Modal -->
   <div class="modal-overlay" id="whatsappModal">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
+    <div class="modal-content" style="max-width: 420px; text-align: center;">
       <button class="close-btn" id="closeWhatsappModal">&times;</button>
       <div class="modal-title" style="margin-bottom: 0.25rem;">Share via WhatsApp</div>
       <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Choose how you want to share your marked items:</p>
@@ -851,8 +865,12 @@
         💬 1st Option: Share Clean Text
       </button>
 
-      <button id="waShareFileBtn" class="wa-choice-btn" style="background-color: #0284c7;">
-        📎 2nd Option: Share CSV/Excel File
+      <button id="waShareExcelBtn" class="wa-choice-btn" style="background-color: #16a34a;">
+        📊 2nd Option: Share Excel File (.xlsx)
+      </button>
+
+      <button id="waShareCsvBtn" class="wa-choice-btn" style="background-color: #0284c7;">
+        📄 3rd Option: Share CSV File (.csv)
       </button>
     </div>
   </div>
@@ -872,7 +890,8 @@
     const fileInput = document.getElementById('excelFileInput');
     const tabSelector = document.getElementById('tabSelector');
     const removeExcelBtn = document.getElementById('removeExcelBtn');
-    const exportSelectedBtn = document.getElementById('exportSelectedBtn');
+    const exportExcelBtn = document.getElementById('exportExcelBtn');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
     const whatsappShareBtn = document.getElementById('whatsappShareBtn');
     const unmarkAllBtn = document.getElementById('unmarkAllBtn');
     const searchInput = document.getElementById('searchInput');
@@ -900,7 +919,8 @@
     const whatsappModal = document.getElementById('whatsappModal');
     const closeWhatsappModal = document.getElementById('closeWhatsappModal');
     const waShareTextBtn = document.getElementById('waShareTextBtn');
-    const waShareFileBtn = document.getElementById('waShareFileBtn');
+    const waShareExcelBtn = document.getElementById('waShareExcelBtn');
+    const waShareCsvBtn = document.getElementById('waShareCsvBtn');
 
     window.addEventListener('DOMContentLoaded', () => {
       const savedData = localStorage.getItem('inventory_excel_data_map');
@@ -1345,7 +1365,6 @@
       const qtyInput = card.querySelector('.qty-input');
       const markBtn = card.querySelector('.big-mark-btn');
 
-      // Prevent card modal from opening when interacting with counter or mark button
       actionsBar.addEventListener('click', (e) => e.stopPropagation());
 
       const syncCardUI = (marked, qty) => {
@@ -1368,7 +1387,6 @@
           setItemMarkAndQty(item._uniqueKey, true, val);
           syncCardUI(true, val);
         } else {
-          // If at 1 and minus is pressed while marked, unmark it
           setItemMarkAndQty(item._uniqueKey, false, 1);
           syncCardUI(false, 1);
           if (currentTab === 2) renderMarkedGrid();
@@ -1377,7 +1395,6 @@
 
       plusBtn.addEventListener('click', () => {
         let val = parseInt(qtyInput.value, 10) || 0;
-        // If not marked yet and input shows 1, clicking + marks it with 1 (or increments if already marked)
         if (!selectedItemIds.has(item._uniqueKey)) {
           val = Math.max(1, val);
         } else {
@@ -1594,7 +1611,7 @@
       if (e.target === modal) modal.classList.remove('active');
     });
 
-    // Build Excel Workbook with Marked Qty placed BEFORE Description
+    // Build Excel / CSV Workbook (kept as is)
     function buildExportWorkbook(selectedItemsList) {
       const dynamicQtyHeaders = new Set();
       selectedItemsList.forEach(item => {
@@ -1623,7 +1640,6 @@
           "Description": i.description || ""
         };
 
-        // Add Quantity column(s)
         dynamicQtyHeaders.forEach(qtyHeader => {
           if (i.allQtyCols && i.allQtyCols[qtyHeader] !== undefined) {
             rowObj[qtyHeader] = i.allQtyCols[qtyHeader];
@@ -1632,11 +1648,8 @@
           }
         });
 
-        // Explicitly add Physical QTY and Physical Qty. Ea.Jt. right after Quantity
         rowObj["Physical QTY"] = i.physicalQty || "";
         rowObj["Physical Qty. Ea.Jt."] = i.physicalQtyEaJt || "";
-
-        // Remaining requested columns
         rowObj["Plant"] = i.plant || "";
         rowObj["Storage Location"] = i.storageLocation || i.location || "";
         rowObj["Tab Name"] = i._tabName || "";
@@ -1666,32 +1679,28 @@
       return wb;
     }
 
-    // Generate clean text summary for WhatsApp 1st Option
+    // Generate Clean Text Summary with exact requested fields:
+    // SN, Marked Qty, Quantity, Physical Qty. Ea.Jt., SAP Code, Description, BIN
     function generateFormattedTextSummary(selectedItemsList) {
       let textLines = ["*Inventory Marked Items* 📦\n"];
       selectedItemsList.forEach((item, idx) => {
         const sn = item.sn || item.itemNo || 'N/A';
-        const code = item.isWriteOff ? (item.material || 'N/A') : (item.sapCode || 'N/A');
         const markedQty = markedQuantities[item._uniqueKey] || 1;
+        const qty = item.quantity || item.sapQty || item.physicalQty || 'N/A';
+        const physQtyEaJt = item.physicalQtyEaJt || 'N/A';
+        const sapCode = item.isWriteOff ? (item.material || 'N/A') : (item.sapCode || 'N/A');
         const desc = item.description || 'N/A';
-        const loc = item.storageLocation || item.location || 'N/A';
-        const tab = item._tabName || 'N/A';
+        const bin = item.bin || item.location || 'N/A';
 
-        let qtyParts = [];
-        if (item.allQtyCols) {
-          Object.entries(item.allQtyCols).forEach(([k, v]) => {
-            if (v !== "") qtyParts.push(`${k}: ${v}`);
-          });
-        }
-        const qtyStr = qtyParts.length > 0 ? qtyParts.join(', ') : (item.quantity || item.physicalQty || '0');
-
-        textLines.push(`${idx + 1}. SN: *${sn}* | Code: *${code}* | Marked Qty: *${markedQty}* | ${desc} | Stock Qty: ${qtyStr} | Physical QTY: ${item.physicalQty || 'N/A'} | Physical Qty. Ea.Jt.: ${item.physicalQtyEaJt || 'N/A'} | Plant: ${item.plant || 'N/A'} | Loc: ${loc} | Tab: ${tab}`);
+        textLines.push(
+          `${idx + 1}. SN: *${sn}* | Marked Qty: *${markedQty}* | Quantity: ${qty} | Physical Qty. Ea.Jt.: ${physQtyEaJt} | SAP Code: *${sapCode}* | Description: ${desc} | BIN: *${bin}*`
+        );
       });
       return textLines.join("\n");
     }
 
     // Direct Excel (.xlsx) Download Button
-    exportSelectedBtn.addEventListener('click', () => {
+    exportExcelBtn.addEventListener('click', () => {
       const selectedItemsList = getSelectedItemsList();
       if (selectedItemsList.length === 0) {
         alert("No items selected. Please mark items first.");
@@ -1702,6 +1711,28 @@
       const dateStr = new Date().toISOString().slice(0, 10);
       const fileName = `Selected_Inventory_${dateStr}.xlsx`;
       XLSX.writeFile(wb, fileName);
+    });
+
+    // Direct CSV (.csv) Download Button
+    exportCsvBtn.addEventListener('click', () => {
+      const selectedItemsList = getSelectedItemsList();
+      if (selectedItemsList.length === 0) {
+        alert("No items selected. Please mark items first.");
+        return;
+      }
+
+      const wb = buildExportWorkbook(selectedItemsList);
+      const ws = wb.Sheets["Exported Inventory"];
+      const csvContent = "\uFEFF" + XLSX.utils.sheet_to_csv(ws);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const fileName = `Selected_Inventory_${dateStr}.csv`;
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(link.href);
     });
 
     // Open WhatsApp Choice Modal
@@ -1727,8 +1758,40 @@
       window.open(whatsappUrl, '_blank');
     });
 
-    // Option 2: Share CSV/Excel File directly via Native Share Sheet
-    waShareFileBtn.addEventListener('click', async () => {
+    // Option 2: Share Excel (.xlsx) File directly via Native Share Sheet
+    waShareExcelBtn.addEventListener('click', async () => {
+      whatsappModal.classList.remove('active');
+      const selectedItemsList = getSelectedItemsList();
+      const wb = buildExportWorkbook(selectedItemsList);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const fileName = `Selected_Inventory_${dateStr}.xlsx`;
+
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const file = new File(
+        [wbout],
+        fileName,
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'Inventory Excel Export',
+            text: 'Here is the marked inventory Excel file:',
+            files: [file]
+          });
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      alert("Direct file sharing is not supported on this browser/device. The Excel (.xlsx) file has been downloaded so you can attach it manually in WhatsApp.");
+      XLSX.writeFile(wb, fileName);
+    });
+
+    // Option 3: Share CSV (.csv) File directly via Native Share Sheet
+    waShareCsvBtn.addEventListener('click', async () => {
       whatsappModal.classList.remove('active');
       const selectedItemsList = getSelectedItemsList();
       const wb = buildExportWorkbook(selectedItemsList);
@@ -1742,8 +1805,8 @@
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
-            title: 'Inventory Export',
-            text: 'Here is the marked inventory file:',
+            title: 'Inventory CSV Export',
+            text: 'Here is the marked inventory CSV file:',
             files: [file]
           });
           return;
@@ -1752,8 +1815,7 @@
         }
       }
 
-      // Fallback if direct file sharing is not supported
-      alert("Direct file sharing is not supported on this browser/device. We have downloaded the CSV file for you instead—you can now attach it manually in WhatsApp!");
+      alert("Direct file sharing is not supported on this browser/device. The CSV (.csv) file has been downloaded so you can attach it manually in WhatsApp.");
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
