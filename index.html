@@ -391,7 +391,7 @@
       max-width: 1200px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
       gap: 1.25rem;
     }
 
@@ -448,27 +448,109 @@
       color: var(--ptb-accent) !important;
     }
 
-    .card-checkbox {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      width: 22px;
-      height: 22px;
-      accent-color: var(--accent);
-      cursor: pointer;
-      z-index: 5;
-    }
-
+    /* Card Top Action Bar (Counter + Big Mark Button) */
     .card-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 2rem;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
     }
 
     .card-sn {
       font-size: 0.95rem;
       font-weight: 700;
+      word-break: break-word;
+    }
+
+    .card-actions-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-shrink: 0;
+      z-index: 5;
+    }
+
+    .qty-counter-group {
+      display: inline-flex;
+      align-items: center;
+      background-color: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .qty-btn {
+      width: 34px;
+      height: 36px;
+      border: none;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-main);
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s;
+      user-select: none;
+    }
+
+    .qty-btn:hover {
+      background-color: var(--accent);
+      color: var(--bg-color);
+    }
+
+    .qty-btn:active {
+      transform: scale(0.95);
+    }
+
+    .qty-input {
+      width: 42px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 700;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+
+    .qty-input::-webkit-outer-spin-button,
+    .qty-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .big-mark-btn {
+      height: 36px;
+      min-width: 44px;
+      padding: 0 0.65rem;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background-color: rgba(15, 23, 42, 0.85);
+      color: var(--text-muted);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      transition: all 0.15s ease;
+    }
+
+    .big-mark-btn:hover {
+      border-color: var(--accent);
+      color: var(--text-main);
+    }
+
+    .big-mark-btn.is-marked {
+      background-color: var(--success);
+      border-color: var(--success);
+      color: #ffffff;
     }
 
     .card-source {
@@ -685,7 +767,7 @@
   <div id="tab2" class="tab-content">
     <div class="action-panel">
       <h3>Marked Items Management</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted);">Review items you selected, download them as Excel, or share directly via WhatsApp.</p>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Review items you selected, adjust quantities, download as Excel, or share via WhatsApp.</p>
       
       <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center; flex-wrap: wrap;">
         <button id="exportSelectedBtn" class="export-btn" style="max-width: 200px;">
@@ -729,11 +811,18 @@
   <div class="modal-overlay" id="modal">
     <div class="modal-content">
       <button class="close-btn" id="closeModal">&times;</button>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-right: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-right: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
         <div class="modal-title" id="modalTitle">Item Details</div>
-        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--accent);">
-          <input type="checkbox" id="modalCheckbox" style="width: 18px; height: 18px; accent-color: var(--accent);"> Select for Export
-        </label>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <div class="qty-counter-group">
+            <button type="button" class="qty-btn" id="modalQtyMinus">−</button>
+            <input type="number" class="qty-input" id="modalQtyInput" min="1" value="1">
+            <button type="button" class="qty-btn" id="modalQtyPlus">+</button>
+          </div>
+          <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--accent);">
+            <input type="checkbox" id="modalCheckbox" style="width: 18px; height: 18px; accent-color: var(--accent);"> Mark
+          </label>
+        </div>
       </div>
       <div id="modalSource" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; background: rgba(255, 255, 255, 0.08); padding: 0.3rem 0.6rem; border-radius: 6px; display: inline-block;"></div>
 
@@ -771,6 +860,7 @@
   <script>
     let loadedDataMap = {}; 
     let selectedItemIds = new Set(); 
+    let markedQuantities = {}; // Stores { [uniqueKey]: number }
     let html5QrcodeScanner = null;
     let currentModalItemKey = null;
     let displayedItemCount = 50; 
@@ -795,6 +885,9 @@
     const modalDescVal = document.getElementById('modalDescVal');
     const modalGrid = document.getElementById('modalGrid');
     const modalCheckbox = document.getElementById('modalCheckbox');
+    const modalQtyMinus = document.getElementById('modalQtyMinus');
+    const modalQtyInput = document.getElementById('modalQtyInput');
+    const modalQtyPlus = document.getElementById('modalQtyPlus');
     const modalCommentSection = document.getElementById('modalCommentSection');
     const modalCommentVal = document.getElementById('modalCommentVal');
     const closeModal = document.getElementById('closeModal');
@@ -812,6 +905,21 @@
     window.addEventListener('DOMContentLoaded', () => {
       const savedData = localStorage.getItem('inventory_excel_data_map');
       const savedSelections = localStorage.getItem('inventory_selected_items');
+      const savedQuantities = localStorage.getItem('inventory_marked_quantities');
+      
+      if (savedQuantities) {
+        try {
+          markedQuantities = JSON.parse(savedQuantities) || {};
+        } catch(e) {}
+      }
+
+      if (savedSelections) {
+        try {
+          selectedItemIds = new Set(JSON.parse(savedSelections));
+          updateMarkedBadge();
+        } catch(e) {}
+      }
+
       if (savedData) {
         try {
           loadedDataMap = JSON.parse(savedData);
@@ -825,12 +933,6 @@
         } catch(e) {
           localStorage.removeItem('inventory_excel_data_map');
         }
-      }
-      if (savedSelections) {
-        try {
-          selectedItemIds = new Set(JSON.parse(savedSelections));
-          updateMarkedBadge();
-        } catch(e) {}
       }
     });
 
@@ -854,6 +956,7 @@
     function saveSelectionsToStorage() {
       try {
         localStorage.setItem('inventory_selected_items', JSON.stringify(Array.from(selectedItemIds)));
+        localStorage.setItem('inventory_marked_quantities', JSON.stringify(markedQuantities));
         updateMarkedBadge();
       } catch(e) {}
     }
@@ -1103,8 +1206,10 @@
       if (confirm("Are you sure you want to clear all loaded inventory data?")) {
         loadedDataMap = {};
         selectedItemIds.clear();
+        markedQuantities = {};
         localStorage.removeItem('inventory_excel_data_map');
         localStorage.removeItem('inventory_selected_items');
+        localStorage.removeItem('inventory_marked_quantities');
         updateTabSelector();
         updateFilesSummary();
         updateMarkedBadge();
@@ -1121,6 +1226,7 @@
       }
       if (confirm("Are you sure you want to unmark all selected items?")) {
         selectedItemIds.clear();
+        markedQuantities = {};
         saveSelectionsToStorage();
         renderMarkedGrid();
         showStatusBanner("All items have been unmarked.");
@@ -1140,8 +1246,21 @@
       }
     }
 
+    function setItemMarkAndQty(uniqueKey, isMarked, qtyVal) {
+      if (isMarked) {
+        selectedItemIds.add(uniqueKey);
+        const parsedQty = parseInt(qtyVal, 10);
+        markedQuantities[uniqueKey] = (!isNaN(parsedQty) && parsedQty > 0) ? parsedQty : 1;
+      } else {
+        selectedItemIds.delete(uniqueKey);
+        delete markedQuantities[uniqueKey];
+      }
+      saveSelectionsToStorage();
+    }
+
     function renderCardHtml(item) {
       const isChecked = selectedItemIds.has(item._uniqueKey);
+      const currentQty = markedQuantities[item._uniqueKey] || 1;
       const themeClass = item.isPtb ? 'ptb' : 'ieoc';
       const sourceBadgeHtml = item.isPtb ? '<b>Petrobel</b>' : `<b>${item._tabName || 'IEOC'}</b>`;
 
@@ -1197,10 +1316,19 @@
       const card = document.createElement('div');
       card.className = isChecked ? `card ${themeClass} marked` : `card ${themeClass}`;
       card.innerHTML = `
-        <input type="checkbox" class="card-checkbox" data-key="${item._uniqueKey}" ${isChecked ? 'checked' : ''} title="Select item">
         <div>
           <div class="card-header">
             <div class="card-sn">${mainTitle}</div>
+            <div class="card-actions-bar">
+              <div class="qty-counter-group">
+                <button type="button" class="qty-btn qty-minus" title="Decrease Marked Quantity">−</button>
+                <input type="number" class="qty-input" min="1" value="${currentQty}" title="Marked Quantity">
+                <button type="button" class="qty-btn qty-plus" title="Increase Marked Quantity">+</button>
+              </div>
+              <button type="button" class="big-mark-btn ${isChecked ? 'is-marked' : ''}" title="Mark / Unmark Item">
+                ${isChecked ? '✓' : 'Mark'}
+              </button>
+            </div>
           </div>
           <div class="card-source" title="${item._sourceTab}">${sourceBadgeHtml}</div>
           ${subInfo}
@@ -1211,19 +1339,81 @@
         </div>
       `;
 
-      const checkbox = card.querySelector('.card-checkbox');
-      checkbox.addEventListener('click', (e) => e.stopPropagation());
-      checkbox.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          selectedItemIds.add(item._uniqueKey);
+      const actionsBar = card.querySelector('.card-actions-bar');
+      const minusBtn = card.querySelector('.qty-minus');
+      const plusBtn = card.querySelector('.qty-plus');
+      const qtyInput = card.querySelector('.qty-input');
+      const markBtn = card.querySelector('.big-mark-btn');
+
+      // Prevent card modal from opening when interacting with counter or mark button
+      actionsBar.addEventListener('click', (e) => e.stopPropagation());
+
+      const syncCardUI = (marked, qty) => {
+        qtyInput.value = qty;
+        if (marked) {
           card.classList.add('marked');
+          markBtn.classList.add('is-marked');
+          markBtn.textContent = '✓';
         } else {
-          selectedItemIds.delete(item._uniqueKey);
           card.classList.remove('marked');
+          markBtn.classList.remove('is-marked');
+          markBtn.textContent = 'Mark';
         }
-        saveSelectionsToStorage();
-        if (currentTab === 2) {
-          renderMarkedGrid();
+      };
+
+      minusBtn.addEventListener('click', () => {
+        let val = parseInt(qtyInput.value, 10) || 1;
+        if (val > 1) {
+          val -= 1;
+          setItemMarkAndQty(item._uniqueKey, true, val);
+          syncCardUI(true, val);
+        } else {
+          // If at 1 and minus is pressed while marked, unmark it
+          setItemMarkAndQty(item._uniqueKey, false, 1);
+          syncCardUI(false, 1);
+          if (currentTab === 2) renderMarkedGrid();
+        }
+      });
+
+      plusBtn.addEventListener('click', () => {
+        let val = parseInt(qtyInput.value, 10) || 0;
+        // If not marked yet and input shows 1, clicking + marks it with 1 (or increments if already marked)
+        if (!selectedItemIds.has(item._uniqueKey)) {
+          val = Math.max(1, val);
+        } else {
+          val += 1;
+        }
+        setItemMarkAndQty(item._uniqueKey, true, val);
+        syncCardUI(true, val);
+      });
+
+      qtyInput.addEventListener('input', () => {
+        let val = parseInt(qtyInput.value, 10);
+        if (!isNaN(val) && val > 0) {
+          setItemMarkAndQty(item._uniqueKey, true, val);
+          card.classList.add('marked');
+          markBtn.classList.add('is-marked');
+          markBtn.textContent = '✓';
+        }
+      });
+
+      qtyInput.addEventListener('blur', () => {
+        let val = parseInt(qtyInput.value, 10);
+        if (isNaN(val) || val < 1) {
+          qtyInput.value = markedQuantities[item._uniqueKey] || 1;
+        }
+      });
+
+      markBtn.addEventListener('click', () => {
+        const currentlyMarked = selectedItemIds.has(item._uniqueKey);
+        if (currentlyMarked) {
+          setItemMarkAndQty(item._uniqueKey, false, 1);
+          syncCardUI(false, 1);
+          if (currentTab === 2) renderMarkedGrid();
+        } else {
+          const val = parseInt(qtyInput.value, 10) || 1;
+          setItemMarkAndQty(item._uniqueKey, true, val);
+          syncCardUI(true, val);
         }
       });
 
@@ -1280,6 +1470,7 @@
       modalSource.textContent = `📑 Source Tab: ${item._sourceTab}`;
       modalDescVal.textContent = item.description || '-';
       modalCheckbox.checked = selectedItemIds.has(item._uniqueKey);
+      modalQtyInput.value = markedQuantities[item._uniqueKey] || 1;
       
       let fields = [];
       if (item.isPtb) {
@@ -1347,16 +1538,55 @@
       modal.classList.add('active');
     }
 
-    modalCheckbox.addEventListener('change', (e) => {
-      if (!currentModalItemKey) return;
-      if (e.target.checked) {
-        selectedItemIds.add(currentModalItemKey);
-      } else {
-        selectedItemIds.delete(currentModalItemKey);
-      }
-      saveSelectionsToStorage();
+    function refreshCurrentTabView() {
       if (currentTab === 1) filterData();
       if (currentTab === 2) renderMarkedGrid();
+    }
+
+    modalQtyMinus.addEventListener('click', () => {
+      if (!currentModalItemKey) return;
+      let val = parseInt(modalQtyInput.value, 10) || 1;
+      if (val > 1) {
+        val -= 1;
+        modalQtyInput.value = val;
+        modalCheckbox.checked = true;
+        setItemMarkAndQty(currentModalItemKey, true, val);
+      } else {
+        modalCheckbox.checked = false;
+        setItemMarkAndQty(currentModalItemKey, false, 1);
+      }
+      refreshCurrentTabView();
+    });
+
+    modalQtyPlus.addEventListener('click', () => {
+      if (!currentModalItemKey) return;
+      let val = parseInt(modalQtyInput.value, 10) || 0;
+      if (!selectedItemIds.has(currentModalItemKey)) {
+        val = Math.max(1, val);
+      } else {
+        val += 1;
+      }
+      modalQtyInput.value = val;
+      modalCheckbox.checked = true;
+      setItemMarkAndQty(currentModalItemKey, true, val);
+      refreshCurrentTabView();
+    });
+
+    modalQtyInput.addEventListener('input', () => {
+      if (!currentModalItemKey) return;
+      let val = parseInt(modalQtyInput.value, 10);
+      if (!isNaN(val) && val > 0) {
+        modalCheckbox.checked = true;
+        setItemMarkAndQty(currentModalItemKey, true, val);
+        refreshCurrentTabView();
+      }
+    });
+
+    modalCheckbox.addEventListener('change', (e) => {
+      if (!currentModalItemKey) return;
+      const val = parseInt(modalQtyInput.value, 10) || 1;
+      setItemMarkAndQty(currentModalItemKey, e.target.checked, val);
+      refreshCurrentTabView();
     });
 
     closeModal.addEventListener('click', () => modal.classList.remove('active'));
@@ -1364,14 +1594,13 @@
       if (e.target === modal) modal.classList.remove('active');
     });
 
-    // Build Excel Workbook with requested columns
+    // Build Excel Workbook with Marked Qty placed BEFORE Description
     function buildExportWorkbook(selectedItemsList) {
       const dynamicQtyHeaders = new Set();
       selectedItemsList.forEach(item => {
         if (item.allQtyCols) {
           Object.keys(item.allQtyCols).forEach(colName => {
             const lower = colName.trim().toLowerCase();
-            // Exclude Physical QTY and Physical Qty. Ea.Jt. from dynamic list since they are placed explicitly right after
             if (lower !== 'physical qty' && lower !== 'phyical qty' && !lower.includes('ea') && !lower.includes('jt')) {
               dynamicQtyHeaders.add(colName);
             }
@@ -1385,10 +1614,12 @@
 
       const exportRows = selectedItemsList.map(i => {
         const sapOrMaterial = i.isWriteOff ? (i.material || "") : (i.sapCode || "");
+        const markedQty = markedQuantities[i._uniqueKey] || 1;
 
         const rowObj = {
           "SN": i.sn || i.itemNo || "",
           "SAP Code / Material": sapOrMaterial,
+          "Marked Qty": markedQty,
           "Description": i.description || ""
         };
 
@@ -1441,6 +1672,7 @@
       selectedItemsList.forEach((item, idx) => {
         const sn = item.sn || item.itemNo || 'N/A';
         const code = item.isWriteOff ? (item.material || 'N/A') : (item.sapCode || 'N/A');
+        const markedQty = markedQuantities[item._uniqueKey] || 1;
         const desc = item.description || 'N/A';
         const loc = item.storageLocation || item.location || 'N/A';
         const tab = item._tabName || 'N/A';
@@ -1453,7 +1685,7 @@
         }
         const qtyStr = qtyParts.length > 0 ? qtyParts.join(', ') : (item.quantity || item.physicalQty || '0');
 
-        textLines.push(`${idx + 1}. SN: *${sn}* | Code: *${code}* | ${desc} | Qty: ${qtyStr} | Physical QTY: ${item.physicalQty || 'N/A'} | Physical Qty. Ea.Jt.: ${item.physicalQtyEaJt || 'N/A'} | Plant: ${item.plant || 'N/A'} | Loc: ${loc} | Tab: ${tab}`);
+        textLines.push(`${idx + 1}. SN: *${sn}* | Code: *${code}* | Marked Qty: *${markedQty}* | ${desc} | Stock Qty: ${qtyStr} | Physical QTY: ${item.physicalQty || 'N/A'} | Physical Qty. Ea.Jt.: ${item.physicalQtyEaJt || 'N/A'} | Plant: ${item.plant || 'N/A'} | Loc: ${loc} | Tab: ${tab}`);
       });
       return textLines.join("\n");
     }
@@ -1462,7 +1694,7 @@
     exportSelectedBtn.addEventListener('click', () => {
       const selectedItemsList = getSelectedItemsList();
       if (selectedItemsList.length === 0) {
-        alert("No items selected. Please mark items using the checkboxes.");
+        alert("No items selected. Please mark items first.");
         return;
       }
 
@@ -1475,7 +1707,7 @@
     // Open WhatsApp Choice Modal
     whatsappShareBtn.addEventListener('click', () => {
       if (selectedItemIds.size === 0) {
-        alert("No items selected. Please mark items using the checkboxes.");
+        alert("No items selected. Please mark items first.");
         return;
       }
       whatsappModal.classList.add('active');
