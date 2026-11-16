@@ -52,6 +52,7 @@
       --danger: #f43f5e;
       --success: #22c55e;
       --warning: #f59e0b;
+      --whatsapp-color: #25d366;
       
       /* IEOC Orange Theme */
       --ieoc-card-bg: #1e293b;
@@ -88,7 +89,7 @@
       min-height: 100vh;
       padding: 1rem;
       padding-top: 1rem;
-      padding-bottom: 6rem; /* Extra padding for bottom navigation bar */
+      padding-bottom: 6rem;
     }
 
     @media (min-width: 640px) {
@@ -183,7 +184,7 @@
 
     /* Controls & Buttons */
     .action-panel {
-      max-width: 600px;
+      max-width: 650px;
       margin: 0 auto 1.5rem auto;
       background-color: var(--card-bg);
       border: 1px solid var(--border);
@@ -197,7 +198,7 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
-    .custom-file-upload, .qr-btn, .csv-select, .remove-btn, .export-btn, .action-btn {
+    .custom-file-upload, .qr-btn, .csv-select, .remove-btn, .export-btn, .whatsapp-btn, .action-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -216,7 +217,7 @@
       text-align: center;
     }
 
-    .qr-btn, .csv-select, .export-btn, .action-btn {
+    .qr-btn, .csv-select, .export-btn, .whatsapp-btn, .action-btn {
       border-style: solid;
       border-color: var(--border);
     }
@@ -228,6 +229,17 @@
 
     .export-btn:hover {
       background-color: var(--success);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .whatsapp-btn {
+      border-color: var(--whatsapp-color);
+      color: var(--whatsapp-color);
+    }
+
+    .whatsapp-btn:hover {
+      background-color: var(--whatsapp-color);
       color: #fff;
       transform: translateY(-2px);
     }
@@ -592,6 +604,26 @@
       font-weight: 600;
       color: var(--text-main);
     }
+
+    /* WhatsApp Share Choice Modal */
+    .wa-choice-btn {
+      display: block;
+      width: 100%;
+      padding: 0.85rem 1rem;
+      margin-top: 0.75rem;
+      border-radius: 10px;
+      border: none;
+      background-color: var(--whatsapp-color);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-align: center;
+      transition: opacity 0.2s;
+    }
+    .wa-choice-btn:hover {
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
@@ -653,13 +685,16 @@
   <div id="tab2" class="tab-content">
     <div class="action-panel">
       <h3>Marked Items Management</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted);">Review items you selected, export them to Excel, or share via WhatsApp.</p>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Review items you selected, download them as Excel, or share directly via WhatsApp.</p>
       
       <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center; flex-wrap: wrap;">
-        <button id="exportSelectedBtn" class="export-btn" style="max-width: 240px;">
-          📥 Export & WhatsApp
+        <button id="exportSelectedBtn" class="export-btn" style="max-width: 200px;">
+          📥 Download Excel
         </button>
-        <button id="unmarkAllBtn" class="remove-btn" style="max-width: 200px; border-color: var(--warning); color: var(--warning);">
+        <button id="whatsappShareBtn" class="whatsapp-btn" style="max-width: 210px;">
+          💬 Share via WhatsApp
+        </button>
+        <button id="unmarkAllBtn" class="remove-btn" style="max-width: 180px; border-color: var(--warning); color: var(--warning);">
           🧹 Unmark All
         </button>
       </div>
@@ -716,6 +751,23 @@
     </div>
   </div>
 
+  <!-- WhatsApp Choice Modal -->
+  <div class="modal-overlay" id="whatsappModal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <button class="close-btn" id="closeWhatsappModal">&times;</button>
+      <div class="modal-title" style="margin-bottom: 0.25rem;">Share via WhatsApp</div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Choose how you want to share your marked items:</p>
+      
+      <button id="waShareTextBtn" class="wa-choice-btn">
+        💬 1st Option: Share Clean Text
+      </button>
+
+      <button id="waShareFileBtn" class="wa-choice-btn" style="background-color: #0284c7;">
+        📎 2nd Option: Share Excel File
+      </button>
+    </div>
+  </div>
+
   <script>
     let loadedDataMap = {}; 
     let selectedItemIds = new Set(); 
@@ -731,6 +783,7 @@
     const tabSelector = document.getElementById('tabSelector');
     const removeExcelBtn = document.getElementById('removeExcelBtn');
     const exportSelectedBtn = document.getElementById('exportSelectedBtn');
+    const whatsappShareBtn = document.getElementById('whatsappShareBtn');
     const unmarkAllBtn = document.getElementById('unmarkAllBtn');
     const searchInput = document.getElementById('searchInput');
     const searchMode = document.getElementById('searchMode');
@@ -750,6 +803,11 @@
     const statusBanner = document.getElementById('statusBanner');
     const loadedFilesSummary = document.getElementById('loadedFilesSummary');
     const markedCountBadge = document.getElementById('markedCountBadge');
+
+    const whatsappModal = document.getElementById('whatsappModal');
+    const closeWhatsappModal = document.getElementById('closeWhatsappModal');
+    const waShareTextBtn = document.getElementById('waShareTextBtn');
+    const waShareFileBtn = document.getElementById('waShareFileBtn');
 
     window.addEventListener('DOMContentLoaded', () => {
       const savedData = localStorage.getItem('inventory_excel_data_map');
@@ -824,6 +882,17 @@
       loadedFilesSummary.innerHTML = html;
     }
 
+    function extractQtyColumns(row) {
+      const qtyCols = {};
+      Object.keys(row).forEach(key => {
+        const lowerKey = key.trim().toLowerCase();
+        if (lowerKey.includes('qty') || lowerKey.includes('quantity')) {
+          qtyCols[key.trim()] = row[key] !== undefined ? String(row[key]).trim() : "";
+        }
+      });
+      return qtyCols;
+    }
+
     function getAllQtyComments(worksheet, index) {
       let comments = [];
       for (let cellRef in worksheet) {
@@ -873,7 +942,7 @@
                   const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
                   const tabKey = `PTB - ${sheetName} (${file.name})`;
 
-                  const parsedItems = jsonRows.map((row, idx) => normalizePtbRow(row, worksheet, tabKey, sheetName, idx));
+                  const parsedItems = jsonRows.map((row, idx) => normalizePtbRow(row, worksheet, tabKey, sheetName, file.name, idx));
                   const validItems = parsedItems.filter(item => item.sapCode || item.sn || item.description || item.partSerNo);
 
                   if (validItems.length > 0) {
@@ -890,7 +959,7 @@
                   const isWriteOff = cleanSheetName.includes('write off');
                   const isOutOfSap = cleanSheetName.includes('out of sap');
 
-                  const parsedItems = jsonRows.map((row, idx) => normalizeIeocRow(row, worksheet, tabKey, isSapStock, isWriteOff, isOutOfSap, sheetName, idx));
+                  const parsedItems = jsonRows.map((row, idx) => normalizeIeocRow(row, worksheet, tabKey, isSapStock, isWriteOff, isOutOfSap, sheetName, file.name, idx));
                   const validItems = parsedItems.filter(item => item.sapCode || item.sn || item.description || item.itemNo || item.material || item.title);
 
                   if (validItems.length > 0) {
@@ -919,7 +988,7 @@
       fileInput.value = '';
     });
 
-    function normalizeIeocRow(row, worksheet, sourceTabName, isSapStock, isWriteOff, isOutOfSap, sheetName, index) {
+    function normalizeIeocRow(row, worksheet, sourceTabName, isSapStock, isWriteOff, isOutOfSap, sheetName, fileName, index) {
       const getVal = (keys) => {
         for (let k of keys) {
           const foundKey = Object.keys(row).find(rk => rk.trim().toLowerCase() === k.toLowerCase());
@@ -935,6 +1004,7 @@
         _uniqueKey: uniqueKey,
         _sourceTab: sourceTabName,
         _tabName: sheetName,
+        _fileName: fileName,
         isPtb: false,
         isSapStock: isSapStock,
         isWriteOff: isWriteOff,
@@ -953,11 +1023,12 @@
         sapQty: getVal(['sap qty', 'sap quantity', 'sap_qty', 'system qty']),
         physicalQty: getVal(['physical qty', 'phyical qty', 'physical quantity', 'phy_qty']),
         physicalQtyEaJt: getVal(['physical qty. ea.\jt.', 'physical qty ea jt', 'qty by ea', 'physical qty ea', 'ea/jt', 'quantity jt\\ea', 'quantity jt/ea']),
+        allQtyCols: extractQtyColumns(row),
         comment: qtyComments
       };
     }
 
-    function normalizePtbRow(row, worksheet, sourceTabName, sheetName, index) {
+    function normalizePtbRow(row, worksheet, sourceTabName, sheetName, fileName, index) {
       const getVal = (keys) => {
         for (let k of keys) {
           const foundKey = Object.keys(row).find(rk => rk.trim().toLowerCase() === k.toLowerCase());
@@ -973,6 +1044,7 @@
         _uniqueKey: uniqueKey,
         _sourceTab: sourceTabName,
         _tabName: sheetName,
+        _fileName: fileName,
         isPtb: true,
         sn: getVal(['sn', 'serial no', 'serial number']),
         sapCode: getVal(['sap. code', 'sap code', 'sapcode']),
@@ -983,6 +1055,7 @@
         partSerNo: getVal(['part.\\ser. no,', 'part/ser. no', 'part.ser. no', 'part ser no']),
         um: getVal(['unt.', 'unt', 'uom', 'unit']),
         quantity: getVal(['quantity', 'qty']),
+        allQtyCols: extractQtyColumns(row),
         comment: qtyComments,
         location: getVal(['location', 'bin', 'loc'])
       };
@@ -1185,16 +1258,20 @@
       }
     }
 
-    function renderMarkedGrid() {
-      let markedItems = [];
+    function getSelectedItemsList() {
+      let selectedItemsList = [];
       Object.values(loadedDataMap).forEach(tabItems => {
         tabItems.forEach(item => {
           if (selectedItemIds.has(item._uniqueKey)) {
-            markedItems.push(item);
+            selectedItemsList.push(item);
           }
         });
       });
-      renderGrid(markedItems, gridTab2);
+      return selectedItemsList;
+    }
+
+    function renderMarkedGrid() {
+      renderGrid(getSelectedItemsList(), gridTab2);
     }
 
     function openModal(item) {
@@ -1287,153 +1364,156 @@
       if (e.target === modal) modal.classList.remove('active');
     });
 
+    // Build Excel Workbook with requested columns
+    function buildExportWorkbook(selectedItemsList) {
+      const dynamicQtyHeaders = new Set();
+      selectedItemsList.forEach(item => {
+        if (item.allQtyCols) {
+          Object.keys(item.allQtyCols).forEach(colName => dynamicQtyHeaders.add(colName));
+        }
+      });
+
+      if (dynamicQtyHeaders.size === 0) {
+        dynamicQtyHeaders.add("Quantity");
+      }
+
+      const exportRows = selectedItemsList.map(i => {
+        const sapOrMaterial = i.isWriteOff ? (i.material || "") : (i.sapCode || "");
+
+        const rowObj = {
+          "SN": i.sn || i.itemNo || "",
+          "SAP Code / Material": sapOrMaterial,
+          "Description": i.description || ""
+        };
+
+        dynamicQtyHeaders.forEach(qtyHeader => {
+          if (i.allQtyCols && i.allQtyCols[qtyHeader] !== undefined) {
+            rowObj[qtyHeader] = i.allQtyCols[qtyHeader];
+          } else {
+            rowObj[qtyHeader] = "";
+          }
+        });
+
+        rowObj["Plant"] = i.plant || "";
+        rowObj["Storage Location"] = i.storageLocation || i.location || "";
+        rowObj["Tab Name"] = i._tabName || "";
+        rowObj["Sheet / File Name"] = i._fileName || i._sourceTab || "";
+
+        return rowObj;
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportRows);
+
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      const colWidths = [];
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        let maxWidth = 12;
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+          const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
+          if (!ws[cellRef]) continue;
+          const valStr = String(ws[cellRef].v || "");
+          maxWidth = Math.max(maxWidth, Math.min(valStr.length + 3, 45));
+        }
+        colWidths.push({ wch: maxWidth });
+      }
+      ws['!cols'] = colWidths;
+
+      XLSX.utils.book_append_sheet(wb, ws, "Exported Inventory");
+      return wb;
+    }
+
+    // Generate clean text summary for WhatsApp 1st Option
+    function generateFormattedTextSummary(selectedItemsList) {
+      let textLines = ["*Inventory Marked Items* 📦\n"];
+      selectedItemsList.forEach((item, idx) => {
+        const sn = item.sn || item.itemNo || 'N/A';
+        const code = item.isWriteOff ? (item.material || 'N/A') : (item.sapCode || 'N/A');
+        const desc = item.description || 'N/A';
+        const loc = item.storageLocation || item.location || 'N/A';
+        const tab = item._tabName || 'N/A';
+
+        let qtyParts = [];
+        if (item.allQtyCols) {
+          Object.entries(item.allQtyCols).forEach(([k, v]) => {
+            if (v !== "") qtyParts.push(`${k}: ${v}`);
+          });
+        }
+        const qtyStr = qtyParts.length > 0 ? qtyParts.join(', ') : (item.quantity || item.physicalQty || '0');
+
+        textLines.push(`${idx + 1}. SN: *${sn}* | Code: *${code}* | ${desc} | Qty: ${qtyStr} | Plant: ${item.plant || 'N/A'} | Loc: ${loc} | Tab: ${tab}`);
+      });
+      return textLines.join("\n");
+    }
+
+    // Direct Excel Download Button
     exportSelectedBtn.addEventListener('click', () => {
-      if (selectedItemIds.size === 0) {
+      const selectedItemsList = getSelectedItemsList();
+      if (selectedItemsList.length === 0) {
         alert("No items selected. Please mark items using the checkboxes.");
         return;
       }
 
-      let selectedItemsList = [];
-      Object.values(loadedDataMap).forEach(tabItems => {
-        tabItems.forEach(item => {
-          if (selectedItemIds.has(item._uniqueKey)) {
-            selectedItemsList.push(item);
-          }
-        });
-      });
-
-      let groups = {
-        "PTB Stock": [],
-        "SAP Stock": [],
-        "Write off": [],
-        "IEOC OUT OF SAP": [],
-        "Other": []
-      };
-
-      selectedItemsList.forEach(item => {
-        const tabLower = item._sourceTab.toLowerCase();
-        if (item.isPtb || tabLower.includes('ptb')) {
-          groups["PTB Stock"].push(item);
-        } else if (item.isWriteOff || tabLower.includes('write off')) {
-          groups["Write off"].push(item);
-        } else if (item.isOutOfSap || tabLower.includes('out of sap')) {
-          groups["IEOC OUT OF SAP"].push(item);
-        } else if (item.isSapStock || tabLower.includes('sap stock')) {
-          groups["SAP Stock"].push(item);
-        } else {
-          groups["Other"].push(item);
-        }
-      });
-
-      const wb = XLSX.utils.book_new();
-
-      const headerStyle = {
-        font: { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 11 },
-        fill: { fgColor: { rgb: "1F4E78" } },
-        alignment: { horizontal: "center", vertical: "center", wrapText: true },
-        border: {
-          top: { style: "thin", color: { rgb: "000000" } },
-          bottom: { style: "thin", color: { rgb: "000000" } },
-          left: { style: "thin", color: { rgb: "000000" } },
-          right: { style: "thin", color: { rgb: "000000" } }
-        }
-      };
-
-      const cellStyle = {
-        font: { name: "Calibri", sz: 11 },
-        alignment: { vertical: "center", wrapText: true },
-        border: {
-          top: { style: "thin", color: { rgb: "D9D9D9" } },
-          bottom: { style: "thin", color: { rgb: "D9D9D9" } },
-          left: { style: "thin", color: { rgb: "D9D9D9" } },
-          right: { style: "thin", color: { rgb: "D9D9D9" } }
-        }
-      };
-
-      Object.keys(groups).forEach(groupName => {
-        const itemsInGroup = groups[groupName];
-        if (itemsInGroup.length > 0) {
-          const exportRows = itemsInGroup.map(i => {
-            if (i.isPtb) {
-              return {
-                "SN": i.sn || "",
-                "SAP. CODE": i.sapCode || "",
-                "Material description": i.description || "",
-                "Status": i.status || "",
-                "Vendor": i.vendor || "",
-                "Matl group": i.matlGroup || "",
-                "Part.\Ser. No,.": i.partSerNo || "",
-                "UNT.": i.um || "",
-                "Quantity": i.quantity || "",
-                "Comments (Cell Notes)": i.comment || "",
-                "location": i.location || "",
-                "Source Sheet": i._sourceTab
-              };
-            } else {
-              return {
-                "SN": i.sn || "",
-                "Item": i.itemNo || "",
-                "Title": i.title || "",
-                "Plant": i.plant || "",
-                "Storage Location": i.storageLocation || "",
-                "Material": i.material || "",
-                "Sap Code": i.sapCode || "",
-                "Description": i.description || "",
-                "Concession": i.concession || "",
-                "UM": i.um || "",
-                "BIN": i.bin || "",
-                "SAP Qty": i.sapQty || "",
-                "Physical QTY": i.physicalQty || "",
-                "Physical Qty. Ea.Jt.": i.physicalQtyEaJt || "",
-                "Comments (Cell Notes)": i.comment || "",
-                "Source Sheet": i._sourceTab
-              };
-            }
-          });
-
-          const ws = XLSX.utils.json_to_sheet(exportRows);
-          const range = XLSX.utils.decode_range(ws['!ref']);
-          const colWidths = [];
-
-          for (let C = range.s.c; C <= range.e.c; ++C) {
-            let maxWidth = 10;
-            for (let R = range.s.r; R <= range.e.r; ++R) {
-              const cellAddress = { c: C, r: R };
-              const cellRef = XLSX.utils.encode_cell(cellAddress);
-              if (!ws[cellRef]) continue;
-
-              if (R === 0) {
-                ws[cellRef].s = headerStyle;
-              } else {
-                ws[cellRef].s = cellStyle;
-              }
-
-              const valStr = String(ws[cellRef].v || "");
-              if (valStr.length > maxWidth) {
-                maxWidth = Math.min(valStr.length + 3, 40);
-              }
-            }
-            colWidths.push({ wch: maxWidth });
-          }
-
-          ws['!cols'] = colWidths;
-          ws['!rows'] = [{ hpt: 24 }];
-
-          XLSX.utils.book_append_sheet(wb, ws, groupName);
-        }
-      });
-
-      const dateStr = new Date().toISOString().slice(0,10);
-      const fileName = `Selected_Inventory_Export_${dateStr}.xlsx`;
-      
+      const wb = buildExportWorkbook(selectedItemsList);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const fileName = `Selected_Inventory_${dateStr}.xlsx`;
       XLSX.writeFile(wb, fileName);
+    });
 
-      const whatsappText = encodeURIComponent(`Hello, here is the exported inventory report (${selectedItemIds.size} items selected) exported on ${dateStr}. Please find the downloaded file: ${fileName}`);
-      const whatsappUrl = `https://api.whatsapp.com/send?text=${whatsappText}`;
-      
-      setTimeout(() => {
-        window.open(whatsappUrl, '_blank');
-      }, 500);
+    // Open WhatsApp Choice Modal
+    whatsappShareBtn.addEventListener('click', () => {
+      if (selectedItemIds.size === 0) {
+        alert("No items selected. Please mark items using the checkboxes.");
+        return;
+      }
+      whatsappModal.classList.add('active');
+    });
+
+    closeWhatsappModal.addEventListener('click', () => whatsappModal.classList.remove('active'));
+    whatsappModal.addEventListener('click', (e) => {
+      if (e.target === whatsappModal) whatsappModal.classList.remove('active');
+    });
+
+    // Option 1: Share Clean Text via WhatsApp
+    waShareTextBtn.addEventListener('click', () => {
+      whatsappModal.classList.remove('active');
+      const selectedItemsList = getSelectedItemsList();
+      const finalMessage = generateFormattedTextSummary(selectedItemsList);
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(finalMessage)}`;
+      window.open(whatsappUrl, '_blank');
+    });
+
+    // Option 2: Share Excel File directly via Native Share Sheet (like rigging.html)
+    waShareFileBtn.addEventListener('click', async () => {
+      whatsappModal.classList.remove('active');
+      const selectedItemsList = getSelectedItemsList();
+      const wb = buildExportWorkbook(selectedItemsList);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const fileName = `Selected_Inventory_${dateStr}.xlsx`;
+
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const file = new File(
+        [wbout],
+        fileName,
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'Inventory Export',
+            text: 'Here is the marked inventory Excel file:',
+            files: [file]
+          });
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      // Fallback if file sharing is not supported by the browser/device
+      alert("Direct file sharing is not supported on this browser/device. We have downloaded the Excel file for you instead—you can now attach it manually in WhatsApp!");
+      XLSX.writeFile(wb, fileName);
     });
 
     function filterData() {
