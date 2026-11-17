@@ -45,8 +45,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Damietta yard inventory</title>
   
-  <!-- SheetJS Library with Cell Comments Support -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- SheetJS with Cell Styling & Comments Support -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <!-- HTML5 QR Code Scanner Library -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
@@ -168,6 +168,7 @@
         justify-content: center;
         font-size: 0.9rem;
         padding: 0.6rem 1rem;
+        gap: 0.4rem;
       }
     }
 
@@ -179,6 +180,13 @@
     .nav-tab-btn.active {
       color: var(--bg-color);
       background-color: var(--accent);
+    }
+
+    .tab-icon-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 20px;
     }
 
     .tab-content {
@@ -758,13 +766,30 @@
   <!-- Fixed Bottom Navigation Tab Bar -->
   <nav class="nav-tabs">
     <button class="nav-tab-btn active" onclick="switchTab(1)">
-      <span>📦</span> Catalog & Scan
+      <span class="tab-icon-wrap">📦</span> Catalog & Scan
     </button>
     <button class="nav-tab-btn" onclick="switchTab(2)">
-      <span>📌</span> Marked <span id="markedCountBadge">0</span>
+      <span class="tab-icon-wrap" aria-hidden="true">
+        <!-- Truck Loaded with Tools Icon -->
+        <svg width="24" height="20" viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Tools loaded in truck bed (wrench + hammer/box) -->
+          <path d="M4.5 9V5.5a1.5 1.5 0 0 1 3 0V9" />
+          <circle cx="6" cy="4.5" r="1.5" />
+          <path d="M10.5 9V4.5H8.5V3h5v1.5h-2V9" />
+          <rect x="3" y="7.5" width="11.5" height="3" rx="0.6" />
+          <!-- Truck Bed & Cab -->
+          <path d="M2 10.5h13v6H2z" />
+          <path d="M15 8.5h4.8l2.7 3.5v4.5H15v-8z" />
+          <path d="M16.5 10h2.8l1.6 2h-4.4v-2z" />
+          <!-- Wheels -->
+          <circle cx="6.5" cy="17.5" r="2.3" fill="var(--bg-color)" />
+          <circle cx="19" cy="17.5" r="2.3" fill="var(--bg-color)" />
+        </svg>
+      </span>
+      <span>Cart <span id="markedCountBadge">0</span></span>
     </button>
     <button class="nav-tab-btn" onclick="switchTab(3)">
-      <span>📁</span> Files & Import
+      <span class="tab-icon-wrap">📁</span> Files & Import
     </button>
   </nav>
 
@@ -801,11 +826,11 @@
     <main class="grid-container" id="gridTab1"></main>
   </div>
 
-  <!-- TAB 2: MARKED ITEMS, UNMARK ALL, EXPORT & WHATSAPP -->
+  <!-- TAB 2: CART (MARKED ITEMS, UNMARK ALL, EXPORT & WHATSAPP) -->
   <div id="tab2" class="tab-content">
     <div class="action-panel">
-      <h3>Marked Items Management</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted);">Review items you selected, adjust quantities, download as Excel or CSV, or share via WhatsApp.</p>
+      <h3>Cart Management</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Review items in your cart, adjust quantities, download as Excel or CSV, or share via WhatsApp.</p>
       
       <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center; flex-wrap: wrap;">
         <button id="exportExcelBtn" class="export-btn" style="max-width: 175px;">
@@ -818,7 +843,7 @@
           💬 Share via WhatsApp
         </button>
         <button id="unmarkAllBtn" class="remove-btn" style="max-width: 165px; border-color: var(--warning); color: var(--warning);">
-          🧹 Unmark All
+          🧹 Clear Cart
         </button>
       </div>
     </div>
@@ -870,7 +895,7 @@
             <button type="button" class="qty-btn" id="modalQtyPlus">+</button>
           </div>
           <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--accent);">
-            <input type="checkbox" id="modalCheckbox" style="width: 18px; height: 18px; accent-color: var(--accent);"> Mark
+            <input type="checkbox" id="modalCheckbox" style="width: 18px; height: 18px; accent-color: var(--accent);"> Add to Cart
           </label>
         </div>
       </div>
@@ -894,8 +919,8 @@
   <div class="modal-overlay" id="whatsappModal">
     <div class="modal-content" style="max-width: 420px; text-align: center;">
       <button class="close-btn" id="closeWhatsappModal">&times;</button>
-      <div class="modal-title" style="margin-bottom: 0.25rem;">Share via WhatsApp</div>
-      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Choose how you want to share your marked items:</p>
+      <div class="modal-title" style="margin-bottom: 0.25rem;">Share Cart via WhatsApp</div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Choose how you want to share your cart items:</p>
       
       <button id="waShareTextBtn" class="wa-choice-btn">
         💬 1st Option: Share Clean Text
@@ -1034,7 +1059,6 @@
 
     // Check all ways an APK / OS "Open with" intent can pass an Excel file
     async function checkForIncomingOpenedFiles() {
-      // 1. PWA File Handling API (window.launchQueue)
       if ('launchQueue' in window && 'files' in LaunchParams.prototype) {
         window.launchQueue.setConsumer(async (launchParams) => {
           if (!launchParams.files || launchParams.files.length === 0) return;
@@ -1046,7 +1070,6 @@
         });
       }
 
-      // 2. URL Query Parameters passed by WebView wrappers (?file=..., ?uri=..., ?url=..., ?path=...)
       const params = new URLSearchParams(window.location.search);
       const incomingUri = params.get('file') || params.get('uri') || params.get('url') || params.get('path') || params.get('intent');
       const incomingName = params.get('name') || params.get('filename');
@@ -1055,7 +1078,6 @@
         await loadExternalExcelUri(incomingUri, incomingName);
       }
 
-      // 3. Global variables injected by APK WebView wrappers on page load
       if (window.incomingFileUrl) {
         const uri = window.incomingFileUrl;
         window.incomingFileUrl = null;
@@ -1063,7 +1085,6 @@
       }
     }
 
-    // Global helper so an APK wrapper can also call window.importBase64Excel(base64, fileName) directly
     window.importBase64Excel = function(base64Str, fileName) {
       try {
         const cleanB64 = base64Str.includes(',') ? base64Str.split(',')[1] : base64Str;
@@ -1238,7 +1259,6 @@
       fileInput.value = '';
     });
 
-    // Fetch from WhatsApp / Local Phone Folder button
     fetchWhatsappFolderBtn.addEventListener('click', async () => {
       if ('showDirectoryPicker' in window) {
         try {
@@ -1401,15 +1421,15 @@
 
     unmarkAllBtn.addEventListener('click', () => {
       if (selectedItemIds.size === 0) {
-        alert("No items currently marked.");
+        alert("Your cart is already empty.");
         return;
       }
-      if (confirm("Are you sure you want to unmark all selected items?")) {
+      if (confirm("Are you sure you want to clear all items from your cart?")) {
         selectedItemIds.clear();
         markedQuantities = {};
         saveSelectionsToStorage();
         renderMarkedGrid();
-        showStatusBanner("All items have been unmarked.");
+        showStatusBanner("Cart has been cleared.");
       }
     });
 
@@ -1501,12 +1521,12 @@
             <div class="card-sn">${mainTitle}</div>
             <div class="card-actions-bar">
               <div class="qty-counter-group">
-                <button type="button" class="qty-btn qty-minus" title="Decrease Marked Quantity">−</button>
-                <input type="number" class="qty-input" min="1" value="${currentQty}" title="Marked Quantity">
-                <button type="button" class="qty-btn qty-plus" title="Increase Marked Quantity">+</button>
+                <button type="button" class="qty-btn qty-minus" title="Decrease Quantity">−</button>
+                <input type="number" class="qty-input" min="1" value="${currentQty}" title="Cart Quantity">
+                <button type="button" class="qty-btn qty-plus" title="Increase Quantity">+</button>
               </div>
-              <button type="button" class="big-mark-btn ${isChecked ? 'is-marked' : ''}" title="Mark / Unmark Item">
-                ${isChecked ? '✓' : 'Mark'}
+              <button type="button" class="big-mark-btn ${isChecked ? 'is-marked' : ''}" title="Add / Remove from Cart">
+                ${isChecked ? '✓' : 'Add'}
               </button>
             </div>
           </div>
@@ -1536,7 +1556,7 @@
         } else {
           card.classList.remove('marked');
           markBtn.classList.remove('is-marked');
-          markBtn.textContent = 'Mark';
+          markBtn.textContent = 'Add';
         }
       };
 
@@ -1601,7 +1621,8 @@
     function renderGrid(data, containerEl) {
       containerEl.innerHTML = '';
       if (!data || data.length === 0) {
-        containerEl.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">No inventory records found.</div>`;
+        const emptyMsg = containerEl === gridTab2 ? 'Your cart is empty.' : 'No inventory records found.';
+        containerEl.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">${emptyMsg}</div>`;
         return;
       }
 
@@ -1771,6 +1792,7 @@
       if (e.target === modal) modal.classList.remove('active');
     });
 
+    // Build Styled Excel / CSV Workbook (Centered content + Orange filled top header row)
     function buildExportWorkbook(selectedItemsList) {
       const dynamicQtyHeaders = new Set();
       selectedItemsList.forEach(item => {
@@ -1795,7 +1817,7 @@
         const rowObj = {
           "SN": i.sn || i.itemNo || "",
           "SAP Code / Material": sapOrMaterial,
-          "Marked Qty": markedQty,
+          "Cart Qty": markedQty,
           "Description": i.description || ""
         };
 
@@ -1822,24 +1844,53 @@
 
       const range = XLSX.utils.decode_range(ws['!ref']);
       const colWidths = [];
+
+      const headerStyle = {
+        fill: { patternType: "solid", fgColor: { rgb: "F97316" } },
+        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: {
+          top: { style: "thin", color: { rgb: "D1D5DB" } },
+          bottom: { style: "thin", color: { rgb: "D1D5DB" } },
+          left: { style: "thin", color: { rgb: "D1D5DB" } },
+          right: { style: "thin", color: { rgb: "D1D5DB" } }
+        }
+      };
+
+      const bodyCellStyle = {
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: {
+          top: { style: "thin", color: { rgb: "E5E7EB" } },
+          bottom: { style: "thin", color: { rgb: "E5E7EB" } },
+          left: { style: "thin", color: { rgb: "E5E7EB" } },
+          right: { style: "thin", color: { rgb: "E5E7EB" } }
+        }
+      };
+
       for (let C = range.s.c; C <= range.e.c; ++C) {
-        let maxWidth = 12;
+        let maxWidth = 14;
         for (let R = range.s.r; R <= range.e.r; ++R) {
           const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
-          if (!ws[cellRef]) continue;
+          if (!ws[cellRef]) {
+            ws[cellRef] = { t: "s", v: "" };
+          }
+          ws[cellRef].s = (R === 0) ? headerStyle : bodyCellStyle;
           const valStr = String(ws[cellRef].v || "");
-          maxWidth = Math.max(maxWidth, Math.min(valStr.length + 3, 45));
+          maxWidth = Math.max(maxWidth, Math.min(valStr.length + 4, 45));
         }
         colWidths.push({ wch: maxWidth });
       }
       ws['!cols'] = colWidths;
 
-      XLSX.utils.book_append_sheet(wb, ws, "Exported Inventory");
+      // Give header row a slightly taller height
+      ws['!rows'] = [{ hpt: 28 }];
+
+      XLSX.utils.book_append_sheet(wb, ws, "Cart Inventory");
       return wb;
     }
 
     function generateFormattedTextSummary(selectedItemsList) {
-      let textLines = ["*Inventory Marked Items* 📦\n"];
+      let textLines = ["*Inventory Cart Items* 🚚\n"];
       selectedItemsList.forEach((item, idx) => {
         const sn = item.sn || item.itemNo || 'N/A';
         const markedQty = markedQuantities[item._uniqueKey] || 1;
@@ -1850,7 +1901,7 @@
         const bin = item.bin || item.location || 'N/A';
 
         textLines.push(
-          `${idx + 1}. SN: *${sn}* | Marked Qty: *${markedQty}* | Quantity: ${qty} | Physical Qty. Ea.Jt.: ${physQtyEaJt} | SAP Code: *${sapCode}* | Description: ${desc} | BIN: *${bin}*`
+          `${idx + 1}. SN: *${sn}* | Cart Qty: *${markedQty}* | Quantity: ${qty} | Physical Qty. Ea.Jt.: ${physQtyEaJt} | SAP Code: *${sapCode}* | Description: ${desc} | BIN: *${bin}*`
         );
       });
       return textLines.join("\n");
@@ -1859,28 +1910,28 @@
     exportExcelBtn.addEventListener('click', () => {
       const selectedItemsList = getSelectedItemsList();
       if (selectedItemsList.length === 0) {
-        alert("No items selected. Please mark items first.");
+        alert("Your cart is empty. Please add items first.");
         return;
       }
 
       const wb = buildExportWorkbook(selectedItemsList);
       const dateStr = new Date().toISOString().slice(0, 10);
-      const fileName = `Selected_Inventory_${dateStr}.xlsx`;
+      const fileName = `Cart_Inventory_${dateStr}.xlsx`;
       XLSX.writeFile(wb, fileName);
     });
 
     exportCsvBtn.addEventListener('click', () => {
       const selectedItemsList = getSelectedItemsList();
       if (selectedItemsList.length === 0) {
-        alert("No items selected. Please mark items first.");
+        alert("Your cart is empty. Please add items first.");
         return;
       }
 
       const wb = buildExportWorkbook(selectedItemsList);
-      const ws = wb.Sheets["Exported Inventory"];
+      const ws = wb.Sheets["Cart Inventory"];
       const csvContent = "\uFEFF" + XLSX.utils.sheet_to_csv(ws);
       const dateStr = new Date().toISOString().slice(0, 10);
-      const fileName = `Selected_Inventory_${dateStr}.csv`;
+      const fileName = `Cart_Inventory_${dateStr}.csv`;
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -1892,7 +1943,7 @@
 
     whatsappShareBtn.addEventListener('click', () => {
       if (selectedItemIds.size === 0) {
-        alert("No items selected. Please mark items first.");
+        alert("Your cart is empty. Please add items first.");
         return;
       }
       whatsappModal.classList.add('active');
@@ -1916,7 +1967,7 @@
       const selectedItemsList = getSelectedItemsList();
       const wb = buildExportWorkbook(selectedItemsList);
       const dateStr = new Date().toISOString().slice(0, 10);
-      const fileName = `Selected_Inventory_${dateStr}.xlsx`;
+      const fileName = `Cart_Inventory_${dateStr}.xlsx`;
 
       const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       const file = new File(
@@ -1929,7 +1980,7 @@
         try {
           await navigator.share({
             title: 'Inventory Excel Export',
-            text: 'Here is the marked inventory Excel file:',
+            text: 'Here is the cart inventory Excel file:',
             files: [file]
           });
           return;
@@ -1947,9 +1998,9 @@
       const selectedItemsList = getSelectedItemsList();
       const wb = buildExportWorkbook(selectedItemsList);
       const dateStr = new Date().toISOString().slice(0, 10);
-      const fileName = `Selected_Inventory_${dateStr}.csv`;
+      const fileName = `Cart_Inventory_${dateStr}.csv`;
 
-      const ws = wb.Sheets["Exported Inventory"];
+      const ws = wb.Sheets["Cart Inventory"];
       const csvContent = "\uFEFF" + XLSX.utils.sheet_to_csv(ws);
       const file = new File([csvContent], fileName, { type: 'text/csv' });
 
@@ -1957,7 +2008,7 @@
         try {
           await navigator.share({
             title: 'Inventory CSV Export',
-            text: 'Here is the marked inventory CSV file:',
+            text: 'Here is the cart inventory CSV file:',
             files: [file]
           });
           return;
