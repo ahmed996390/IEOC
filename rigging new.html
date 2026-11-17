@@ -15,8 +15,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rigging Inventory</title>
 
-  <!-- SheetJS Library for Excel (.xlsx / .xls) parsing & export -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- SheetJS with Cell Styling, Borders, Fills & Hyperlinks Support -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
   <style>
     :root {
@@ -1139,7 +1139,6 @@
 
         if (!sn && !id && !description && !certificates) continue;
 
-        // Precompute timestamp & lowercase search index once during import for lag-free filtering
         const examDateObj = parseDateObject(nextExaminationDate);
         const examTimestamp = examDateObj ? examDateObj.getTime() : null;
         const _searchBlob = `${id} ${sn} ${description} ${swl} ${certificates} ${dateOfCertificate} ${nextExaminationDate} ${currentLocation}`.toLowerCase();
@@ -1496,20 +1495,99 @@
 
     function buildExportWorkbook() {
       const selected = getMarkedItemObjects();
-      const rows = selected.map(item => ({
-        "Tab": item.tabName,
-        "SN": item.sn || "",
-        "Description": item.description || "",
-        "SWL (Ton)": item.swl || "",
-        "ID": item.id || "",
-        "Certificates": item.certificates || "",
-        "Date of Certificate": item.dateOfCertificate || "",
-        "Next Examination date": item.nextExaminationDate || "",
-        "Current location": item.currentLocation || ""
-      }));
+      const headers = [
+        "Tab",
+        "SN",
+        "Description",
+        "SWL (Ton)",
+        "ID",
+        "Certificates",
+        "Date of Certificate",
+        "Next Examination date",
+        "Current location"
+      ];
+
+      const rows = selected.map(item => ([
+        item.tabName || "",
+        item.sn || "",
+        item.description || "",
+        item.swl || "",
+        item.id || "",
+        item.certificates || "",
+        item.dateOfCertificate || "",
+        item.nextExaminationDate || "",
+        item.currentLocation || ""
+      ]));
 
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(rows);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+      const cellBorder = {
+        top: { style: "thin", color: { rgb: "000000" } },
+        bottom: { style: "thin", color: { rgb: "000000" } },
+        left: { style: "thin", color: { rgb: "000000" } },
+        right: { style: "thin", color: { rgb: "000000" } }
+      };
+
+      const headerStyle = {
+        fill: { patternType: "solid", fgColor: { rgb: "FACC15" } },
+        font: { bold: true, color: { rgb: "000000" }, sz: 11 },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: cellBorder
+      };
+
+      const bodyStyle = {
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: cellBorder
+      };
+
+      const linkStyle = {
+        font: { color: { rgb: "0563C1" }, underline: true },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: cellBorder
+      };
+
+      const certColIndex = headers.indexOf("Certificates");
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      const colWidths = [];
+
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        let maxWidth = 14;
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+          const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
+          if (!ws[cellRef]) {
+            ws[cellRef] = { t: "s", v: "" };
+          }
+
+          if (R === 0) {
+            ws[cellRef].s = headerStyle;
+          } else {
+            ws[cellRef].s = bodyStyle;
+
+            // Attach working hyperlink to the Certificates column
+            if (C === certColIndex) {
+              const item = selected[R - 1];
+              let url = item ? item.certUrl : "";
+              if (!url && item && item.certificates && /^(https?:\/\/|www\.)/i.test(item.certificates)) {
+                url = item.certificates;
+              }
+              if (url) {
+                const cleanUrl = /^www\./i.test(url) ? "https://" + url : url;
+                ws[cellRef].l = { Target: cleanUrl, Tooltip: "Open Certificate" };
+                ws[cellRef].s = linkStyle;
+              }
+            }
+          }
+
+          const valStr = String(ws[cellRef].v || "");
+          maxWidth = Math.max(maxWidth, Math.min(valStr.length + 4, 48));
+        }
+        colWidths.push({ wch: maxWidth });
+      }
+
+      ws['!cols'] = colWidths;
+      ws['!rows'] = [{ hpt: 28 }];
+
       XLSX.utils.book_append_sheet(wb, ws, "Marked Rigging Log");
       return wb;
     }
