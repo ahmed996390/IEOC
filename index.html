@@ -717,6 +717,24 @@
     .wa-choice-btn:hover {
       opacity: 0.9;
     }
+
+    .folder-hint-box {
+      background: rgba(37, 211, 102, 0.08);
+      border: 1px solid rgba(37, 211, 102, 0.3);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      max-width: 420px;
+      line-height: 1.45;
+      text-align: left;
+    }
+
+    .folder-hint-box code {
+      color: var(--whatsapp-color);
+      font-size: 0.75rem;
+      word-break: break-all;
+    }
   </style>
 </head>
 <body>
@@ -803,12 +821,21 @@
   <div id="tab3" class="tab-content">
     <div class="action-panel">
       <h3>Excel File Management</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted);">Load new PTB ("stock file") or IEOC inventory workbooks or clear existing data.</p>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Load new PTB ("stock file") or IEOC inventory workbooks from phone storage or WhatsApp Documents.</p>
 
       <label for="excelFileInput" class="custom-file-upload">
         📊 Load Excel File(s) (.xlsx)
       </label>
-      <input type="file" id="excelFileInput" accept=".xlsx, .xls" multiple>
+      <input type="file" id="excelFileInput" accept=".xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" multiple>
+
+      <button id="fetchWhatsappFolderBtn" class="whatsapp-btn" style="border-style: dashed;">
+        💬 Fetch from WhatsApp / Phone Folder
+      </button>
+
+      <div class="folder-hint-box">
+        <b>Phone Path Tip:</b> In the phone picker, open the top-left menu (☰) &rarr; select your phone storage &rarr; browse to:<br>
+        <code>Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Documents</code>
+      </div>
 
       <button id="removeExcelBtn" class="remove-btn">
         🗑️ Clear All Loaded Data
@@ -888,6 +915,7 @@
     const IEOC_TABS = ["sap stock", "write off", "ieoc out of sap"];
 
     const fileInput = document.getElementById('excelFileInput');
+    const fetchWhatsappFolderBtn = document.getElementById('fetchWhatsappFolderBtn');
     const tabSelector = document.getElementById('tabSelector');
     const removeExcelBtn = document.getElementById('removeExcelBtn');
     const exportExcelBtn = document.getElementById('exportExcelBtn');
@@ -1039,8 +1067,7 @@
       return comments.join("\n\n");
     }
 
-    fileInput.addEventListener('change', function(e) {
-      const files = e.target.files;
+    function processExcelFiles(files) {
       if (!files || files.length === 0) return;
 
       let filesProcessed = 0;
@@ -1099,7 +1126,7 @@
               updateFilesSummary();
               displayedItemCount = 50;
               switchTab(1);
-              showStatusBanner(`Successfully imported inventory. Total records: ${getTotalItemsCount()}`);
+              showStatusBanner(`Successfully imported ${totalFiles} file(s). Total records: ${getTotalItemsCount()}`);
             }
           } catch(err) {
             alert("Error parsing Excel file: " + file.name);
@@ -1107,8 +1134,46 @@
         };
         reader.readAsArrayBuffer(file);
       });
+    }
 
+    fileInput.addEventListener('change', function(e) {
+      processExcelFiles(e.target.files);
       fileInput.value = '';
+    });
+
+    // Fetch from WhatsApp / Local Phone Folder button
+    fetchWhatsappFolderBtn.addEventListener('click', async () => {
+      // 1. Try modern File System Access Directory Picker (Chrome / TWA)
+      if ('showDirectoryPicker' in window) {
+        try {
+          const dirHandle = await window.showDirectoryPicker({
+            id: 'whatsapp_docs',
+            mode: 'read',
+            startIn: 'downloads'
+          });
+
+          const excelFiles = [];
+          for await (const entry of dirHandle.values()) {
+            if (entry.kind === 'file' && /\.(xlsx|xls)$/i.test(entry.name)) {
+              const file = await entry.getFile();
+              excelFiles.push(file);
+            }
+          }
+
+          if (excelFiles.length === 0) {
+            alert("No .xlsx or .xls files found in the selected folder.");
+            return;
+          }
+
+          processExcelFiles(excelFiles);
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return; // User closed picker
+        }
+      }
+
+      // 2. Fallback for Android WebView APKs where showDirectoryPicker is restricted
+      fileInput.click();
     });
 
     function normalizeIeocRow(row, worksheet, sourceTabName, isSapStock, isWriteOff, isOutOfSap, sheetName, fileName, index) {
@@ -1611,7 +1676,7 @@
       if (e.target === modal) modal.classList.remove('active');
     });
 
-    // Build Excel / CSV Workbook (kept as is)
+    // Build Excel / CSV Workbook
     function buildExportWorkbook(selectedItemsList) {
       const dynamicQtyHeaders = new Set();
       selectedItemsList.forEach(item => {
@@ -1679,8 +1744,6 @@
       return wb;
     }
 
-    // Generate Clean Text Summary with exact requested fields:
-    // SN, Marked Qty, Quantity, Physical Qty. Ea.Jt., SAP Code, Description, BIN
     function generateFormattedTextSummary(selectedItemsList) {
       let textLines = ["*Inventory Marked Items* 📦\n"];
       selectedItemsList.forEach((item, idx) => {
