@@ -3582,6 +3582,30 @@
       XLSX.writeFile(wb, fileName);
     });
 
+    // Helper: Expand search synonyms & term aliases
+    function expandSearchTerm(term) {
+      const synonyms = {
+        'csg': ['casing'],
+        'casing': ['csg'],
+        'xo': ['x-over', 'x-o'],
+        'x-over': ['xo', 'x-o'],
+        'x-o': ['xo', 'x-over'],
+        'pj': ['pup joint'],
+        'pup joint': ['pj'],
+        'hgr': ['hanger'],
+        'hanger': ['hgr'],
+        'rt': ['running tools', 'running tool'],
+        'running tools': ['rt'],
+        'running tool': ['rt']
+      };
+      const t = term.toLowerCase().trim();
+      let results = [t];
+      if (synonyms[t]) {
+        results = results.concat(synonyms[t]);
+      }
+      return results;
+    }
+
     function filterData() {
       let activeItems = getActiveItems();
       let rawTerm = searchInput.value.toLowerCase().trim();
@@ -3610,7 +3634,8 @@
         return;
       }
 
-      // Split search terms by comma (e.g. "csg , 523 , 3/8" -> ["csg", "523", "3/8"])
+      // Check if comma is used (which triggers description-only search rule)
+      const hasComma = rawTerm.includes(',');
       const searchTerms = rawTerm.split(',').map(t => t.trim()).filter(t => t.length > 0);
       if (searchTerms.length === 0) {
         renderGrid(activeItems, gridTab1);
@@ -3635,16 +3660,24 @@
         const status = String(item.status || '').toLowerCase();
         const matlGroup = String(item.matlGroup || '').toLowerCase();
 
-        // Check if every comma-separated term matches at least one of the item's attributes
+        // Check if every comma-separated term matches according to rules
         return searchTerms.every(term => {
-          const compactTerm = term.replace(/[\s\-_./\\]+/g, '');
-          
+          const expandedTerms = expandSearchTerm(term);
+
           const matchesField = (val) => {
             if (!val) return false;
-            if (val.includes(term)) return true;
-            if (compactTerm.length >= 2 && val.replace(/[\s\-_./\\]+/g, '').includes(compactTerm)) return true;
-            return false;
+            return expandedTerms.some(exTerm => {
+              const compactTerm = exTerm.replace(/[\s\-_./\\]+/g, '');
+              if (val.includes(exTerm)) return true;
+              if (compactTerm.length >= 2 && val.replace(/[\s\-_./\\]+/g, '').includes(compactTerm)) return true;
+              return false;
+            });
           };
+
+          if (hasComma) {
+            // Comma rule: search ONLY in description / title columns
+            return matchesField(desc) || matchesField(title);
+          }
 
           if (mode === 'sn') {
             return matchesField(partNo) || matchesField(sn) || matchesField(itemNo);
