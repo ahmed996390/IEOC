@@ -57,10 +57,16 @@
   <style>
     :root {
       --bg-color: #0f172a;
+      --bg-overlay: rgba(15, 23, 42, 0.88);
       --card-bg: #1e293b;
+      --surface-subtle: rgba(15, 23, 42, 0.7);
+      --surface-glass: rgba(15, 23, 42, 0.92);
+      --search-bg: rgba(30, 41, 59, 0.95);
+      --badge-bg: rgba(255, 255, 255, 0.08);
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.55);
       --border: #334155;
       --danger: #f43f5e;
       --success: #22c55e;
@@ -82,6 +88,39 @@
       --ptb-accent: #60a5fa;
     }
 
+    body.light-theme {
+      --bg-color: #f1f5f9;
+      --bg-overlay: rgba(241, 245, 249, 0.91);
+      --card-bg: #ffffff;
+      --surface-subtle: #f8fafc;
+      --surface-glass: rgba(255, 255, 255, 0.95);
+      --search-bg: #ffffff;
+      --badge-bg: rgba(15, 23, 42, 0.06);
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --accent: #0284c7;
+      --accent-glow: rgba(2, 132, 199, 0.45);
+      --border: #cbd5e1;
+      --danger: #e11d48;
+      --success: #16a34a;
+      --warning: #d97706;
+      --whatsapp-color: #16a34a;
+
+      /* IEOC Orange Theme (Light) */
+      --ieoc-card-bg: #ffffff;
+      --ieoc-border: #ea580c;
+      --ieoc-marked-bg: #ffedd5;
+      --ieoc-marked-border: #ea580c;
+      --ieoc-accent: #c2410c;
+
+      /* PTB Blue Theme (Light) */
+      --ptb-card-bg: #ffffff;
+      --ptb-border: #2563eb;
+      --ptb-marked-bg: #dbeafe;
+      --ptb-marked-border: #2563eb;
+      --ptb-accent: #1d4ed8;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -92,7 +131,7 @@
     body {
       background-color: var(--bg-color);
       background-image: 
-        linear-gradient(rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.88)), 
+        linear-gradient(var(--bg-overlay), var(--bg-overlay)), 
         url('https://companieslogo.com/img/orig/E-c310aaa5.png');
       background-repeat: no-repeat;
       background-position: center center;
@@ -103,6 +142,7 @@
       padding: 1rem;
       padding-top: 1rem;
       padding-bottom: 6rem;
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
     @media (min-width: 640px) {
@@ -118,7 +158,7 @@
       margin: 0 auto 0.75rem auto;
       text-align: center;
       position: relative;
-      padding: 0 3rem;
+      padding: 0 3.25rem;
     }
 
     h1 {
@@ -134,35 +174,48 @@
       }
     }
 
+    /* Slow Pulse Keyframes for High-Visibility Menu Button */
+    @keyframes menuPulse {
+      0% {
+        box-shadow: 0 0 0 0 var(--accent-glow), 0 4px 14px rgba(0, 0, 0, 0.35);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 0 9px rgba(56, 189, 248, 0), 0 6px 20px var(--accent-glow);
+        transform: scale(1.06);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(56, 189, 248, 0), 0 4px 14px rgba(0, 0, 0, 0.35);
+        transform: scale(1);
+      }
+    }
+
     /* Right Side Slide Menu Toggle Button */
     .side-menu-trigger {
       position: fixed;
       top: 0.85rem;
       right: 0.85rem;
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background-color: rgba(30, 41, 59, 0.92);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1.5px solid var(--border);
-      color: var(--accent);
-      font-size: 1.35rem;
-      font-weight: 700;
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), #0ea5e9);
+      border: 2px solid #ffffff;
+      color: #ffffff;
+      font-size: 1.4rem;
+      font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       z-index: 1050;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-      transition: all 0.2s ease;
+      animation: menuPulse 2.6s ease-in-out infinite;
+      transition: background 0.2s ease, transform 0.2s ease;
     }
 
     .side-menu-trigger:hover {
-      background-color: var(--accent);
-      color: var(--bg-color);
-      border-color: var(--accent);
-      transform: scale(1.04);
+      animation: none;
+      transform: scale(1.08);
+      box-shadow: 0 0 18px var(--accent-glow);
     }
 
     /* Right Side Slide Drawer & Backdrop */
@@ -188,13 +241,15 @@
       top: 0;
       right: 0;
       bottom: 0;
-      width: 280px;
+      width: 285px;
       max-width: 82vw;
-      background-color: rgba(15, 23, 42, 0.98);
+      background-color: var(--surface-glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border-left: 1px solid var(--border);
-      box-shadow: -8px 0 30px rgba(0, 0, 0, 0.6);
+      box-shadow: -8px 0 30px rgba(0, 0, 0, 0.45);
       transform: translateX(100%);
-      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease;
       z-index: 1250;
       display: flex;
       flex-direction: column;
@@ -222,7 +277,7 @@
     }
 
     .side-drawer-close {
-      background: rgba(255, 255, 255, 0.06);
+      background: var(--badge-bg);
       border: 1px solid var(--border);
       color: var(--text-muted);
       width: 34px;
@@ -267,19 +322,57 @@
 
     .side-drawer-btn.active {
       border-color: var(--accent);
-      background-color: rgba(56, 189, 248, 0.2);
+      background-color: rgba(56, 189, 248, 0.18);
       color: var(--accent);
     }
 
-    .side-drawer-btn.highlight-import {
-      border-color: rgba(56, 189, 248, 0.55);
-      background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(30, 41, 59, 0.95));
+    .side-drawer-btn.highlight-settings {
+      border-color: var(--accent);
       color: var(--accent);
     }
 
-    .side-drawer-btn.highlight-import:hover {
+    .side-drawer-btn.highlight-settings:hover {
       background-color: var(--accent);
-      color: var(--bg-color);
+      color: #ffffff;
+    }
+
+    /* Theme Switcher Controls */
+    .theme-toggle-group {
+      display: flex;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 350px;
+      background-color: var(--surface-subtle);
+      padding: 0.35rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .theme-option-btn {
+      flex: 1;
+      padding: 0.65rem 0.75rem;
+      border-radius: 9px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .theme-option-btn:hover {
+      color: var(--text-main);
+    }
+
+    .theme-option-btn.active {
+      background-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     /* Fixed Bottom Navigation Tab Bar */
@@ -288,7 +381,7 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background-color: rgba(15, 23, 42, 0.95);
+      background-color: var(--surface-glass);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-top: 1px solid var(--border);
@@ -296,7 +389,7 @@
       justify-content: space-around;
       padding: 0.5rem 0.75rem;
       z-index: 1000;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
     }
 
     .nav-tab-btn {
@@ -328,11 +421,11 @@
 
     .nav-tab-btn:hover {
       color: var(--text-main);
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: var(--badge-bg);
     }
 
     .nav-tab-btn.active {
-      color: var(--bg-color);
+      color: #ffffff;
       background-color: var(--accent);
     }
 
@@ -366,7 +459,7 @@
       gap: 1rem;
       align-items: center;
       text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
     }
 
     .custom-file-upload, .qr-btn, .csv-select, .remove-btn, .export-btn, .whatsapp-btn, .action-btn {
@@ -430,14 +523,14 @@
 
     .custom-file-upload:hover, .qr-btn:hover, .csv-select:hover, .action-btn:hover {
       background-color: var(--accent);
-      color: var(--bg-color);
+      color: #ffffff;
       border-color: var(--accent);
       transform: translateY(-2px);
     }
 
     .qr-excel-btn {
       border-color: #a855f7;
-      color: #c084fc;
+      color: #a855f7;
     }
 
     .qr-excel-btn:hover {
@@ -448,7 +541,7 @@
 
     .qr-preview-btn {
       border-color: #ec4899;
-      color: #f472b6;
+      color: #ec4899;
     }
 
     .qr-preview-btn:hover {
@@ -468,13 +561,19 @@
       border-radius: 12px;
     }
 
+    .csv-select:hover {
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      transform: none;
+    }
+
     #excelFileInput {
       display: none;
     }
 
-    /* Loaded File Item Row in Tab 3 */
+    /* Loaded File Item Row in Settings Tab */
     .file-summary-card {
-      background-color: rgba(15, 23, 42, 0.7);
+      background-color: var(--surface-subtle);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 0.75rem 0.9rem;
@@ -509,8 +608,8 @@
       text-align: center;
       font-size: 0.85rem;
       color: var(--accent);
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
       padding: 0.6rem;
       border-radius: 8px;
       display: none;
@@ -525,7 +624,7 @@
       border: 2px solid var(--accent);
       border-radius: 12px;
       padding: 1rem;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
     }
 
     .scanner-wrapper.active {
@@ -543,10 +642,12 @@
       position: sticky;
       top: 0.5rem;
       z-index: 100;
-      background-color: rgba(15, 23, 42, 0.9);
+      background-color: var(--surface-glass);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      padding: 0.5rem 0;
+      padding: 0.5rem 0.65rem;
+      border-radius: 16px;
+      border: 1px solid var(--border);
       margin-bottom: 1.25rem;
       display: flex;
       flex-direction: column;
@@ -568,11 +669,11 @@
       display: flex;
       align-items: center;
       gap: 0.35rem;
-      background-color: rgba(30, 41, 59, 0.95);
+      background-color: var(--search-bg);
       padding: 0.35rem 0.5rem;
       border-radius: 9999px;
       border: 2px solid var(--border);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
       transition: border-color 0.2s;
     }
 
@@ -607,7 +708,7 @@
     }
 
     .search-mode:hover {
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: var(--badge-bg);
     }
 
     /* Bulk Mark / Unmark Bar for Filtered Results */
@@ -660,7 +761,7 @@
 
     .bulk-btn.unmark-all:hover {
       background-color: var(--warning);
-      color: #0f172a;
+      color: #ffffff;
     }
 
     .grid-container {
@@ -684,17 +785,17 @@
       justify-content: space-between;
       gap: 0.75rem;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
     }
 
     .card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.22);
     }
 
     /* IEOC Card Styling (Orange Theme) */
     .card.ieoc {
-      border-color: rgba(249, 115, 22, 0.4);
+      border-color: rgba(249, 115, 22, 0.45);
     }
     .card.ieoc:hover {
       border-color: var(--ieoc-border);
@@ -710,7 +811,7 @@
 
     /* PTB Card Styling (Blue Theme) */
     .card.ptb {
-      border-color: rgba(59, 130, 246, 0.4);
+      border-color: rgba(59, 130, 246, 0.45);
     }
     .card.ptb:hover {
       border-color: var(--ptb-border);
@@ -750,7 +851,7 @@
     .qty-counter-group {
       display: inline-flex;
       align-items: center;
-      background-color: rgba(15, 23, 42, 0.85);
+      background-color: var(--surface-subtle);
       border: 1px solid var(--border);
       border-radius: 10px;
       overflow: hidden;
@@ -760,7 +861,7 @@
       width: 34px;
       height: 36px;
       border: none;
-      background: rgba(255, 255, 255, 0.06);
+      background: var(--badge-bg);
       color: var(--text-main);
       font-size: 1.2rem;
       font-weight: 700;
@@ -774,7 +875,7 @@
 
     .qty-btn:hover {
       background-color: var(--accent);
-      color: var(--bg-color);
+      color: #ffffff;
     }
 
     .qty-btn:active {
@@ -806,7 +907,7 @@
       padding: 0 0.65rem;
       border-radius: 10px;
       border: 2px solid var(--border);
-      background-color: rgba(15, 23, 42, 0.85);
+      background-color: var(--surface-subtle);
       color: var(--text-muted);
       font-size: 1rem;
       font-weight: 700;
@@ -831,7 +932,7 @@
 
     .card-source {
       font-size: 0.75rem;
-      background: rgba(255, 255, 255, 0.08);
+      background: var(--badge-bg);
       padding: 0.2rem 0.6rem;
       border-radius: 6px;
       display: inline-block;
@@ -869,8 +970,8 @@
       border-radius: 6px;
       font-size: 0.82rem;
       font-weight: 700;
-      background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.35);
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.4);
       color: var(--text-main);
       word-break: break-all;
     }
@@ -879,7 +980,7 @@
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background-color: rgba(0, 0, 0, 0.75);
+      background-color: rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       display: flex;
@@ -908,7 +1009,7 @@
       transition: transform 0.2s;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
 
     .modal-overlay.active .modal-content {
@@ -930,7 +1031,7 @@
 
     .close-btn:hover {
       color: var(--text-main);
-      background: rgba(255,255,255,0.05);
+      background: var(--badge-bg);
     }
 
     .modal-title {
@@ -940,7 +1041,8 @@
     }
 
     .modal-description-box {
-      background-color: rgba(15, 23, 42, 0.6);
+      background-color: var(--surface-subtle);
+      border: 1px solid var(--border);
       padding: 0.75rem;
       border-radius: 8px;
       margin-top: 0.75rem;
@@ -956,7 +1058,8 @@
     }
 
     .modal-item-box {
-      background-color: rgba(15, 23, 42, 0.6);
+      background-color: var(--surface-subtle);
+      border: 1px solid var(--border);
       padding: 0.75rem;
       border-radius: 8px;
     }
@@ -999,7 +1102,7 @@
 
     .folder-hint-box {
       background: rgba(37, 211, 102, 0.08);
-      border: 1px solid rgba(37, 211, 102, 0.3);
+      border: 1px solid rgba(37, 211, 102, 0.35);
       border-radius: 10px;
       padding: 0.75rem 1rem;
       font-size: 0.8rem;
@@ -1143,7 +1246,7 @@
 </head>
 <body>
 
-  <!-- Right Side Slide Menu Trigger Button -->
+  <!-- Right Side Slide Menu Trigger Button (Slow Pulse for High Visibility) -->
   <button type="button" id="openSideMenuBtn" class="side-menu-trigger no-print" title="Open Menu" aria-label="Open Menu">
     ☰
   </button>
@@ -1156,9 +1259,9 @@
       <button type="button" id="closeSideMenuBtn" class="side-drawer-close" aria-label="Close Menu">&times;</button>
     </div>
 
-    <button type="button" id="drawerOpenFilesBtn" class="side-drawer-btn highlight-import">
-      <span>📁</span>
-      <span>Files & Import</span>
+    <button type="button" id="drawerSettingsBtn" class="side-drawer-btn highlight-settings">
+      <span>⚙️</span>
+      <span>Settings</span>
     </button>
 
     <button type="button" id="drawerCatalogBtn" class="side-drawer-btn active">
@@ -1276,8 +1379,24 @@
     <main class="grid-container" id="gridTab2"></main>
   </div>
 
-  <!-- TAB 3: IMPORT & CLEAR FILES (OPENED VIA RIGHT SLIDE MENU) -->
+  <!-- TAB 3: SETTINGS (APPEARANCE THEME & EXCEL FILE MANAGEMENT) -->
   <div id="tab3" class="tab-content">
+    <!-- Appearance / Theme Panel -->
+    <div class="action-panel">
+      <h3>⚙️ Settings</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Switch between Dark and Light appearance for the entire site.</p>
+      
+      <div class="theme-toggle-group" role="group" aria-label="Site Theme">
+        <button type="button" id="darkThemeBtn" class="theme-option-btn active">
+          🌙 Dark Mode
+        </button>
+        <button type="button" id="lightThemeBtn" class="theme-option-btn">
+          ☀️ Light Mode
+        </button>
+      </div>
+    </div>
+
+    <!-- File Import & Clear Panel -->
     <div class="action-panel">
       <h3>Excel File Management</h3>
       <p style="font-size: 0.85rem; color: var(--text-muted);">Load new PTB ("stock file") or IEOC inventory workbooks from phone storage or WhatsApp Documents.</p>
@@ -1301,7 +1420,7 @@
       </button>
     </div>
 
-    <div style="max-width: 650px; margin: 1.5rem auto; background: var(--card-bg); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+    <div style="max-width: 650px; margin: 1.5rem auto; background: var(--card-bg); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.18);">
       <h4 style="margin-bottom: 0.75rem; color: var(--accent);">Loaded File Summary</h4>
       <div id="loadedFilesSummary" style="font-size: 0.9rem; color: var(--text-muted);">No files currently loaded.</div>
     </div>
@@ -1324,7 +1443,7 @@
           </label>
         </div>
       </div>
-      <div id="modalSource" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; background: rgba(255, 255, 255, 0.08); padding: 0.3rem 0.6rem; border-radius: 6px; display: inline-block;"></div>
+      <div id="modalSource" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; background: var(--badge-bg); padding: 0.3rem 0.6rem; border-radius: 6px; display: inline-block;"></div>
 
       <div class="modal-description-box">
         <label style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Description</label>
@@ -1333,7 +1452,7 @@
 
       <div class="modal-details-grid" id="modalGrid"></div>
 
-      <div id="modalCommentSection" style="margin-top: 0.75rem; background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--warning); padding: 0.75rem; border-radius: 8px; display: none;">
+      <div id="modalCommentSection" style="margin-top: 0.75rem; background: rgba(245, 158, 11, 0.12); border-left: 3px solid var(--warning); padding: 0.75rem; border-radius: 8px; display: none;">
         <label style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--warning); display: block; margin-bottom: 0.2rem;">Quantity Column Comments / Cell Notes</label>
         <div id="modalCommentVal" style="font-size: 0.9rem; color: var(--text-main); white-space: pre-line; line-height: 1.5;"></div>
       </div>
@@ -1419,10 +1538,13 @@
     const closeSideMenuBtn = document.getElementById('closeSideMenuBtn');
     const sideDrawer = document.getElementById('sideDrawer');
     const sideDrawerBackdrop = document.getElementById('sideDrawerBackdrop');
-    const drawerOpenFilesBtn = document.getElementById('drawerOpenFilesBtn');
+    const drawerSettingsBtn = document.getElementById('drawerSettingsBtn');
     const drawerCatalogBtn = document.getElementById('drawerCatalogBtn');
     const drawerCartBtn = document.getElementById('drawerCartBtn');
     const drawerCartCount = document.getElementById('drawerCartCount');
+
+    const darkThemeBtn = document.getElementById('darkThemeBtn');
+    const lightThemeBtn = document.getElementById('lightThemeBtn');
 
     const fileInput = document.getElementById('excelFileInput');
     const fetchWhatsappFolderBtn = document.getElementById('fetchWhatsappFolderBtn');
@@ -1468,6 +1590,26 @@
     const closeQrModal = document.getElementById('closeQrModal');
     const qrLabelsContainer = document.getElementById('qrLabelsContainer');
 
+    // Theme Management (Light & Dark)
+    function applySiteTheme(themeName) {
+      const isLight = themeName === 'light';
+      if (isLight) {
+        document.body.classList.add('light-theme');
+        lightThemeBtn.classList.add('active');
+        darkThemeBtn.classList.remove('active');
+      } else {
+        document.body.classList.remove('light-theme');
+        darkThemeBtn.classList.add('active');
+        lightThemeBtn.classList.remove('active');
+      }
+      try {
+        localStorage.setItem('inventory_site_theme', isLight ? 'light' : 'dark');
+      } catch (e) {}
+    }
+
+    darkThemeBtn.addEventListener('click', () => applySiteTheme('dark'));
+    lightThemeBtn.addEventListener('click', () => applySiteTheme('light'));
+
     // Right Slide Menu Controls
     function openSideMenu() {
       sideDrawer.classList.add('active');
@@ -1483,7 +1625,7 @@
     closeSideMenuBtn.addEventListener('click', closeSideMenu);
     sideDrawerBackdrop.addEventListener('click', closeSideMenu);
 
-    drawerOpenFilesBtn.addEventListener('click', () => {
+    drawerSettingsBtn.addEventListener('click', () => {
       closeSideMenu();
       switchTab(3);
     });
@@ -1675,6 +1817,11 @@
     };
 
     window.addEventListener('DOMContentLoaded', async () => {
+      const savedTheme = localStorage.getItem('inventory_site_theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        applySiteTheme(savedTheme);
+      }
+
       getColoredEniLogoCanvas();
 
       const savedData = localStorage.getItem('inventory_excel_data_map');
@@ -1729,7 +1876,7 @@
         drawerCartBtn.classList.add('active');
         renderMarkedGrid();
       } else if (tabNum === 3) {
-        drawerOpenFilesBtn.classList.add('active');
+        drawerSettingsBtn.classList.add('active');
         updateFilesSummary();
       }
     }
@@ -2407,7 +2554,7 @@
         loadMoreDiv.style.gridColumn = '1 / -1';
         loadMoreDiv.style.textAlign = 'center';
         loadMoreDiv.style.padding = '1.5rem';
-        loadMoreDiv.innerHTML = `<button id="loadMoreBtn" style="padding: 0.75rem 1.5rem; background: var(--accent); color: var(--bg-color); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: opacity 0.2s;">Load More Results (${data.length - displayedItemCount} remaining)</button>`;
+        loadMoreDiv.innerHTML = `<button id="loadMoreBtn" style="padding: 0.75rem 1.5rem; background: var(--accent); color: #ffffff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: opacity 0.2s;">Load More Results (${data.length - displayedItemCount} remaining)</button>`;
         containerEl.appendChild(loadMoreDiv);
 
         document.getElementById('loadMoreBtn').addEventListener('click', () => {
