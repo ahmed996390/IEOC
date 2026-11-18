@@ -1,84 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- App Icons for iOS & Android Home Screen -->
-<link rel="apple-touch-icon" sizes="180x180" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
-<link rel="icon" type="image/png" sizes="192x192" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
-
-<!-- Mobile App Capabilities -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Damietta yard inventory">
-
-<!-- Web App Manifest with File Handlers & Share Target -->
-<link rel="manifest" href="data:application/manifest+json,{
-  \"name\": \"Damietta yard inventory\",
-  \"short_name\": \"Inventory\",
-  \"start_url\": \"./\",
-  \"display\": \"standalone\",
-  \"background_color\": \"#0f172a\",
-  \"theme_color\": \"#0f172a\",
-  \"icons\": [
-    {
-      \"src\": \"https://companieslogo.com/img/orig/E-c310aaa5.png\",
-      \"sizes\": \"192x192\",
-      \"type\": \"image/png\",
-      \"purpose\": \"any maskable\"
-    },
-    {
-      \"src\": \"https://companieslogo.com/img/orig/E-c310aaa5.png\",
-      \"sizes\": \"512x512\",
-      \"type\": \"image/png\"
-    }
-  ],
-  \"file_handlers\": [
-    {
-      \"action\": \"./\",
-      \"accept\": {
-        \"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\": [\".xlsx\"],
-        \"application/vnd.ms-excel\": [\".xls\"]
-      }
-    }
-  ]
-}">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Damietta yard inventory</title>
-  
-  <!-- SheetJS with Cell Styling & Comments Support -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-  <!-- HTML5 QR Code Scanner Library -->
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <!-- TensorFlow.js & COCO-SSD for On-Device Camera Object Recognition -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AR Measure & Object Scanner</title>
+
+  <!-- Mobile PWA Settings -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" type="image/png" sizes="192x192" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
+
+  <!-- Inline Web App Manifest for PWABuilder (PWA-to-APK) -->
+  <link rel="manifest" href='data:application/manifest+json,{
+    "name": "AR Measure & Object ID",
+    "short_name": "AR Scanner",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#0f172a",
+    "icons": [
+      {
+        "src": "https://companieslogo.com/img/orig/E-c310aaa5.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any maskable"
+      },
+      {
+        "src": "https://companieslogo.com/img/orig/E-c310aaa5.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }'>
+
+  <!-- TensorFlow.js & COCO-SSD Object Detection -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"></script>
 
   <style>
     :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
       --accent: #38bdf8;
-      --border: #334155;
-      --danger: #f43f5e;
       --success: #22c55e;
       --warning: #f59e0b;
-      --whatsapp-color: #25d366;
-      
-      /* IEOC Orange Theme */
-      --ieoc-card-bg: #1e293b;
-      --ieoc-border: #f97316;
-      --ieoc-marked-bg: #431407;
-      --ieoc-marked-border: #fb923c;
-      --ieoc-accent: #fb923c;
-
-      /* PTB Blue Theme */
-      --ptb-card-bg: #0f172a;
-      --ptb-border: #3b82f6;
-      --ptb-marked-bg: #172554;
-      --ptb-marked-border: #60a5fa;
-      --ptb-accent: #60a5fa;
+      --danger: #f43f5e;
+      --border: #334155;
     }
 
     * {
@@ -89,2845 +60,637 @@
     }
 
     body {
-      background-color: var(--bg-color);
-      background-image: 
-        linear-gradient(rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.88)), 
-        url('https://companieslogo.com/img/orig/E-c310aaa5.png');
-      background-repeat: no-repeat;
-      background-position: center center;
-      background-attachment: fixed;
-      background-size: 850px auto;
-      color: var(--text-main);
+      background-color: var(--bg);
+      color: var(--text);
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 1rem;
-      padding-top: 1rem;
-      padding-bottom: 6rem;
-    }
-
-    @media (min-width: 640px) {
-      body {
-        padding: 2rem;
-        padding-top: 1.5rem;
-        padding-bottom: 6rem;
-      }
+      padding-bottom: 5.5rem;
     }
 
     header {
-      max-width: 1200px;
-      margin: 0 auto 0.75rem auto;
       text-align: center;
+      margin-bottom: 1rem;
+      width: 100%;
+      max-width: 540px;
     }
 
-    h1 {
+    header h1 {
       font-size: 1.5rem;
-      margin-bottom: 0.15rem;
-      color: var(--accent);
-    }
-
-    @media (min-width: 640px) {
-      h1 {
-        font-size: 2.25rem;
-        margin-bottom: 0.5rem;
-      }
-    }
-
-    /* Fixed Bottom Navigation Tab Bar */
-    .nav-tabs {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background-color: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-around;
-      padding: 0.45rem 0.5rem;
-      z-index: 1000;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
-    }
-
-    .nav-tab-btn {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 0.45rem 0.2rem;
-      font-size: 0.72rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.2rem;
-      border-radius: 12px;
-      transition: all 0.2s ease;
-    }
-
-    @media (min-width: 768px) {
-      .nav-tab-btn {
-        flex-direction: row;
-        justify-content: center;
-        font-size: 0.9rem;
-        padding: 0.6rem 1rem;
-        gap: 0.4rem;
-      }
-    }
-
-    .nav-tab-btn:hover {
-      color: var(--text-main);
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-
-    .nav-tab-btn.active {
-      color: var(--bg-color);
-      background-color: var(--accent);
-    }
-
-    .tab-icon-wrap {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      height: 20px;
-    }
-
-    .tab-content {
-      display: none;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    /* Controls & Buttons */
-    .action-panel {
-      max-width: 720px;
-      margin: 0 auto 1.5rem auto;
-      background-color: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      align-items: center;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-
-    .custom-file-upload, .qr-btn, .csv-select, .remove-btn, .export-btn, .csv-export-btn, .whatsapp-btn, .action-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1.25rem;
-      cursor: pointer;
-      background-color: var(--card-bg);
-      color: var(--accent);
-      border: 2px dashed var(--accent);
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: all 0.2s ease;
-      width: 100%;
-      max-width: 350px;
-      text-align: center;
-    }
-
-    .qr-btn, .csv-select, .export-btn, .csv-export-btn, .whatsapp-btn, .action-btn {
-      border-style: solid;
-      border-color: var(--border);
-    }
-
-    .export-btn {
-      border-color: var(--success);
-      color: var(--success);
-    }
-
-    .export-btn:hover {
-      background-color: var(--success);
-      color: #fff;
-      transform: translateY(-2px);
-    }
-
-    .csv-export-btn {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .csv-export-btn:hover {
-      background-color: var(--accent);
-      color: var(--bg-color);
-      transform: translateY(-2px);
-    }
-
-    .whatsapp-btn {
-      border-color: var(--whatsapp-color);
-      color: var(--whatsapp-color);
-    }
-
-    .whatsapp-btn:hover {
-      background-color: var(--whatsapp-color);
-      color: #fff;
-      transform: translateY(-2px);
-    }
-
-    .remove-btn {
-      border-style: solid;
-      border-color: var(--danger);
-      color: var(--danger);
-      background: transparent;
-    }
-
-    .remove-btn:hover {
-      background-color: var(--danger);
-      color: #fff;
-      transform: translateY(-2px);
-    }
-
-    .custom-file-upload:hover, .qr-btn:hover, .csv-select:hover, .action-btn:hover {
-      background-color: var(--accent);
-      color: var(--bg-color);
-      border-color: var(--accent);
-      transform: translateY(-2px);
-    }
-
-    .csv-select {
-      outline: none;
-      color: var(--text-main);
-      border-style: solid;
-      background-color: var(--card-bg);
-      width: 100%;
-      max-width: 350px;
-      padding: 0.75rem;
-      border-radius: 12px;
-    }
-
-    #excelFileInput {
-      display: none;
-    }
-
-    /* Status Banner */
-    .status-banner {
-      max-width: 650px;
-      margin: 0 auto 1rem auto;
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--accent);
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      padding: 0.6rem;
-      border-radius: 8px;
-      display: none;
-    }
-
-    /* Scanner Viewport */
-    .scanner-wrapper {
-      max-width: 500px;
-      margin: 0 auto 1.25rem auto;
-      display: none;
-      background-color: var(--card-bg);
-      border: 2px solid var(--accent);
-      border-radius: 12px;
-      padding: 1rem;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-    }
-
-    .scanner-wrapper.active {
-      display: block;
-    }
-
-    #reader {
-      width: 100%;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    /* Floating Header Controls for Tab 1 */
-    .sticky-header-container {
-      position: sticky;
-      top: 0.5rem;
-      z-index: 100;
-      background-color: rgba(15, 23, 42, 0.9);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      padding: 0.5rem 0;
-      margin-bottom: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      max-width: 680px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .top-controls-row {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: center;
-      align-items: center;
-    }
-
-    /* Hovering Search Bar */
-    .search-container {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      background-color: rgba(30, 41, 59, 0.95);
-      padding: 0.35rem 0.5rem;
-      border-radius: 9999px;
-      border: 2px solid var(--border);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transition: border-color 0.2s;
-    }
-
-    .search-container:focus-within {
-      border-color: var(--accent);
-    }
-
-    .search-input {
-      flex: 1;
-      min-width: 0;
-      padding: 0.5rem 0.75rem;
-      font-size: 0.9rem;
-      border-radius: 9999px;
-      border: none;
-      background: transparent;
-      color: var(--text-main);
-      outline: none;
-    }
-
-    .search-mode {
-      background-color: var(--card-bg);
-      color: var(--accent);
-      border: 1px solid var(--border);
-      border-radius: 9999px;
-      padding: 0.5rem 0.75rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      outline: none;
-      cursor: pointer;
-      max-width: 48%;
-      transition: background-color 0.2s;
-    }
-
-    .search-mode:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-
-    .grid-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-      gap: 1.25rem;
-    }
-
-    /* Card Themes & Hover effects */
-    .card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem;
-      position: relative;
-      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 0.75rem;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.4);
-    }
-
-    /* IEOC Card Styling (Orange Theme) */
-    .card.ieoc {
-      border-color: rgba(249, 115, 22, 0.4);
-    }
-    .card.ieoc:hover {
-      border-color: var(--ieoc-border);
-    }
-    .card.ieoc.marked {
-      background-color: var(--ieoc-marked-bg);
-      border: 2px solid var(--ieoc-marked-border);
-      box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);
-    }
-    .card.ieoc .card-sn, .card.ieoc .card-source, .card.ieoc .sub-title {
-      color: var(--ieoc-accent) !important;
-    }
-
-    /* PTB Card Styling (Blue Theme) */
-    .card.ptb {
-      border-color: rgba(59, 130, 246, 0.4);
-    }
-    .card.ptb:hover {
-      border-color: var(--ptb-border);
-    }
-    .card.ptb.marked {
-      background-color: var(--ptb-marked-bg);
-      border: 2px solid var(--ptb-marked-border);
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
-    }
-    .card.ptb .card-sn, .card.ptb .card-source, .card.ptb .sub-title {
-      color: var(--ptb-accent) !important;
-    }
-
-    /* Card Top Action Bar (Counter + Big Mark Button) */
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.35rem;
-    }
-
-    .card-sn {
-      font-size: 0.95rem;
-      font-weight: 700;
-      word-break: break-word;
-    }
-
-    .card-actions-bar {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      flex-shrink: 0;
-      z-index: 5;
-    }
-
-    .qty-counter-group {
-      display: inline-flex;
-      align-items: center;
-      background-color: rgba(15, 23, 42, 0.85);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    .qty-btn {
-      width: 34px;
-      height: 36px;
-      border: none;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text-main);
-      font-size: 1.2rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.15s;
-      user-select: none;
-    }
-
-    .qty-btn:hover {
-      background-color: var(--accent);
-      color: var(--bg-color);
-    }
-
-    .qty-btn:active {
-      transform: scale(0.95);
-    }
-
-    .qty-input {
-      width: 42px;
-      height: 36px;
-      border: none;
-      background: transparent;
-      color: var(--text-main);
-      text-align: center;
-      font-size: 0.95rem;
-      font-weight: 700;
-      outline: none;
-      -moz-appearance: textfield;
-    }
-
-    .qty-input::-webkit-outer-spin-button,
-    .qty-input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    .big-mark-btn {
-      height: 36px;
-      min-width: 44px;
-      padding: 0 0.65rem;
-      border-radius: 10px;
-      border: 2px solid var(--border);
-      background-color: rgba(15, 23, 42, 0.85);
-      color: var(--text-muted);
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.25rem;
-      transition: all 0.15s ease;
-    }
-
-    .big-mark-btn:hover {
-      border-color: var(--accent);
-      color: var(--text-main);
-    }
-
-    .big-mark-btn.is-marked {
-      background-color: var(--success);
-      border-color: var(--success);
-      color: #ffffff;
-    }
-
-    .card-source {
-      font-size: 0.75rem;
-      background: rgba(255, 255, 255, 0.08);
-      padding: 0.2rem 0.6rem;
-      border-radius: 6px;
-      display: inline-block;
-      margin-top: 0.2rem;
-    }
-
-    .card-desc {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .card-grid-info {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.4rem 0.75rem;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      border-top: 1px solid var(--border);
-      padding-top: 0.6rem;
-    }
-
-    .card-grid-info span b {
-      color: var(--text-main);
-    }
-
-    /* Modal Styling */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background-color: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.2s, visibility 0.2s;
-      z-index: 1100;
-    }
-
-    .modal-overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .modal-content {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border);
-      padding: 1.5rem;
-      border-radius: 16px;
-      max-width: 600px;
-      width: 90%;
-      position: relative;
-      transform: scale(0.95);
-      transition: transform 0.2s;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-
-    .modal-overlay.active .modal-content {
-      transform: scale(1);
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 0.75rem;
-      right: 0.75rem;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.5rem;
-      cursor: pointer;
-      padding: 0.25rem 0.5rem;
-      border-radius: 8px;
-    }
-
-    .close-btn:hover {
-      color: var(--text-main);
-      background: rgba(255,255,255,0.05);
-    }
-
-    .modal-title {
-      font-size: 1.15rem;
       color: var(--accent);
       margin-bottom: 0.25rem;
     }
 
-    .modal-description-box {
-      background-color: rgba(15, 23, 42, 0.6);
-      padding: 0.75rem;
-      border-radius: 8px;
-      margin-top: 0.75rem;
-      font-size: 0.9rem;
-      color: var(--text-main);
+    header p {
+      font-size: 0.85rem;
+      color: var(--muted);
     }
 
-    .modal-details-grid {
+    .panel {
+      width: 100%;
+      max-width: 540px;
+      background-color: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .mode-switch {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      margin-top: 0.75rem;
+      gap: 0.5rem;
     }
 
-    .modal-item-box {
-      background-color: rgba(15, 23, 42, 0.6);
-      padding: 0.75rem;
-      border-radius: 8px;
-    }
-
-    .modal-item-box label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      display: block;
-      margin-bottom: 0.2rem;
-    }
-
-    .modal-item-box div {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    /* WhatsApp Share Choice Modal */
-    .wa-choice-btn {
-      display: block;
-      width: 100%;
+    .btn {
       padding: 0.85rem 1rem;
-      margin-top: 0.75rem;
-      border-radius: 10px;
-      border: none;
-      background-color: var(--whatsapp-color);
-      color: #ffffff;
-      font-weight: 600;
-      font-size: 0.95rem;
-      cursor: pointer;
-      text-align: center;
-      transition: opacity 0.2s;
-    }
-    .wa-choice-btn:hover {
-      opacity: 0.9;
-    }
-
-    .folder-hint-box {
-      background: rgba(37, 211, 102, 0.08);
-      border: 1px solid rgba(37, 211, 102, 0.3);
-      border-radius: 10px;
-      padding: 0.75rem 1rem;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      max-width: 420px;
-      line-height: 1.45;
-      text-align: left;
-    }
-
-    .folder-hint-box code {
-      color: var(--whatsapp-color);
-      font-size: 0.75rem;
-      word-break: break-all;
-    }
-
-    /* TAB 4: AI PIPE SCANNER & MEASURER */
-    .pipe-cam-stage {
-      position: relative;
-      width: 100%;
-      max-width: 560px;
-      background: #020617;
+      border-radius: 12px;
       border: 2px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-      margin: 0 auto;
-      aspect-ratio: 4 / 3;
-      display: flex;
+      background-color: rgba(15, 23, 42, 0.85);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 0.45rem;
+      transition: all 0.15s ease;
     }
 
-    .pipe-cam-stage video,
-    .pipe-cam-stage canvas {
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-primary.active, .btn-primary:hover {
+      background-color: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-success {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .btn-success.active, .btn-success:hover {
+      background-color: var(--success);
+      color: #fff;
+    }
+
+    .btn-danger {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background-color: var(--danger);
+      color: #fff;
+    }
+
+    /* Object Detection Viewport */
+    .camera-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      max-height: 62vh;
+      background: #020617;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 2px solid var(--accent);
+      display: none;
+    }
+
+    .camera-box.active {
+      display: block;
+    }
+
+    video, canvas {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: cover;
     }
 
-    #pipeOverlayCanvas {
-      z-index: 5;
-      touch-action: none;
-      cursor: crosshair;
+    canvas {
+      pointer-events: none;
     }
 
-    .pipe-step-pills {
+    .camera-overlay-controls {
+      position: absolute;
+      bottom: 0.75rem;
+      left: 0.75rem;
+      right: 0.75rem;
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.45rem;
-      justify-content: center;
-      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      gap: 0.5rem;
     }
 
-    .step-pill {
+    .pill-badge {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--border);
       padding: 0.45rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.85);
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.15s;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
     }
 
-    .step-pill.active {
-      background: var(--accent);
-      color: var(--bg-color);
-      border-color: var(--accent);
-    }
-
-    .step-pill.done {
-      border-color: var(--success);
-      color: var(--success);
-    }
-
-    .pipe-metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
-      gap: 0.65rem;
+    /* AR Measurement HUD (Shown inside WebXR DOM Overlay) */
+    #arOverlayContainer {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
       width: 100%;
+      height: 100%;
     }
 
-    .metric-card {
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 0.75rem;
+    #arOverlayContainer.xr-active {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      padding: 1.25rem;
+      pointer-events: none;
+    }
+
+    .ar-top-card {
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--accent);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
       text-align: center;
-    }
-
-    .metric-card label {
-      display: block;
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin-bottom: 0.25rem;
-    }
-
-    .metric-card .metric-val {
-      font-size: 1.05rem;
-      font-weight: 800;
-      color: var(--accent);
-    }
-
-    .pipe-match-list {
       width: 100%;
+      max-width: 420px;
+      pointer-events: auto;
+    }
+
+    .ar-readout {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--success);
+      letter-spacing: -0.02em;
+    }
+
+    .ar-sub-readout {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Center Aiming Reticle */
+    .reticle-ring {
+      width: 44px;
+      height: 44px;
+      border: 3px solid var(--muted);
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .reticle-ring::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background-color: var(--muted);
+      border-radius: 50%;
+      transition: background-color 0.2s;
+    }
+
+    .reticle-ring.locked {
+      border-color: var(--success);
+      transform: scale(1.1);
+      box-shadow: 0 0 16px rgba(34, 197, 94, 0.6);
+    }
+
+    .reticle-ring.locked::after {
+      background-color: var(--success);
+    }
+
+    .ar-bottom-controls {
+      display: flex;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 420px;
+      pointer-events: auto;
+    }
+
+    /* Measurement History */
+    .history-box {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.85rem;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .history-list {
+      list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
-      text-align: left;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--text);
     }
 
-    .pipe-match-item {
-      background: rgba(15, 23, 42, 0.85);
+    .history-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.45rem 0.65rem;
+      background: var(--card);
+      border-radius: 8px;
       border: 1px solid var(--border);
-      border-left: 4px solid var(--success);
-      border-radius: 10px;
-      padding: 0.75rem 0.9rem;
-      cursor: pointer;
-      transition: transform 0.15s, border-color 0.15s;
     }
 
-    .pipe-match-item:hover {
-      transform: translateY(-2px);
-      border-color: var(--accent);
+    .status-msg {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--warning);
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 0.65rem;
+      border-radius: 10px;
+      display: none;
     }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>Damietta yard inventory</h1>
-    <p style="color: var(--text-muted)">IEOC & PTB Inventory System</p>
+    <h1>AR Measure & Object ID</h1>
+    <p>Point-to-Point AR Ruler & Live AI Object Detection</p>
   </header>
 
-  <div id="statusBanner" class="status-banner"></div>
+  <div class="panel">
+    <div id="statusMsg" class="status-msg"></div>
 
-  <!-- Fixed Bottom Navigation Tab Bar -->
-  <nav class="nav-tabs">
-    <button class="nav-tab-btn active" onclick="switchTab(1)">
-      <span class="tab-icon-wrap">📦</span> Catalog & Scan
-    </button>
-    <button class="nav-tab-btn" onclick="switchTab(2)">
-      <span class="tab-icon-wrap" aria-hidden="true">
-        <!-- Truck Loaded with Tools Icon -->
-        <svg width="24" height="20" viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <!-- Tools loaded in truck bed (wrench + hammer/box) -->
-          <path d="M4.5 9V5.5a1.5 1.5 0 0 1 3 0V9" />
-          <circle cx="6" cy="4.5" r="1.5" />
-          <path d="M10.5 9V4.5H8.5V3h5v1.5h-2V9" />
-          <rect x="3" y="7.5" width="11.5" height="3" rx="0.6" />
-          <!-- Truck Bed & Cab -->
-          <path d="M2 10.5h13v6H2z" />
-          <path d="M15 8.5h4.8l2.7 3.5v4.5H15v-8z" />
-          <path d="M16.5 10h2.8l1.6 2h-4.4v-2z" />
-          <!-- Wheels -->
-          <circle cx="6.5" cy="17.5" r="2.3" fill="var(--bg-color)" />
-          <circle cx="19" cy="17.5" r="2.3" fill="var(--bg-color)" />
-        </svg>
-      </span>
-      <span>Cart <span id="markedCountBadge">0</span></span>
-    </button>
-    <button class="nav-tab-btn" onclick="switchTab(3)">
-      <span class="tab-icon-wrap">📁</span> Files & Import
-    </button>
-    <button class="nav-tab-btn" onclick="switchTab(4)">
-      <span class="tab-icon-wrap">📐</span> Pipe Scan
-    </button>
-  </nav>
-
-  <!-- TAB 1: VIEW, SEARCH, & QR SCAN -->
-  <div id="tab1" class="tab-content active">
-    <!-- Floating Header Controls -->
-    <div class="sticky-header-container">
-      <div class="top-controls-row">
-        <select id="tabSelector" class="csv-select" style="max-width: 65%; margin: 0;">
-          <option value="all">📂 View All Loaded Tabs</option>
-        </select>
-        <button id="toggleQrBtn" class="qr-btn" style="width: auto; padding: 0.75rem 1rem; margin: 0;">
-          📷 Scan QR
-        </button>
-      </div>
-
-      <!-- Search Container (Hovers / Pinned Top) -->
-      <div class="search-container">
-        <input type="text" id="searchInput" class="search-input" placeholder="Search (e.g. sn 15, bin pyr5, ieoc, ptb)...">
-        <select id="searchMode" class="search-mode">
-          <option value="auto">⚡ Smart Auto</option>
-          <option value="sn"># SN / Item</option>
-          <option value="sap"># SAP Code</option>
-          <option value="desc">📄 Description</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Camera Container -->
-    <div id="scannerContainer" class="scanner-wrapper">
-      <div id="reader"></div>
-    </div>
-
-    <main class="grid-container" id="gridTab1"></main>
-  </div>
-
-  <!-- TAB 2: CART (MARKED ITEMS, UNMARK ALL, EXPORT & WHATSAPP) -->
-  <div id="tab2" class="tab-content">
-    <div class="action-panel">
-      <h3>Cart Management</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted);">Review items in your cart, adjust quantities, download as Excel or CSV, or share via WhatsApp.</p>
-      
-      <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center; flex-wrap: wrap;">
-        <button id="exportExcelBtn" class="export-btn" style="max-width: 175px;">
-          📊 Download Excel
-        </button>
-        <button id="exportCsvBtn" class="csv-export-btn" style="max-width: 175px;">
-          📄 Download CSV
-        </button>
-        <button id="whatsappShareBtn" class="whatsapp-btn" style="max-width: 195px;">
-          💬 Share via WhatsApp
-        </button>
-        <button id="unmarkAllBtn" class="remove-btn" style="max-width: 165px; border-color: var(--warning); color: var(--warning);">
-          🧹 Clear Cart
-        </button>
-      </div>
-    </div>
-
-    <main class="grid-container" id="gridTab2"></main>
-  </div>
-
-  <!-- TAB 3: IMPORT & CLEAR FILES -->
-  <div id="tab3" class="tab-content">
-    <div class="action-panel">
-      <h3>Excel File Management</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted);">Load new PTB ("stock file") or IEOC inventory workbooks from phone storage or WhatsApp Documents.</p>
-
-      <label for="excelFileInput" class="custom-file-upload">
-        📊 Load Excel File(s) (.xlsx)
-      </label>
-      <input type="file" id="excelFileInput" accept=".xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" multiple>
-
-      <button id="fetchWhatsappFolderBtn" class="whatsapp-btn" style="border-style: dashed;">
-        💬 Fetch from WhatsApp / Phone Folder
+    <!-- Mode Buttons -->
+    <div class="mode-switch">
+      <button id="btnIdentify" class="btn btn-primary">
+        🔍 Identify Objects
       </button>
-
-      <div class="folder-hint-box">
-        <b>Quick Tip:</b> In the phone picker, open the top-left menu (☰) &rarr; select phone storage &rarr; browse to:<br>
-        <code>Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Documents</code>
-      </div>
-
-      <button id="removeExcelBtn" class="remove-btn">
-        🗑️ Clear All Loaded Data
+      <button id="btnMeasure" class="btn btn-success">
+        📏 AR Measure
       </button>
     </div>
 
-    <div style="max-width: 600px; margin: 1.5rem auto; background: var(--card-bg); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-      <h4 style="margin-bottom: 0.5rem; color: var(--accent);">Loaded File Summary</h4>
-      <div id="loadedFilesSummary" style="font-size: 0.9rem; color: var(--text-muted);">No files currently loaded.</div>
-    </div>
-  </div>
-
-  <!-- TAB 4: AI PIPE & OBJECT DIMENSION SCANNER -->
-  <div id="tab4" class="tab-content">
-    <div class="action-panel" style="max-width: 780px;">
-      <h3>AI Pipe &amp; Object Size Estimator</h3>
-      <p style="font-size: 0.84rem; color: var(--text-muted);">
-        Point your camera at a pipe with a reference object (e.g., ID card, QR tag, or ruler) next to it, capture a frame, and tap endpoints to calculate diameter, standard NPS size, and length.
-      </p>
-
-      <!-- Reference Scale Preset -->
-      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; width: 100%; align-items: center;">
-        <select id="refPresetSelect" class="csv-select" style="max-width: 240px; padding: 0.6rem 0.75rem; font-size: 0.85rem;">
-          <option value="85.6">💳 ID / Credit Card Width (85.6 mm)</option>
-          <option value="53.98">💳 ID Card Height (54.0 mm)</option>
-          <option value="100">📏 10 cm / 100 mm Ruler Mark</option>
-          <option value="300">📏 30 cm / 300 mm Ruler</option>
-          <option value="custom">✏️ Custom Reference (mm)</option>
-        </select>
-        <input type="number" id="customRefMmInput" value="85.6" step="0.1" min="1" placeholder="Ref mm"
-          style="width: 110px; padding: 0.6rem; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); font-weight: 700; text-align: center;">
-      </div>
-
-      <!-- Camera Action Buttons -->
-      <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; width: 100%;">
-        <button type="button" id="startPipeCamBtn" class="action-btn" style="max-width: 175px; border-color: var(--accent); color: var(--accent);">
-          📷 Start Camera
-        </button>
-        <button type="button" id="capturePipeFrameBtn" class="export-btn" style="max-width: 185px; display: none;">
-          📸 Capture &amp; Measure
-        </button>
-        <button type="button" id="retakePipeFrameBtn" class="qr-btn" style="max-width: 165px; display: none;">
-          🔄 Live Camera
-        </button>
-        <label for="pipePhotoUploadInput" class="qr-btn" style="max-width: 175px; margin: 0;">
-          🖼️ Upload Photo
-        </label>
-        <input type="file" id="pipePhotoUploadInput" accept="image/*" capture="environment" style="display: none;">
-      </div>
-
-      <!-- AI Status Badge -->
-      <div id="pipeAiStatus" style="font-size: 0.8rem; color: var(--accent); background: rgba(56, 189, 248, 0.1); padding: 0.45rem 0.85rem; border-radius: 9999px; border: 1px solid rgba(56, 189, 248, 0.25);">
-        AI Detector: Ready (Start camera or upload a photo)
-      </div>
-
-      <!-- Interactive Camera & Measurement Canvas -->
-      <div class="pipe-cam-stage" id="pipeCamStage">
-        <video id="pipeVideo" autoplay playsinline muted></video>
-        <canvas id="pipeSnapshotCanvas"></canvas>
-        <canvas id="pipeOverlayCanvas"></canvas>
-        <div id="pipeStagePlaceholder" style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem; z-index: 2;">
-          Tap <b>Start Camera</b> or <b>Upload Photo</b> to begin
-        </div>
-      </div>
-
-      <!-- Measurement Mode Selector (2-tap lines on captured frame) -->
-      <div class="pipe-step-pills" id="pipeMeasureModes">
-        <button type="button" class="step-pill active" data-mode="ref">1. Mark Reference (2 taps)</button>
-        <button type="button" class="step-pill" data-mode="dia">2. Mark Pipe Diameter (2 taps)</button>
-        <button type="button" class="step-pill" data-mode="len">3. Mark Pipe Length (2 taps)</button>
-        <button type="button" id="resetPipePointsBtn" class="step-pill" style="border-color: var(--danger); color: var(--danger);">↺ Clear Lines</button>
-      </div>
-
-      <div id="pipeInstructionHint" style="font-size: 0.82rem; color: var(--warning);">
-        Capture or upload a photo, then tap two ends of your reference object (cyan line).
-      </div>
-
-      <!-- Calculated Dimensions Output -->
-      <div class="pipe-metrics-grid">
-        <div class="metric-card">
-          <label>Detected Object</label>
-          <div class="metric-val" id="metricDetectedObj" style="color: var(--text-main);">Pipe / Cylinder</div>
-        </div>
-        <div class="metric-card">
-          <label>Est. Diameter (OD)</label>
-          <div class="metric-val" id="metricEstDia">--</div>
-        </div>
-        <div class="metric-card">
-          <label>Standard Pipe Size</label>
-          <div class="metric-val" id="metricStdPipe" style="color: var(--success);">--</div>
-        </div>
-        <div class="metric-card">
-          <label>Est. Pipe Length</label>
-          <div class="metric-val" id="metricEstLen" style="color: #fb923c;">--</div>
-        </div>
-      </div>
-
-      <!-- Matching Inventory Items from Loaded Excel -->
-      <div style="width: 100%; border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.25rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;">
-          <h4 style="color: var(--accent); font-size: 0.95rem;">Matching Pipe Inventory in Loaded Sheets</h4>
-          <button type="button" id="searchMatchedSizeInCatalogBtn" class="mark-all-btn" style="display: none; padding: 0.35rem 0.75rem; border-radius: 8px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-weight: 700; cursor: pointer;">
-            🔍 Filter in Catalog
+    <!-- Live Object Detection Camera View -->
+    <div id="cameraBox" class="camera-box">
+      <video id="videoEl" autoplay playsinline muted></video>
+      <canvas id="canvasEl"></canvas>
+      <div class="camera-overlay-controls">
+        <span id="detectedCountBadge" class="pill-badge">Objects: 0</span>
+        <div style="display: flex; gap: 0.4rem;">
+          <button id="btnTorch" class="btn" style="padding: 0.45rem 0.75rem; font-size: 0.8rem; display: none;">
+            🔦 Light
+          </button>
+          <button id="btnStopCamera" class="btn btn-danger" style="padding: 0.45rem 0.75rem; font-size: 0.8rem;">
+            ⏹ Stop
           </button>
         </div>
-        <div id="pipeInventoryMatches" class="pipe-match-list">
-          <div style="font-size: 0.84rem; color: var(--text-muted); text-align: center;">
-            Measure a pipe diameter to automatically match against your loaded IEOC / PTB Excel sheets.
-          </div>
-        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Detail Modal -->
-  <div class="modal-overlay" id="modal">
-    <div class="modal-content">
-      <button class="close-btn" id="closeModal">&times;</button>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-right: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
-        <div class="modal-title" id="modalTitle">Item Details</div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <div class="qty-counter-group">
-            <button type="button" class="qty-btn" id="modalQtyMinus">−</button>
-            <input type="number" class="qty-input" id="modalQtyInput" min="1" value="1">
-            <button type="button" class="qty-btn" id="modalQtyPlus">+</button>
-          </div>
-          <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--accent);">
-            <input type="checkbox" id="modalCheckbox" style="width: 18px; height: 18px; accent-color: var(--accent);"> Add to Cart
-          </label>
-        </div>
-      </div>
-      <div id="modalSource" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; background: rgba(255, 255, 255, 0.08); padding: 0.3rem 0.6rem; border-radius: 6px; display: inline-block;"></div>
-
-      <div class="modal-description-box">
-        <label style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Description</label>
-        <div id="modalDescVal" style="font-family: system-ui;">-</div>
+    <!-- WebXR AR Measurement Overlay -->
+    <div id="arOverlayContainer">
+      <div class="ar-top-card">
+        <div id="arReadout" class="ar-readout">0.0 cm</div>
+        <div id="arSubReadout" class="ar-sub-readout">Move phone slowly over a flat surface...</div>
       </div>
 
-      <div class="modal-details-grid" id="modalGrid"></div>
+      <div id="reticleRing" class="reticle-ring"></div>
 
-      <div id="modalCommentSection" style="margin-top: 0.75rem; background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--warning); padding: 0.75rem; border-radius: 8px; display: none;">
-        <label style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--warning); display: block; margin-bottom: 0.2rem;">Quantity Column Comments / Cell Notes</label>
-        <div id="modalCommentVal" style="font-size: 0.9rem; color: var(--text-main); white-space: pre-line; line-height: 1.5;"></div>
+      <div class="ar-bottom-controls">
+        <button id="btnMarkPoint" class="btn btn-success" style="flex: 2; background: var(--success); color: #fff;">
+          📍 Mark Start (0/2)
+        </button>
+        <button id="btnExitAr" class="btn btn-danger" style="flex: 1; background: rgba(15,23,42,0.9);">
+          ✕ Exit
+        </button>
       </div>
     </div>
-  </div>
 
-  <!-- WhatsApp Choice Modal -->
-  <div class="modal-overlay" id="whatsappModal">
-    <div class="modal-content" style="max-width: 420px; text-align: center;">
-      <button class="close-btn" id="closeWhatsappModal">&times;</button>
-      <div class="modal-title" style="margin-bottom: 0.25rem;">Share Cart via WhatsApp</div>
-      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Choose how you want to share your cart items:</p>
-      
-      <button id="waShareTextBtn" class="wa-choice-btn">
-        💬 1st Option: Share Clean Text
-      </button>
-
-      <button id="waShareExcelBtn" class="wa-choice-btn" style="background-color: #16a34a;">
-        📊 2nd Option: Share Excel File (.xlsx)
-      </button>
-
-      <button id="waShareCsvBtn" class="wa-choice-btn" style="background-color: #0284c7;">
-        📄 3rd Option: Share CSV File (.csv)
-      </button>
+    <!-- Saved Measurements List -->
+    <div class="history-box">
+      <div class="history-header">
+        <span>Saved AR Measurements</span>
+        <button id="btnClearHistory" style="background: none; border: none; color: var(--muted); font-size: 0.75rem; cursor: pointer;">
+          Clear
+        </button>
+      </div>
+      <ul id="historyList" class="history-list">
+        <li style="color: var(--muted); justify-content: center;">No measurements yet</li>
+      </ul>
     </div>
   </div>
 
   <script>
-    let loadedDataMap = {}; 
-    let selectedItemIds = new Set(); 
-    let markedQuantities = {}; // Stores { [uniqueKey]: number }
-    let html5QrcodeScanner = null;
-    let currentModalItemKey = null;
-    let displayedItemCount = 50; 
-    let searchTimeout = null;
-    let currentTab = 1;
+    let cocoModel = null;
+    let mediaStream = null;
+    let detectFrameId = null;
+    let torchOn = false;
 
-    const IEOC_TABS = ["sap stock", "write off", "ieoc out of sap"];
+    let xrSession = null;
+    let xrPoints = [];
+    let latestHitPose = null;
+    let savedMeasurements = [];
 
-    const fileInput = document.getElementById('excelFileInput');
-    const fetchWhatsappFolderBtn = document.getElementById('fetchWhatsappFolderBtn');
-    const tabSelector = document.getElementById('tabSelector');
-    const removeExcelBtn = document.getElementById('removeExcelBtn');
-    const exportExcelBtn = document.getElementById('exportExcelBtn');
-    const exportCsvBtn = document.getElementById('exportCsvBtn');
-    const whatsappShareBtn = document.getElementById('whatsappShareBtn');
-    const unmarkAllBtn = document.getElementById('unmarkAllBtn');
-    const searchInput = document.getElementById('searchInput');
-    const searchMode = document.getElementById('searchMode');
-    const gridTab1 = document.getElementById('gridTab1');
-    const gridTab2 = document.getElementById('gridTab2');
-    const modal = document.getElementById('modal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalSource = document.getElementById('modalSource');
-    const modalDescVal = document.getElementById('modalDescVal');
-    const modalGrid = document.getElementById('modalGrid');
-    const modalCheckbox = document.getElementById('modalCheckbox');
-    const modalQtyMinus = document.getElementById('modalQtyMinus');
-    const modalQtyInput = document.getElementById('modalQtyInput');
-    const modalQtyPlus = document.getElementById('modalQtyPlus');
-    const modalCommentSection = document.getElementById('modalCommentSection');
-    const modalCommentVal = document.getElementById('modalCommentVal');
-    const closeModal = document.getElementById('closeModal');
-    const toggleQrBtn = document.getElementById('toggleQrBtn');
-    const scannerContainer = document.getElementById('scannerContainer');
-    const statusBanner = document.getElementById('statusBanner');
-    const loadedFilesSummary = document.getElementById('loadedFilesSummary');
-    const markedCountBadge = document.getElementById('markedCountBadge');
+    const statusMsg = document.getElementById('statusMsg');
+    const btnIdentify = document.getElementById('btnIdentify');
+    const btnMeasure = document.getElementById('btnMeasure');
+    const cameraBox = document.getElementById('cameraBox');
+    const videoEl = document.getElementById('videoEl');
+    const canvasEl = document.getElementById('canvasEl');
+    const detectedCountBadge = document.getElementById('detectedCountBadge');
+    const btnTorch = document.getElementById('btnTorch');
+    const btnStopCamera = document.getElementById('btnStopCamera');
 
-    const whatsappModal = document.getElementById('whatsappModal');
-    const closeWhatsappModal = document.getElementById('closeWhatsappModal');
-    const waShareTextBtn = document.getElementById('waShareTextBtn');
-    const waShareExcelBtn = document.getElementById('waShareExcelBtn');
-    const waShareCsvBtn = document.getElementById('waShareCsvBtn');
+    const arOverlayContainer = document.getElementById('arOverlayContainer');
+    const arReadout = document.getElementById('arReadout');
+    const arSubReadout = document.getElementById('arSubReadout');
+    const reticleRing = document.getElementById('reticleRing');
+    const btnMarkPoint = document.getElementById('btnMarkPoint');
+    const btnExitAr = document.getElementById('btnExitAr');
+    const historyList = document.getElementById('historyList');
+    const btnClearHistory = document.getElementById('btnClearHistory');
 
-    // Parse an ArrayBuffer directly (used by both File input and incoming Intent/URL files)
-    function parseWorkbookBuffer(arrayBuffer, fileName) {
-      const fileNameLower = (fileName || 'Imported_Sheet.xlsx').toLowerCase();
-      const isPtb = fileNameLower.includes('ptb');
-      const data = new Uint8Array(arrayBuffer);
-      const workbook = XLSX.read(data, { type: 'array', cellComments: true });
-      let importedSheetsCount = 0;
-
-      workbook.SheetNames.forEach(sheetName => {
-        const cleanSheetName = sheetName.trim().toLowerCase();
-        
-        if (isPtb) {
-          if (cleanSheetName === 'stock file') {
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-            const tabKey = `PTB - ${sheetName} (${fileName})`;
-
-            const parsedItems = jsonRows.map((row, idx) => normalizePtbRow(row, worksheet, tabKey, sheetName, fileName, idx));
-            const validItems = parsedItems.filter(item => item.sapCode || item.sn || item.description || item.partSerNo);
-
-            if (validItems.length > 0) {
-              loadedDataMap[tabKey] = validItems;
-              importedSheetsCount++;
-            }
-          }
-        } else {
-          if (IEOC_TABS.some(t => cleanSheetName.includes(t))) {
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-            
-            const tabKey = `IEOC - ${sheetName} (${fileName})`;
-            const isSapStock = cleanSheetName.includes('sap stock');
-            const isWriteOff = cleanSheetName.includes('write off');
-            const isOutOfSap = cleanSheetName.includes('out of sap');
-
-            const parsedItems = jsonRows.map((row, idx) => normalizeIeocRow(row, worksheet, tabKey, isSapStock, isWriteOff, isOutOfSap, sheetName, fileName, idx));
-            const validItems = parsedItems.filter(item => item.sapCode || item.sn || item.description || item.itemNo || item.material || item.title);
-
-            if (validItems.length > 0) {
-              loadedDataMap[tabKey] = validItems;
-              importedSheetsCount++;
-            }
-          }
-        }
-      });
-
-      return importedSheetsCount;
+    function showStatus(text, isError = false) {
+      statusMsg.textContent = text;
+      statusMsg.style.display = 'block';
+      statusMsg.style.color = isError ? 'var(--danger)' : 'var(--warning)';
+      statusMsg.style.borderColor = isError ? 'rgba(244, 63, 94, 0.4)' : 'rgba(245, 158, 11, 0.4)';
+      statusMsg.style.background = isError ? 'rgba(244, 63, 94, 0.12)' : 'rgba(245, 158, 11, 0.12)';
     }
 
-    // Fetch and import a file passed by URL / content URI / APK intent
-    async function loadExternalExcelUri(uri, customName) {
-      try {
-        showStatusBanner("Importing incoming Excel sheet...");
-        const response = await fetch(uri);
-        if (!response.ok) throw new Error("Could not read file URI");
-        const buffer = await response.arrayBuffer();
-        const guessedName = customName || decodeURIComponent(uri.split('/').pop().split('?')[0]) || 'Opened_Inventory.xlsx';
-        const added = parseWorkbookBuffer(buffer, guessedName);
-        if (added > 0) {
-          saveToStorage();
-          updateTabSelector();
-          updateFilesSummary();
-          displayedItemCount = 50;
-          switchTab(1);
-          showStatusBanner(`Added <strong>${guessedName}</strong>. Total records: ${getTotalItemsCount()}`);
-        } else {
-          alert(`Opened "${guessedName}", but no matching IEOC ("SAP Stock", "Write Off", "IEOC Out of SAP") or PTB ("Stock File") tabs were found.`);
-        }
-      } catch (err) {
-        console.warn("Incoming URI load failed:", err);
-      }
+    function hideStatus() {
+      statusMsg.style.display = 'none';
     }
 
-    // Check all ways an APK / OS "Open with" intent can pass an Excel file
-    async function checkForIncomingOpenedFiles() {
-      if ('launchQueue' in window && 'files' in LaunchParams.prototype) {
-        window.launchQueue.setConsumer(async (launchParams) => {
-          if (!launchParams.files || launchParams.files.length === 0) return;
-          const files = [];
-          for (const handle of launchParams.files) {
-            files.push(await handle.getFile());
-          }
-          processExcelFiles(files);
-        });
+    function stopEverything() {
+      if (detectFrameId) {
+        cancelAnimationFrame(detectFrameId);
+        detectFrameId = null;
       }
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+      }
+      torchOn = false;
+      btnTorch.style.display = 'none';
+      cameraBox.classList.remove('active');
+      btnIdentify.classList.remove('active');
 
-      const params = new URLSearchParams(window.location.search);
-      const incomingUri = params.get('file') || params.get('uri') || params.get('url') || params.get('path') || params.get('intent');
-      const incomingName = params.get('name') || params.get('filename');
-      if (incomingUri) {
-        window.history.replaceState({}, '', window.location.pathname);
-        await loadExternalExcelUri(incomingUri, incomingName);
+      if (xrSession) {
+        xrSession.end().catch(() => {});
+        xrSession = null;
       }
-
-      if (window.incomingFileUrl) {
-        const uri = window.incomingFileUrl;
-        window.incomingFileUrl = null;
-        await loadExternalExcelUri(uri);
-      }
+      arOverlayContainer.classList.remove('xr-active');
+      arOverlayContainer.style.display = 'none';
+      btnMeasure.classList.remove('active');
     }
 
-    window.importBase64Excel = function(base64Str, fileName) {
-      try {
-        const cleanB64 = base64Str.includes(',') ? base64Str.split(',')[1] : base64Str;
-        const binary = atob(cleanB64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        const added = parseWorkbookBuffer(bytes.buffer, fileName || 'WhatsApp_File.xlsx');
-        if (added > 0) {
-          saveToStorage();
-          updateTabSelector();
-          updateFilesSummary();
-          displayedItemCount = 50;
-          switchTab(1);
-          showStatusBanner(`Imported <strong>${fileName || 'Excel Sheet'}</strong>. Total records: ${getTotalItemsCount()}`);
-        }
-      } catch (e) {
-        alert("Failed to import incoming Excel data: " + e.message);
-      }
-    };
-
-    window.addEventListener('DOMContentLoaded', async () => {
-      const savedData = localStorage.getItem('inventory_excel_data_map');
-      const savedSelections = localStorage.getItem('inventory_selected_items');
-      const savedQuantities = localStorage.getItem('inventory_marked_quantities');
-      
-      if (savedQuantities) {
-        try {
-          markedQuantities = JSON.parse(savedQuantities) || {};
-        } catch(e) {}
-      }
-
-      if (savedSelections) {
-        try {
-          selectedItemIds = new Set(JSON.parse(savedSelections));
-          updateMarkedBadge();
-        } catch(e) {}
-      }
-
-      if (savedData) {
-        try {
-          loadedDataMap = JSON.parse(savedData);
-          updateTabSelector();
-          updateFilesSummary();
-          filterData();
-          const totalCount = getTotalItemsCount();
-          if (totalCount > 0) {
-            showStatusBanner(`Restored inventory containing <strong>${totalCount}</strong> records.`);
-          }
-        } catch(e) {
-          localStorage.removeItem('inventory_excel_data_map');
-        }
-      }
-
-      await checkForIncomingOpenedFiles();
+    btnStopCamera.addEventListener('click', () => {
+      stopEverything();
+      hideStatus();
     });
 
-    function switchTab(tabNum) {
-      currentTab = tabNum;
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.nav-tab-btn').forEach(el => el.classList.remove('active'));
+    btnExitAr.addEventListener('click', () => {
+      stopEverything();
+      hideStatus();
+    });
 
-      document.getElementById(`tab${tabNum}`).classList.add('active');
-      document.querySelectorAll('.nav-tab-btn')[tabNum - 1].classList.add('active');
+    // ==========================================
+    // 1. OBJECT IDENTIFICATION MODE
+    // ==========================================
+    btnIdentify.addEventListener('click', async () => {
+      stopEverything();
+      btnIdentify.classList.add('active');
+      cameraBox.classList.add('active');
 
-      // Stop pipe camera stream if leaving Tab 4 to save battery
-      if (tabNum !== 4 && typeof stopPipeCameraStream === 'function') {
-        stopPipeCameraStream();
-      }
-
-      if (tabNum === 1) {
-        filterData();
-      } else if (tabNum === 2) {
-        renderMarkedGrid();
-      } else if (tabNum === 3) {
-        updateFilesSummary();
-      }
-    }
-
-    function saveSelectionsToStorage() {
       try {
-        localStorage.setItem('inventory_selected_items', JSON.stringify(Array.from(selectedItemIds)));
-        localStorage.setItem('inventory_marked_quantities', JSON.stringify(markedQuantities));
-        updateMarkedBadge();
-      } catch(e) {}
-    }
+        showStatus('Starting rear camera...');
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+        videoEl.srcObject = mediaStream;
+        await videoEl.play();
 
-    function updateMarkedBadge() {
-      markedCountBadge.textContent = selectedItemIds.size;
-    }
+        // Check flashlight support
+        const track = mediaStream.getVideoTracks()[0];
+        const caps = track.getCapabilities ? track.getCapabilities() : {};
+        if (caps.torch) {
+          btnTorch.style.display = 'inline-flex';
+          btnTorch.onclick = async () => {
+            torchOn = !torchOn;
+            await track.applyConstraints({ advanced: [{ torch: torchOn }] });
+            btnTorch.textContent = torchOn ? '💡 Light On' : '🔦 Light';
+          };
+        }
 
-    function showStatusBanner(msg) {
-      statusBanner.innerHTML = msg;
-      statusBanner.style.display = 'block';
-      setTimeout(() => { statusBanner.style.display = 'none'; }, 5000);
-    }
+        if (!cocoModel) {
+          showStatus('Loading AI Object Detection model (first time takes ~3s)...');
+          cocoModel = await cocoSsd.load();
+        }
 
-    function updateFilesSummary() {
-      const keys = Object.keys(loadedDataMap);
-      if (keys.length === 0) {
-        loadedFilesSummary.innerHTML = "No files currently loaded.";
+        hideStatus();
+        const ctx = canvasEl.getContext('2d');
+
+        const runDetection = async () => {
+          if (!mediaStream) return;
+          if (videoEl.readyState === 4) {
+            canvasEl.width = videoEl.videoWidth;
+            canvasEl.height = videoEl.videoHeight;
+            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+            const predictions = await cocoModel.detect(videoEl);
+            detectedCountBadge.textContent = `Objects: ${predictions.length}`;
+
+            predictions.forEach(pred => {
+              const [x, y, w, h] = pred.bbox;
+              const score = Math.round(pred.score * 100);
+              const label = `${pred.class.toUpperCase()} ${score}%`;
+
+              // Bounding Box
+              ctx.strokeStyle = '#38bdf8';
+              ctx.lineWidth = 4;
+              ctx.strokeRect(x, y, w, h);
+
+              // Label Tag
+              ctx.font = 'bold 16px system-ui';
+              const textWidth = ctx.measureText(label).width;
+              const labelY = Math.max(0, y - 28);
+              ctx.fillStyle = '#38bdf8';
+              ctx.fillRect(x, labelY, textWidth + 14, 28);
+
+              ctx.fillStyle = '#0f172a';
+              ctx.fillText(label, x + 7, labelY + 20);
+            });
+          }
+          detectFrameId = requestAnimationFrame(runDetection);
+        };
+
+        runDetection();
+      } catch (err) {
+        stopEverything();
+        showStatus('Camera error: ' + err.message, true);
+      }
+    });
+
+    // ==========================================
+    // 2. AR LENGTH MEASUREMENT MODE (WebXR)
+    // ==========================================
+    btnMeasure.addEventListener('click', async () => {
+      stopEverything();
+
+      if (!navigator.xr) {
+        showStatus('WebXR AR is not available. Make sure you open this over HTTPS in Chrome on Android.', true);
         return;
       }
-      let html = `<ul style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.3rem;">`;
-      keys.forEach(k => {
-        html += `<li><b>${k}</b> (${loadedDataMap[k].length} items)</li>`;
-      });
-      html += `</ul>`;
-      loadedFilesSummary.innerHTML = html;
-    }
 
-    function extractQtyColumns(row) {
-      const qtyCols = {};
-      Object.keys(row).forEach(key => {
-        const lowerKey = key.trim().toLowerCase();
-        if (lowerKey.includes('qty') || lowerKey.includes('quantity')) {
-          qtyCols[key.trim()] = row[key] !== undefined ? String(row[key]).trim() : "";
-        }
-      });
-      return qtyCols;
-    }
-
-    function getAllQtyComments(worksheet, index) {
-      let comments = [];
-      for (let cellRef in worksheet) {
-        if (cellRef[0] === '!') continue;
-        const colLetter = cellRef.replace(/[0-9]/g, '');
-        const rowNum = parseInt(cellRef.replace(/[^0-9]/g, ''), 10);
-        
-        if (rowNum === 1) {
-          const headerVal = String(worksheet[cellRef].v || '').trim().toLowerCase();
-          if (headerVal.includes('qty') || headerVal.includes('quantity')) {
-            const targetCellRef = colLetter + (index + 2);
-            const targetCell = worksheet[targetCellRef];
-            if (targetCell && targetCell.c && targetCell.c.length > 0) {
-              const headerName = String(worksheet[cellRef].v || '').trim();
-              const cellCommentText = targetCell.c.map(c => c.t).join("\n");
-              comments.push(`• [${headerName}]:\n${cellCommentText}`);
-            }
-          }
-        }
+      const supported = await navigator.xr.isSessionSupported('immersive-ar').catch(() => false);
+      if (!supported) {
+        showStatus('Your browser or device does not support WebXR immersive-ar.', true);
+        return;
       }
-      return comments.join("\n\n");
-    }
 
-    function processExcelFiles(files) {
-      if (!files || files.length === 0) return;
+      try {
+        hideStatus();
+        btnMeasure.classList.add('active');
+        xrPoints = [];
+        latestHitPose = null;
 
-      let filesProcessed = 0;
-      const totalFiles = files.length;
+        arReadout.textContent = '0.0 cm';
+        arSubReadout.textContent = 'Scan a flat surface until the center ring turns green.';
+        btnMarkPoint.textContent = '📍 Mark Start (0/2)';
+        reticleRing.classList.remove('locked');
 
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
+        arOverlayContainer.style.display = 'flex';
+        arOverlayContainer.classList.add('xr-active');
 
-        reader.onload = function(evt) {
-          try {
-            parseWorkbookBuffer(evt.target.result, file.name);
+        const glCanvas = document.createElement('canvas');
+        const gl = glCanvas.getContext('webgl', { xrCompatible: true });
 
-            filesProcessed++;
-            if (filesProcessed === totalFiles) {
-              saveToStorage();
-              updateTabSelector();
-              updateFilesSummary();
-              displayedItemCount = 50;
-              switchTab(1);
-              showStatusBanner(`Successfully imported ${totalFiles} file(s). Total records: ${getTotalItemsCount()}`);
-            }
-          } catch(err) {
-            alert("Error parsing Excel file: " + file.name);
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      });
-    }
+        xrSession = await navigator.xr.requestSession('immersive-ar', {
+          requiredFeatures: ['hit-test'],
+          optionalFeatures: ['dom-overlay'],
+          domOverlay: { root: arOverlayContainer }
+        });
 
-    fileInput.addEventListener('change', function(e) {
-      processExcelFiles(e.target.files);
-      fileInput.value = '';
-    });
+        xrSession.updateRenderState({ baseLayer: new XRWebGLLayer(xrSession, gl) });
+        const refSpace = await xrSession.requestReferenceSpace('local');
+        const viewerSpace = await xrSession.requestReferenceSpace('viewer');
+        const hitTestSource = await xrSession.requestHitTestSource({ space: viewerSpace });
 
-    fetchWhatsappFolderBtn.addEventListener('click', async () => {
-      if ('showDirectoryPicker' in window) {
-        try {
-          const dirHandle = await window.showDirectoryPicker({
-            id: 'whatsapp_docs',
-            mode: 'read',
-            startIn: 'downloads'
-          });
-
-          const excelFiles = [];
-          for await (const entry of dirHandle.values()) {
-            if (entry.kind === 'file' && /\.(xlsx|xls)$/i.test(entry.name)) {
-              const file = await entry.getFile();
-              excelFiles.push(file);
-            }
-          }
-
-          if (excelFiles.length === 0) {
-            alert("No .xlsx or .xls files found in the selected folder.");
+        btnMarkPoint.onclick = () => {
+          if (!latestHitPose) {
+            arSubReadout.textContent = 'Surface not locked yet — aim at a textured floor, table, or wall.';
             return;
           }
 
-          processExcelFiles(excelFiles);
-          return;
-        } catch (err) {
-          if (err.name === 'AbortError') return;
-        }
-      }
-
-      fileInput.click();
-    });
-
-    function normalizeIeocRow(row, worksheet, sourceTabName, isSapStock, isWriteOff, isOutOfSap, sheetName, fileName, index) {
-      const getVal = (keys) => {
-        for (let k of keys) {
-          const foundKey = Object.keys(row).find(rk => rk.trim().toLowerCase() === k.toLowerCase());
-          if (foundKey !== undefined && row[foundKey] !== undefined) return String(row[foundKey]).trim();
-        }
-        return "";
-      };
-
-      const uniqueKey = `${sourceTabName}_${index}_${getVal(['sap code', 'item', 'material', 'sn']) || index}`;
-      const qtyComments = getAllQtyComments(worksheet, index);
-
-      return {
-        _uniqueKey: uniqueKey,
-        _sourceTab: sourceTabName,
-        _tabName: sheetName,
-        _fileName: fileName,
-        isPtb: false,
-        isSapStock: isSapStock,
-        isWriteOff: isWriteOff,
-        isOutOfSap: isOutOfSap,
-        itemNo: getVal(['item', 'item no', 'no']),
-        sn: getVal(['sn', 'p/n \\ sn', 'p/n \\sn', 'serial no', 'serial number', 's.n.', 'p/n / sn']),
-        title: getVal(['title']),
-        material: getVal(['material']),
-        plant: getVal(['plant', 'plt']),
-        storageLocation: getVal(['storage location', 'storage loc', 'sloc', 'storage_location']),
-        sapCode: getVal(['sap code', 'sapcode', 'sap item', 'item code', 'code']),
-        description: getVal(['description', 'desc', 'material description']),
-        concession: getVal(['concession', 'concession name']),
-        um: getVal(['um', 'uom', 'unit']),
-        bin: getVal(['bin', 'bin location', 'shelf']),
-        sapQty: getVal(['sap qty', 'sap quantity', 'sap_qty', 'system qty']),
-        physicalQty: getVal(['physical qty', 'phyical qty', 'physical quantity', 'phy_qty']),
-        physicalQtyEaJt: getVal(['physical qty. ea.\jt.', 'physical qty ea jt', 'qty by ea', 'physical qty ea', 'ea/jt', 'quantity jt\\ea', 'quantity jt/ea']),
-        allQtyCols: extractQtyColumns(row),
-        comment: qtyComments
-      };
-    }
-
-    function normalizePtbRow(row, worksheet, sourceTabName, sheetName, fileName, index) {
-      const getVal = (keys) => {
-        for (let k of keys) {
-          const foundKey = Object.keys(row).find(rk => rk.trim().toLowerCase() === k.toLowerCase());
-          if (foundKey !== undefined && row[foundKey] !== undefined) return String(row[foundKey]).trim();
-        }
-        return "";
-      };
-
-      const uniqueKey = `${sourceTabName}_${index}_${getVal(['sap. code', 'sap code', 'sn']) || index}`;
-      const qtyComments = getAllQtyComments(worksheet, index);
-
-      return {
-        _uniqueKey: uniqueKey,
-        _sourceTab: sourceTabName,
-        _tabName: sheetName,
-        _fileName: fileName,
-        isPtb: true,
-        sn: getVal(['sn', 'serial no', 'serial number']),
-        sapCode: getVal(['sap. code', 'sap code', 'sapcode']),
-        description: getVal(['material description', 'description', 'desc']),
-        status: getVal(['status']),
-        vendor: getVal(['vendor']),
-        matlGroup: getVal(['matl group', 'material group']),
-        partSerNo: getVal(['part.\\ser. no,', 'part/ser. no', 'part.ser. no', 'part ser no']),
-        um: getVal(['unt.', 'unt', 'uom', 'unit']),
-        quantity: getVal(['quantity', 'qty']),
-        allQtyCols: extractQtyColumns(row),
-        comment: qtyComments,
-        location: getVal(['location', 'bin', 'loc'])
-      };
-    }
-
-    function saveToStorage() {
-      try {
-        localStorage.setItem('inventory_excel_data_map', JSON.stringify(loadedDataMap));
-      } catch(e) {}
-    }
-
-    function getTotalItemsCount() {
-      return Object.values(loadedDataMap).reduce((acc, curr) => acc + (curr ? curr.length : 0), 0);
-    }
-
-    function updateTabSelector() {
-      const currentSelection = tabSelector.value;
-      tabSelector.innerHTML = '<option value="all">📂 View All Loaded Tabs (' + getTotalItemsCount() + ' items)</option>';
-      
-      Object.keys(loadedDataMap).forEach(tabKey => {
-        const opt = document.createElement('option');
-        opt.value = tabKey;
-        opt.textContent = `📑 ${tabKey} (${loadedDataMap[tabKey].length})`;
-        tabSelector.appendChild(opt);
-      });
-
-      if (currentSelection && (currentSelection === 'all' || loadedDataMap[currentSelection])) {
-        tabSelector.value = currentSelection;
-      } else {
-        tabSelector.value = 'all';
-      }
-    }
-
-    tabSelector.addEventListener('change', () => {
-      displayedItemCount = 50;
-      filterData();
-    });
-
-    removeExcelBtn.addEventListener('click', () => {
-      if (Object.keys(loadedDataMap).length === 0) {
-        alert("No data currently loaded.");
-        return;
-      }
-
-      if (confirm("Are you sure you want to clear all loaded inventory data?")) {
-        loadedDataMap = {};
-        selectedItemIds.clear();
-        markedQuantities = {};
-        localStorage.removeItem('inventory_excel_data_map');
-        localStorage.removeItem('inventory_selected_items');
-        localStorage.removeItem('inventory_marked_quantities');
-        updateTabSelector();
-        updateFilesSummary();
-        updateMarkedBadge();
-        displayedItemCount = 50;
-        filterData();
-        showStatusBanner("All inventory data has been cleared.");
-      }
-    });
-
-    unmarkAllBtn.addEventListener('click', () => {
-      if (selectedItemIds.size === 0) {
-        alert("Your cart is already empty.");
-        return;
-      }
-      if (confirm("Are you sure you want to clear all items from your cart?")) {
-        selectedItemIds.clear();
-        markedQuantities = {};
-        saveSelectionsToStorage();
-        renderMarkedGrid();
-        showStatusBanner("Cart has been cleared.");
-      }
-    });
-
-    function getActiveItems() {
-      const selectedTab = tabSelector.value;
-      if (selectedTab === 'all') {
-        let combined = [];
-        Object.values(loadedDataMap).forEach(tabItems => {
-          if (Array.isArray(tabItems)) combined = combined.concat(tabItems);
-        });
-        return combined;
-      } else {
-        return loadedDataMap[selectedTab] || [];
-      }
-    }
-
-    function setItemMarkAndQty(uniqueKey, isMarked, qtyVal) {
-      if (isMarked) {
-        selectedItemIds.add(uniqueKey);
-        const parsedQty = parseInt(qtyVal, 10);
-        markedQuantities[uniqueKey] = (!isNaN(parsedQty) && parsedQty > 0) ? parsedQty : 1;
-      } else {
-        selectedItemIds.delete(uniqueKey);
-        delete markedQuantities[uniqueKey];
-      }
-      saveSelectionsToStorage();
-    }
-
-    function renderCardHtml(item) {
-      const isChecked = selectedItemIds.has(item._uniqueKey);
-      const currentQty = markedQuantities[item._uniqueKey] || 1;
-      const themeClass = item.isPtb ? 'ptb' : 'ieoc';
-      const sourceBadgeHtml = item.isPtb ? '<b>Petrobel</b>' : `<b>${item._tabName || 'IEOC'}</b>`;
-
-      let mainTitle = '';
-      let subInfo = '';
-      let infoFieldsHtml = '';
-
-      if (item.isPtb) {
-        mainTitle = `SN: ${item.sn || 'N/A'}`;
-        subInfo = `<div class="sub-title" style="font-size: 0.85rem; margin-top: 0.2rem; font-weight: 600;">SAP Code: ${item.sapCode || '-'}</div>`;
-        infoFieldsHtml = `
-          <span>Status: <b>${item.status || '-'}</b></span>
-          <span>Vendor: <b>${item.vendor || '-'}</b></span>
-          <span>Matl Group: <b>${item.matlGroup || '-'}</b></span>
-          <span>Part/Ser: <b>${item.partSerNo || '-'}</b></span>
-          <span>UNT: <b>${item.um || '-'}</b></span>
-          <span>Quantity: <b>${item.quantity || '0'}</b></span>
-          <span style="grid-column: 1/-1;">Location: <b>${item.location || '-'}</b></span>
-        `;
-      } else if (item.isWriteOff) {
-        mainTitle = `SN: ${item.sn || 'N/A'}`;
-        subInfo = `<div class="sub-title" style="font-size: 0.85rem; margin-top: 0.2rem; font-weight: 600;">Title: ${item.title || '-'}</div>`;
-        infoFieldsHtml = `
-          <span>Plant: <b>${item.plant || '-'}</b></span>
-          <span>Storage Loc: <b>${item.storageLocation || '-'}</b></span>
-          <span>Material: <b>${item.material || '-'}</b></span>
-          <span>UoM: <b>${item.um || '-'}</b></span>
-          <span>Bin: <b>${item.bin || '-'}</b></span>
-          <span>Phy Qty: <b>${item.physicalQty || '0'}</b></span>
-        `;
-      } else if (item.isOutOfSap) {
-        mainTitle = `Item: ${item.itemNo || 'N/A'}`;
-        subInfo = `<div class="sub-title" style="font-size: 0.85rem; margin-top: 0.2rem; font-weight: 600;">SAP Code: ${item.sapCode || '-'}</div>`;
-        infoFieldsHtml = `
-          <span>P/N \\ SN: <b>${item.sn || '-'}</b></span>
-          <span>Concession: <b>${item.concession || '-'}</b></span>
-          <span>Bin Location: <b>${item.bin || '-'}</b></span>
-          <span>Physical Qty Ea.Jt: <b>${item.physicalQtyEaJt || '0'}</b></span>
-        `;
-      } else {
-        mainTitle = `SN: ${item.sn || 'N/A'}`;
-        subInfo = `<div class="sub-title" style="font-size: 0.85rem; margin-top: 0.2rem; font-weight: 600;">SAP Code: ${item.sapCode || '-'}</div>`;
-        infoFieldsHtml = `
-          <span>Plant: <b>${item.plant || '-'}</b></span>
-          <span>Storage Loc: <b>${item.storageLocation || '-'}</b></span>
-          <span>Bin: <b>${item.bin || '-'}</b></span>
-          <span>UM: <b>${item.um || '-'}</b></span>
-          <span>SAP Qty: <b>${item.sapQty || '0'}</b></span>
-          <span>Physical QTY: <b>${item.physicalQty || '0'}</b></span>
-        `;
-      }
-
-      const card = document.createElement('div');
-      card.className = isChecked ? `card ${themeClass} marked` : `card ${themeClass}`;
-      card.innerHTML = `
-        <div>
-          <div class="card-header">
-            <div class="card-sn">${mainTitle}</div>
-            <div class="card-actions-bar">
-              <div class="qty-counter-group">
-                <button type="button" class="qty-btn qty-minus" title="Decrease Quantity">−</button>
-                <input type="number" class="qty-input" min="1" value="${currentQty}" title="Cart Quantity">
-                <button type="button" class="qty-btn qty-plus" title="Increase Quantity">+</button>
-              </div>
-              <button type="button" class="big-mark-btn ${isChecked ? 'is-marked' : ''}" title="Add / Remove from Cart">
-                ${isChecked ? '✓' : 'Add'}
-              </button>
-            </div>
-          </div>
-          <div class="card-source" title="${item._sourceTab}">${sourceBadgeHtml}</div>
-          ${subInfo}
-          <div class="card-desc" style="margin-top: 0.3rem;">${item.description || 'No description provided'}</div>
-        </div>
-        <div class="card-grid-info">
-          ${infoFieldsHtml}
-        </div>
-      `;
-
-      const actionsBar = card.querySelector('.card-actions-bar');
-      const minusBtn = card.querySelector('.qty-minus');
-      const plusBtn = card.querySelector('.qty-plus');
-      const qtyInput = card.querySelector('.qty-input');
-      const markBtn = card.querySelector('.big-mark-btn');
-
-      actionsBar.addEventListener('click', (e) => e.stopPropagation());
-
-      const syncCardUI = (marked, qty) => {
-        qtyInput.value = qty;
-        if (marked) {
-          card.classList.add('marked');
-          markBtn.classList.add('is-marked');
-          markBtn.textContent = '✓';
-        } else {
-          card.classList.remove('marked');
-          markBtn.classList.remove('is-marked');
-          markBtn.textContent = 'Add';
-        }
-      };
-
-      minusBtn.addEventListener('click', () => {
-        let val = parseInt(qtyInput.value, 10) || 1;
-        if (val > 1) {
-          val -= 1;
-          setItemMarkAndQty(item._uniqueKey, true, val);
-          syncCardUI(true, val);
-        } else {
-          setItemMarkAndQty(item._uniqueKey, false, 1);
-          syncCardUI(false, 1);
-          if (currentTab === 2) renderMarkedGrid();
-        }
-      });
-
-      plusBtn.addEventListener('click', () => {
-        let val = parseInt(qtyInput.value, 10) || 0;
-        if (!selectedItemIds.has(item._uniqueKey)) {
-          val = Math.max(1, val);
-        } else {
-          val += 1;
-        }
-        setItemMarkAndQty(item._uniqueKey, true, val);
-        syncCardUI(true, val);
-      });
-
-      qtyInput.addEventListener('input', () => {
-        let val = parseInt(qtyInput.value, 10);
-        if (!isNaN(val) && val > 0) {
-          setItemMarkAndQty(item._uniqueKey, true, val);
-          card.classList.add('marked');
-          markBtn.classList.add('is-marked');
-          markBtn.textContent = '✓';
-        }
-      });
-
-      qtyInput.addEventListener('blur', () => {
-        let val = parseInt(qtyInput.value, 10);
-        if (isNaN(val) || val < 1) {
-          qtyInput.value = markedQuantities[item._uniqueKey] || 1;
-        }
-      });
-
-      markBtn.addEventListener('click', () => {
-        const currentlyMarked = selectedItemIds.has(item._uniqueKey);
-        if (currentlyMarked) {
-          setItemMarkAndQty(item._uniqueKey, false, 1);
-          syncCardUI(false, 1);
-          if (currentTab === 2) renderMarkedGrid();
-        } else {
-          const val = parseInt(qtyInput.value, 10) || 1;
-          setItemMarkAndQty(item._uniqueKey, true, val);
-          syncCardUI(true, val);
-        }
-      });
-
-      card.addEventListener('click', () => openModal(item));
-      return card;
-    }
-
-    function renderGrid(data, containerEl) {
-      containerEl.innerHTML = '';
-      if (!data || data.length === 0) {
-        const emptyMsg = containerEl === gridTab2 ? 'Your cart is empty.' : 'No inventory records found.';
-        containerEl.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">${emptyMsg}</div>`;
-        return;
-      }
-
-      const itemsToRender = data.slice(0, displayedItemCount);
-      itemsToRender.forEach(item => {
-        containerEl.appendChild(renderCardHtml(item));
-      });
-
-      if (data.length > displayedItemCount) {
-        const loadMoreDiv = document.createElement('div');
-        loadMoreDiv.style.gridColumn = '1 / -1';
-        loadMoreDiv.style.textAlign = 'center';
-        loadMoreDiv.style.padding = '1.5rem';
-        loadMoreDiv.innerHTML = `<button id="loadMoreBtn" style="padding: 0.75rem 1.5rem; background: var(--accent); color: var(--bg-color); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: opacity 0.2s;">Load More Results (${data.length - displayedItemCount} remaining)</button>`;
-        containerEl.appendChild(loadMoreDiv);
-
-        document.getElementById('loadMoreBtn').addEventListener('click', () => {
-          displayedItemCount += 50;
-          renderGrid(data, containerEl);
-        });
-      }
-    }
-
-    function getSelectedItemsList() {
-      let selectedItemsList = [];
-      Object.values(loadedDataMap).forEach(tabItems => {
-        tabItems.forEach(item => {
-          if (selectedItemIds.has(item._uniqueKey)) {
-            selectedItemsList.push(item);
+          const pos = latestHitPose.transform.position;
+          if (xrPoints.length >= 2) {
+            xrPoints = [];
           }
-        });
-      });
-      return selectedItemsList;
-    }
 
-    function renderMarkedGrid() {
-      renderGrid(getSelectedItemsList(), gridTab2);
-    }
+          xrPoints.push({ x: pos.x, y: pos.y, z: pos.z });
 
-    function openModal(item) {
-      currentModalItemKey = item._uniqueKey;
-      modalTitle.textContent = item.isPtb ? `SN: ${item.sn || 'N/A'}` : (item.isOutOfSap ? `Item: ${item.itemNo || 'N/A'}` : `SN: ${item.sn || 'N/A'}`);
-      modalSource.textContent = `📑 Source Tab: ${item._sourceTab}`;
-      modalDescVal.textContent = item.description || '-';
-      modalCheckbox.checked = selectedItemIds.has(item._uniqueKey);
-      modalQtyInput.value = markedQuantities[item._uniqueKey] || 1;
-      
-      let fields = [];
-      if (item.isPtb) {
-        fields = [
-          { label: 'SN', val: item.sn },
-          { label: 'SAP. CODE', val: item.sapCode },
-          { label: 'Status', val: item.status },
-          { label: 'Vendor', val: item.vendor },
-          { label: 'Matl Group', val: item.matlGroup },
-          { label: 'Part.\Ser. No,', val: item.partSerNo },
-          { label: 'UNT.', val: item.um },
-          { label: 'Quantity', val: item.quantity },
-          { label: 'Location', val: item.location }
-        ];
-      } else if (item.isWriteOff) {
-        fields = [
-          { label: 'SN', val: item.sn },
-          { label: 'Title', val: item.title },
-          { label: 'Plant', val: item.plant },
-          { label: 'Storage Location', val: item.storageLocation },
-          { label: 'Material', val: item.material },
-          { label: 'UM', val: item.um },
-          { label: 'BIN', val: item.bin },
-          { label: 'Physical QTY', val: item.physicalQty },
-          { label: 'Physical Qty. Ea.Jt.', val: item.physicalQtyEaJt }
-        ];
-      } else if (item.isOutOfSap) {
-        fields = [
-          { label: 'Item', val: item.itemNo },
-          { label: 'P/N \\ SN', val: item.sn },
-          { label: 'SAP Code', val: item.sapCode },
-          { label: 'Concession', val: item.concession },
-          { label: 'Bin Location', val: item.bin },
-          { label: 'Physical Qty. Ea.Jt.', val: item.physicalQtyEaJt }
-        ];
-      } else {
-        fields = [
-          { label: 'SN', val: item.sn },
-          { label: 'Plant', val: item.plant },
-          { label: 'Storage Location', val: item.storageLocation },
-          { label: 'Sap Code', val: item.sapCode },
-          { label: 'UM', val: item.um },
-          { label: 'BIN', val: item.bin },
-          { label: 'SAP Qty', val: item.sapQty },
-          { label: 'Physical QTY', val: item.physicalQty },
-          { label: 'Physical Qty. Ea.Jt.', val: item.physicalQtyEaJt }
-        ];
-      }
+          if (xrPoints.length === 1) {
+            arReadout.textContent = 'Start Marked';
+            arSubReadout.textContent = 'Move the green ring to the end point and tap Mark End.';
+            btnMarkPoint.textContent = '📍 Mark End (1/2)';
+          } else if (xrPoints.length === 2) {
+            const dx = xrPoints[1].x - xrPoints[0].x;
+            const dy = xrPoints[1].y - xrPoints[0].y;
+            const dz = xrPoints[1].z - xrPoints[0].z;
+            const meters = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-      modalGrid.innerHTML = '';
-      fields.forEach(f => {
-        const box = document.createElement('div');
-        box.className = 'modal-item-box';
-        box.innerHTML = `<label>${f.label}</label><div>${f.val || '-'}</div>`;
-        modalGrid.appendChild(box);
-      });
+            const cm = (meters * 100).toFixed(1);
+            const inches = (meters * 39.3701).toFixed(1);
+            const mStr = meters.toFixed(2);
 
-      if (item.comment && item.comment.trim() !== '') {
-        modalCommentVal.textContent = item.comment;
-        modalCommentSection.style.display = 'block';
-      } else {
-        modalCommentSection.style.display = 'none';
-      }
+            const formatted = `${cm} cm (${inches} in)`;
+            arReadout.textContent = formatted;
+            arSubReadout.textContent = `${mStr} meters — Tap below to measure again.`;
+            btnMarkPoint.textContent = '🔄 Measure Again';
 
-      modal.classList.add('active');
-    }
-
-    function refreshCurrentTabView() {
-      if (currentTab === 1) filterData();
-      if (currentTab === 2) renderMarkedGrid();
-    }
-
-    modalQtyMinus.addEventListener('click', () => {
-      if (!currentModalItemKey) return;
-      let val = parseInt(modalQtyInput.value, 10) || 1;
-      if (val > 1) {
-        val -= 1;
-        modalQtyInput.value = val;
-        modalCheckbox.checked = true;
-        setItemMarkAndQty(currentModalItemKey, true, val);
-      } else {
-        modalCheckbox.checked = false;
-        setItemMarkAndQty(currentModalItemKey, false, 1);
-      }
-      refreshCurrentTabView();
-    });
-
-    modalQtyPlus.addEventListener('click', () => {
-      if (!currentModalItemKey) return;
-      let val = parseInt(modalQtyInput.value, 10) || 0;
-      if (!selectedItemIds.has(currentModalItemKey)) {
-        val = Math.max(1, val);
-      } else {
-        val += 1;
-      }
-      modalQtyInput.value = val;
-      modalCheckbox.checked = true;
-      setItemMarkAndQty(currentModalItemKey, true, val);
-      refreshCurrentTabView();
-    });
-
-    modalQtyInput.addEventListener('input', () => {
-      if (!currentModalItemKey) return;
-      let val = parseInt(modalQtyInput.value, 10);
-      if (!isNaN(val) && val > 0) {
-        modalCheckbox.checked = true;
-        setItemMarkAndQty(currentModalItemKey, true, val);
-        refreshCurrentTabView();
-      }
-    });
-
-    modalCheckbox.addEventListener('change', (e) => {
-      if (!currentModalItemKey) return;
-      const val = parseInt(modalQtyInput.value, 10) || 1;
-      setItemMarkAndQty(currentModalItemKey, e.target.checked, val);
-      refreshCurrentTabView();
-    });
-
-    closeModal.addEventListener('click', () => modal.classList.remove('active'));
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.classList.remove('active');
-    });
-
-    // Build Styled Excel / CSV Workbook (Centered content + Orange filled top header row)
-    function buildExportWorkbook(selectedItemsList) {
-      const dynamicQtyHeaders = new Set();
-      selectedItemsList.forEach(item => {
-        if (item.allQtyCols) {
-          Object.keys(item.allQtyCols).forEach(colName => {
-            const lower = colName.trim().toLowerCase();
-            if (lower !== 'physical qty' && lower !== 'phyical qty' && !lower.includes('ea') && !lower.includes('jt')) {
-              dynamicQtyHeaders.add(colName);
-            }
-          });
-        }
-      });
-
-      if (dynamicQtyHeaders.size === 0) {
-        dynamicQtyHeaders.add("Quantity");
-      }
-
-      const exportRows = selectedItemsList.map(i => {
-        const sapOrMaterial = i.isWriteOff ? (i.material || "") : (i.sapCode || "");
-        const markedQty = markedQuantities[i._uniqueKey] || 1;
-
-        const rowObj = {
-          "SN": i.sn || i.itemNo || "",
-          "SAP Code / Material": sapOrMaterial,
-          "Cart Qty": markedQty,
-          "Description": i.description || ""
+            addMeasurementToHistory(formatted, `${mStr} m`);
+          }
         };
 
-        dynamicQtyHeaders.forEach(qtyHeader => {
-          if (i.allQtyCols && i.allQtyCols[qtyHeader] !== undefined) {
-            rowObj[qtyHeader] = i.allQtyCols[qtyHeader];
+        const onXRFrame = (time, frame) => {
+          if (!xrSession) return;
+          xrSession.requestAnimationFrame(onXRFrame);
+
+          const hitResults = frame.getHitTestResults(hitTestSource);
+          if (hitResults.length > 0) {
+            latestHitPose = hitResults[0].getPose(refSpace);
+            reticleRing.classList.add('locked');
+            if (xrPoints.length === 0) {
+              arSubReadout.textContent = 'Surface locked! Aim green ring at start point & tap Mark Start.';
+            }
           } else {
-            rowObj[qtyHeader] = i.quantity || i.sapQty || "";
+            latestHitPose = null;
+            reticleRing.classList.remove('locked');
           }
+        };
+
+        xrSession.requestAnimationFrame(onXRFrame);
+        xrSession.addEventListener('end', () => {
+          stopEverything();
         });
-
-        rowObj["Physical QTY"] = i.physicalQty || "";
-        rowObj["Physical Qty. Ea.Jt."] = i.physicalQtyEaJt || "";
-        rowObj["Plant"] = i.plant || "";
-        rowObj["Storage Location"] = i.storageLocation || i.location || "";
-        rowObj["Tab Name"] = i._tabName || "";
-        rowObj["Sheet / File Name"] = i._fileName || i._sourceTab || "";
-
-        return rowObj;
-      });
-
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(exportRows);
-
-      const range = XLSX.utils.decode_range(ws['!ref']);
-      const colWidths = [];
-
-      const headerStyle = {
-        fill: { patternType: "solid", fgColor: { rgb: "F97316" } },
-        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 },
-        alignment: { horizontal: "center", vertical: "center", wrapText: true },
-        border: {
-          top: { style: "thin", color: { rgb: "D1D5DB" } },
-          bottom: { style: "thin", color: { rgb: "D1D5DB" } },
-          left: { style: "thin", color: { rgb: "D1D5DB" } },
-          right: { style: "thin", color: { rgb: "D1D5DB" } }
-        }
-      };
-
-      const bodyCellStyle = {
-        alignment: { horizontal: "center", vertical: "center", wrapText: true },
-        border: {
-          top: { style: "thin", color: { rgb: "E5E7EB" } },
-          bottom: { style: "thin", color: { rgb: "E5E7EB" } },
-          left: { style: "thin", color: { rgb: "E5E7EB" } },
-          right: { style: "thin", color: { rgb: "E5E7EB" } }
-        }
-      };
-
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        let maxWidth = 14;
-        for (let R = range.s.r; R <= range.e.r; ++R) {
-          const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
-          if (!ws[cellRef]) {
-            ws[cellRef] = { t: "s", v: "" };
-          }
-          ws[cellRef].s = (R === 0) ? headerStyle : bodyCellStyle;
-          const valStr = String(ws[cellRef].v || "");
-          maxWidth = Math.max(maxWidth, Math.min(valStr.length + 4, 45));
-        }
-        colWidths.push({ wch: maxWidth });
-      }
-      ws['!cols'] = colWidths;
-
-      // Give header row a slightly taller height
-      ws['!rows'] = [{ hpt: 28 }];
-
-      XLSX.utils.book_append_sheet(wb, ws, "Cart Inventory");
-      return wb;
-    }
-
-    function generateFormattedTextSummary(selectedItemsList) {
-      let textLines = ["*Inventory Cart Items* 🚚\n"];
-      selectedItemsList.forEach((item, idx) => {
-        const sn = item.sn || item.itemNo || 'N/A';
-        const markedQty = markedQuantities[item._uniqueKey] || 1;
-        const qty = item.quantity || item.sapQty || item.physicalQty || 'N/A';
-        const physQtyEaJt = item.physicalQtyEaJt || 'N/A';
-        const sapCode = item.isWriteOff ? (item.material || 'N/A') : (item.sapCode || 'N/A');
-        const desc = item.description || 'N/A';
-        const bin = item.bin || item.location || 'N/A';
-
-        textLines.push(
-          `${idx + 1}. SN: *${sn}* | Cart Qty: *${markedQty}* | Quantity: ${qty} | Physical Qty. Ea.Jt.: ${physQtyEaJt} | SAP Code: *${sapCode}* | Description: ${desc} | BIN: *${bin}*`
-        );
-      });
-      return textLines.join("\n");
-    }
-
-    exportExcelBtn.addEventListener('click', () => {
-      const selectedItemsList = getSelectedItemsList();
-      if (selectedItemsList.length === 0) {
-        alert("Your cart is empty. Please add items first.");
-        return;
-      }
-
-      const wb = buildExportWorkbook(selectedItemsList);
-      const dateStr = new Date().toISOString().slice(0, 10);
-      const fileName = `Cart_Inventory_${dateStr}.xlsx`;
-      XLSX.writeFile(wb, fileName);
-    });
-
-    exportCsvBtn.addEventListener('click', () => {
-      const selectedItemsList = getSelectedItemsList();
-      if (selectedItemsList.length === 0) {
-        alert("Your cart is empty. Please add items first.");
-        return;
-      }
-
-      const wb = buildExportWorkbook(selectedItemsList);
-      const ws = wb.Sheets["Cart Inventory"];
-      const csvContent = "\uFEFF" + XLSX.utils.sheet_to_csv(ws);
-      const dateStr = new Date().toISOString().slice(0, 10);
-      const fileName = `Cart_Inventory_${dateStr}.csv`;
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
-
-    whatsappShareBtn.addEventListener('click', () => {
-      if (selectedItemIds.size === 0) {
-        alert("Your cart is empty. Please add items first.");
-        return;
-      }
-      whatsappModal.classList.add('active');
-    });
-
-    closeWhatsappModal.addEventListener('click', () => whatsappModal.classList.remove('active'));
-    whatsappModal.addEventListener('click', (e) => {
-      if (e.target === whatsappModal) whatsappModal.classList.remove('active');
-    });
-
-    waShareTextBtn.addEventListener('click', () => {
-      whatsappModal.classList.remove('active');
-      const selectedItemsList = getSelectedItemsList();
-      const finalMessage = generateFormattedTextSummary(selectedItemsList);
-      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(finalMessage)}`;
-      window.open(whatsappUrl, '_blank');
-    });
-
-    waShareExcelBtn.addEventListener('click', async () => {
-      whatsappModal.classList.remove('active');
-      const selectedItemsList = getSelectedItemsList();
-      const wb = buildExportWorkbook(selectedItemsList);
-      const dateStr = new Date().toISOString().slice(0, 10);
-      const fileName = `Cart_Inventory_${dateStr}.xlsx`;
-
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      const file = new File(
-        [wbout],
-        fileName,
-        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
-      );
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            title: 'Inventory Excel Export',
-            text: 'Here is the cart inventory Excel file:',
-            files: [file]
-          });
-          return;
-        } catch (err) {
-          if (err.name === 'AbortError') return;
-        }
-      }
-
-      alert("Direct file sharing is not supported on this browser/device. The Excel (.xlsx) file has been downloaded so you can attach it manually in WhatsApp.");
-      XLSX.writeFile(wb, fileName);
-    });
-
-    waShareCsvBtn.addEventListener('click', async () => {
-      whatsappModal.classList.remove('active');
-      const selectedItemsList = getSelectedItemsList();
-      const wb = buildExportWorkbook(selectedItemsList);
-      const dateStr = new Date().toISOString().slice(0, 10);
-      const fileName = `Cart_Inventory_${dateStr}.csv`;
-
-      const ws = wb.Sheets["Cart Inventory"];
-      const csvContent = "\uFEFF" + XLSX.utils.sheet_to_csv(ws);
-      const file = new File([csvContent], fileName, { type: 'text/csv' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            title: 'Inventory CSV Export',
-            text: 'Here is the cart inventory CSV file:',
-            files: [file]
-          });
-          return;
-        } catch (err) {
-          if (err.name === 'AbortError') return;
-        }
-      }
-
-      alert("Direct file sharing is not supported on this browser/device. The CSV (.csv) file has been downloaded so you can attach it manually in WhatsApp.");
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
-
-    function filterData() {
-      let activeItems = getActiveItems();
-      let term = searchInput.value.toLowerCase().trim();
-      const mode = searchMode.value;
-      let exactSnMatch = null;
-      let binSearchTerm = null;
-
-      const snRegex = /^sn\s+(\d+)$/i;
-      const snMatch = term.match(snRegex);
-      if (snMatch) {
-        exactSnMatch = snMatch[1]; 
-      }
-
-      const binRegex = /^bin\s+(.+)$/i;
-      const binMatch = term.match(binRegex);
-      if (binMatch) {
-        binSearchTerm = binMatch[1].toLowerCase().trim();
-      }
-
-      if (term.startsWith('ieoc')) {
-        activeItems = activeItems.filter(item => !item.isPtb);
-        term = term.replace('ieoc', '').trim();
-      } else if (term.startsWith('ptb')) {
-        activeItems = activeItems.filter(item => item.isPtb);
-        term = term.replace('ptb', '').trim();
-      } else if (term.startsWith('stock')) {
-        activeItems = activeItems.filter(item => !item.isPtb && item.isSapStock);
-        term = term.replace('stock', '').trim();
-      } else if (term.startsWith('write off')) {
-        activeItems = activeItems.filter(item => !item.isPtb && item.isWriteOff);
-        term = term.replace('write off', '').trim();
-      } else if (term.startsWith('out stock')) {
-        activeItems = activeItems.filter(item => !item.isPtb && item.isOutOfSap);
-        term = term.replace('out stock', '').trim();
-      }
-
-      if (exactSnMatch !== null) {
-        let filtered = activeItems.filter(item => {
-          const itemSn = String(item.sn || '').toLowerCase().trim();
-          const itemItemNo = String(item.itemNo || '').toLowerCase().trim();
-          return itemSn === exactSnMatch || itemItemNo === exactSnMatch;
-        });
-        renderGrid(filtered, gridTab1);
-        return;
-      }
-
-      if (binSearchTerm !== null) {
-        const cleanSearchTerm = binSearchTerm.replace(/\s+/g, '');
-        let filtered = activeItems.filter(item => {
-          const binVal = String(item.bin || '').toLowerCase().trim();
-          const locationVal = String(item.location || '').toLowerCase().trim();
-          const cleanBin = binVal.replace(/\s+/g, '');
-          const cleanLoc = locationVal.replace(/\s+/g, '');
-          return cleanBin === cleanSearchTerm || cleanLoc === cleanSearchTerm ||
-                 binVal === binSearchTerm || locationVal === binSearchTerm;
-        });
-        renderGrid(filtered, gridTab1);
-        return;
-      }
-
-      if (!term) {
-        renderGrid(activeItems, gridTab1);
-        return;
-      }
-
-      let filtered = [];
-      if (mode === 'sn') {
-        filtered = activeItems.filter(item => String(item.sn).toLowerCase().includes(term) || String(item.itemNo).toLowerCase().includes(term));
-      } else if (mode === 'sap') {
-        filtered = activeItems.filter(item => String(item.sapCode).toLowerCase().includes(term) || String(item.material).toLowerCase().includes(term));
-      } else if (mode === 'desc') {
-        filtered = activeItems.filter(item => 
-          String(item.description).toLowerCase().includes(term) || 
-          String(item.bin).toLowerCase().includes(term) ||
-          String(item.title).toLowerCase().includes(term) ||
-          String(item.location).toLowerCase().includes(term)
-        );
-      } else {
-        filtered = activeItems.filter(item => {
-          return (
-            String(item.sapCode).toLowerCase().includes(term) ||
-            String(item.itemNo).toLowerCase().includes(term) ||
-            String(item.material).toLowerCase().includes(term) ||
-            String(item.sn).toLowerCase().includes(term) ||
-            String(item.title).toLowerCase().includes(term) ||
-            String(item.description).toLowerCase().includes(term) ||
-            String(item.bin).toLowerCase().includes(term) ||
-            String(item.plant).toLowerCase().includes(term) ||
-            String(item.storageLocation).toLowerCase().includes(term) ||
-            String(item.concession).toLowerCase().includes(term) ||
-            String(item.vendor).toLowerCase().includes(term) ||
-            String(item.location).toLowerCase().includes(term)
-          );
-        });
-      }
-
-      renderGrid(filtered, gridTab1);
-    }
-
-    searchInput.addEventListener('input', () => {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        displayedItemCount = 50;
-        filterData();
-      }, 300);
-    });
-
-    searchMode.addEventListener('change', () => {
-      displayedItemCount = 50;
-      filterData();
-    });
-
-    toggleQrBtn.addEventListener('click', () => {
-      if (scannerContainer.classList.contains('active')) {
-        stopScanner();
-      } else {
-        startScanner();
-      }
-    });
-
-    function startScanner() {
-      scannerContainer.classList.add('active');
-      html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-        fps: 10, 
-        qrbox: { width: 220, height: 220 } 
-      });
-
-      html5QrcodeScanner.render((decodedText) => {
-        searchInput.value = decodedText;
-        displayedItemCount = 50;
-        filterData();
-        stopScanner();
-      }, (errorMessage) => {});
-    }
-
-    function stopScanner() {
-      if (html5QrcodeScanner) {
-        html5QrcodeScanner.clear().then(() => {
-          scannerContainer.classList.remove('active');
-        }).catch(() => {
-          scannerContainer.classList.remove('active');
-        });
-      } else {
-        scannerContainer.classList.remove('active');
-      }
-    }
-
-    // =========================================================
-    // TAB 4: AI PIPE & OBJECT RECOGNITION + SIZE ESTIMATOR
-    // =========================================================
-    const STANDARD_PIPES = [
-      { nps: '1/2"',   npsVal: 0.5,  dn: 15,  odIn: 0.840,  odMm: 21.3 },
-      { nps: '3/4"',   npsVal: 0.75, dn: 20,  odIn: 1.050,  odMm: 26.7 },
-      { nps: '1"',     npsVal: 1,    dn: 25,  odIn: 1.315,  odMm: 33.4 },
-      { nps: '1-1/4"', npsVal: 1.25, dn: 32,  odIn: 1.660,  odMm: 42.2 },
-      { nps: '1-1/2"', npsVal: 1.5,  dn: 40,  odIn: 1.900,  odMm: 48.3 },
-      { nps: '2"',     npsVal: 2,    dn: 50,  odIn: 2.375,  odMm: 60.3 },
-      { nps: '2-1/2"', npsVal: 2.5,  dn: 65,  odIn: 2.875,  odMm: 73.0 },
-      { nps: '3"',     npsVal: 3,    dn: 80,  odIn: 3.500,  odMm: 88.9 },
-      { nps: '4"',     npsVal: 4,    dn: 100, odIn: 4.500,  odMm: 114.3 },
-      { nps: '5"',     npsVal: 5,    dn: 125, odIn: 5.563,  odMm: 141.3 },
-      { nps: '6"',     npsVal: 6,    dn: 150, odIn: 6.625,  odMm: 168.3 },
-      { nps: '8"',     npsVal: 8,    dn: 200, odIn: 8.625,  odMm: 219.1 },
-      { nps: '10"',    npsVal: 10,   dn: 250, odIn: 10.750, odMm: 273.1 },
-      { nps: '12"',    npsVal: 12,   dn: 300, odIn: 12.750, odMm: 323.9 },
-      { nps: '14"',    npsVal: 14,   dn: 350, odIn: 14.000, odMm: 355.6 },
-      { nps: '16"',    npsVal: 16,   dn: 400, odIn: 16.000, odMm: 406.4 },
-      { nps: '18"',    npsVal: 18,   dn: 450, odIn: 18.000, odMm: 457.2 },
-      { nps: '20"',    npsVal: 20,   dn: 500, odIn: 20.000, odMm: 508.0 },
-      { nps: '24"',    npsVal: 24,   dn: 600, odIn: 24.000, odMm: 609.6 },
-      { nps: '30"',    npsVal: 30,   dn: 750, odIn: 30.000, odMm: 762.0 },
-      { nps: '36"',    npsVal: 36,   dn: 900, odIn: 36.000, odMm: 914.4 }
-    ];
-
-    const refPresetSelect = document.getElementById('refPresetSelect');
-    const customRefMmInput = document.getElementById('customRefMmInput');
-    const startPipeCamBtn = document.getElementById('startPipeCamBtn');
-    const capturePipeFrameBtn = document.getElementById('capturePipeFrameBtn');
-    const retakePipeFrameBtn = document.getElementById('retakePipeFrameBtn');
-    const pipePhotoUploadInput = document.getElementById('pipePhotoUploadInput');
-    const pipeAiStatus = document.getElementById('pipeAiStatus');
-    const pipeVideo = document.getElementById('pipeVideo');
-    const pipeSnapshotCanvas = document.getElementById('pipeSnapshotCanvas');
-    const pipeOverlayCanvas = document.getElementById('pipeOverlayCanvas');
-    const pipeStagePlaceholder = document.getElementById('pipeStagePlaceholder');
-    const pipeInstructionHint = document.getElementById('pipeInstructionHint');
-    const resetPipePointsBtn = document.getElementById('resetPipePointsBtn');
-
-    const metricDetectedObj = document.getElementById('metricDetectedObj');
-    const metricEstDia = document.getElementById('metricEstDia');
-    const metricStdPipe = document.getElementById('metricStdPipe');
-    const metricEstLen = document.getElementById('metricEstLen');
-    const pipeInventoryMatches = document.getElementById('pipeInventoryMatches');
-    const searchMatchedSizeInCatalogBtn = document.getElementById('searchMatchedSizeInCatalogBtn');
-
-    let pipeStream = null;
-    let cocoModel = null;
-    let isPipeLiveMode = false;
-    let hasCapturedImage = false;
-    let liveDetectAnimId = null;
-    let activeMeasureMode = 'ref'; // 'ref' | 'dia' | 'len'
-    let measurePoints = { ref: [], dia: [], len: [] };
-    let aiDetections = [];
-    let lastSnappedPipe = null;
-
-    refPresetSelect.addEventListener('change', () => {
-      if (refPresetSelect.value !== 'custom') {
-        customRefMmInput.value = refPresetSelect.value;
-      }
-      recalculatePipeMeasurements();
-    });
-
-    customRefMmInput.addEventListener('input', () => {
-      recalculatePipeMeasurements();
-    });
-
-    document.querySelectorAll('#pipeMeasureModes .step-pill[data-mode]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        activeMeasureMode = btn.dataset.mode;
-        updateMeasureStepUI();
-      });
-    });
-
-    resetPipePointsBtn.addEventListener('click', () => {
-      measurePoints = { ref: [], dia: [], len: [] };
-      activeMeasureMode = 'ref';
-      updateMeasureStepUI();
-      drawPipeOverlay();
-      recalculatePipeMeasurements();
-    });
-
-    function updateMeasureStepUI() {
-      document.querySelectorAll('#pipeMeasureModes .step-pill[data-mode]').forEach(btn => {
-        const m = btn.dataset.mode;
-        btn.classList.toggle('active', m === activeMeasureMode);
-        btn.classList.toggle('done', measurePoints[m].length === 2);
-      });
-
-      if (activeMeasureMode === 'ref') {
-        pipeInstructionHint.textContent = "Step 1: Tap two ends of your reference object (cyan line).";
-      } else if (activeMeasureMode === 'dia') {
-        pipeInstructionHint.textContent = "Step 2: Tap across the pipe's outside diameter (green line).";
-      } else {
-        pipeInstructionHint.textContent = "Step 3: Tap both ends along the pipe's length (orange line).";
-      }
-    }
-
-    async function ensureCocoModelLoaded() {
-      if (cocoModel) return cocoModel;
-      if (typeof cocoSsd === 'undefined') {
-        pipeAiStatus.textContent = "AI Detector: Manual caliper ready (offline mode)";
-        return null;
-      }
-      try {
-        pipeAiStatus.textContent = "AI Detector: Loading vision model...";
-        cocoModel = await cocoSsd.load();
-        pipeAiStatus.textContent = "AI Detector: Active (Scanning objects & pipes)";
-        return cocoModel;
-      } catch (e) {
-        pipeAiStatus.textContent = "AI Detector: Manual caliper ready";
-        return null;
-      }
-    }
-
-    function stopPipeCameraStream() {
-      isPipeLiveMode = false;
-      if (liveDetectAnimId) {
-        cancelAnimationFrame(liveDetectAnimId);
-        liveDetectAnimId = null;
-      }
-      if (pipeStream) {
-        pipeStream.getTracks().forEach(t => t.stop());
-        pipeStream = null;
-      }
-    }
-
-    startPipeCamBtn.addEventListener('click', async () => {
-      try {
-        stopPipeCameraStream();
-        pipeStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 960 } },
-          audio: false
-        });
-        pipeVideo.srcObject = pipeStream;
-        await pipeVideo.play();
-
-        pipeStagePlaceholder.style.display = 'none';
-        pipeSnapshotCanvas.style.display = 'none';
-        pipeVideo.style.display = 'block';
-        capturePipeFrameBtn.style.display = 'inline-flex';
-        retakePipeFrameBtn.style.display = 'none';
-        isPipeLiveMode = true;
-        hasCapturedImage = false;
-        measurePoints = { ref: [], dia: [], len: [] };
-        activeMeasureMode = 'ref';
-        updateMeasureStepUI();
-
-        syncOverlaySize(pipeVideo.videoWidth || 640, pipeVideo.videoHeight || 480);
-        await ensureCocoModelLoaded();
-        runLiveObjectDetectionLoop();
       } catch (err) {
-        alert("Unable to access camera. Please allow camera permission or use 'Upload Photo'.");
+        stopEverything();
+        showStatus('Failed to launch AR: ' + err.message, true);
       }
     });
 
-    function syncOverlaySize(w, h) {
-      pipeSnapshotCanvas.width = w;
-      pipeSnapshotCanvas.height = h;
-      pipeOverlayCanvas.width = w;
-      pipeOverlayCanvas.height = h;
+    function addMeasurementToHistory(primaryText, meterText) {
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      savedMeasurements.unshift({ primaryText, meterText, timeStr });
+      renderHistory();
     }
 
-    let lastDetectTs = 0;
-    async function runLiveObjectDetectionLoop(ts = 0) {
-      if (!isPipeLiveMode) return;
-      if (cocoModel && pipeVideo.readyState >= 2 && ts - lastDetectTs > 450) {
-        lastDetectTs = ts;
-        try {
-          const preds = await cocoModel.detect(pipeVideo);
-          aiDetections = preds.filter(p => p.score >= 0.42);
-          updateDetectedLabelFromPredictions(aiDetections);
-          drawPipeOverlay();
-        } catch (e) {}
-      }
-      liveDetectAnimId = requestAnimationFrame(runLiveObjectDetectionLoop);
-    }
-
-    function mapLabelToIndustrialObject(rawClass) {
-      const c = String(rawClass || '').toLowerCase();
-      if (['baseball bat', 'bottle', 'vase', 'cup', 'stick', 'pole', 'umbrella'].includes(c)) {
-        return 'Pipe / Cylindrical Tube';
-      }
-      return rawClass ? `${rawClass} (Pipe / Object)` : 'Pipe / Cylinder';
-    }
-
-    function updateDetectedLabelFromPredictions(preds) {
-      if (!preds || preds.length === 0) {
-        metricDetectedObj.textContent = 'Pipe / Cylinder';
+    function renderHistory() {
+      if (savedMeasurements.length === 0) {
+        historyList.innerHTML = '<li style="color: var(--muted); justify-content: center;">No measurements yet</li>';
         return;
       }
-      // Prioritize elongated/cylindrical detections
-      const pipeLike = preds.find(p => ['baseball bat', 'bottle', 'vase', 'umbrella'].includes(p.class));
-      const best = pipeLike || preds[0];
-      metricDetectedObj.textContent = `${mapLabelToIndustrialObject(best.class)} (${Math.round(best.score * 100)}%)`;
+      historyList.innerHTML = savedMeasurements
+        .map((m, idx) => `<li><span><b>#${savedMeasurements.length - idx}</b> &nbsp; ${m.primaryText}</span><span style="color: var(--muted);">${m.timeStr}</span></li>`)
+        .join('');
     }
 
-    capturePipeFrameBtn.addEventListener('click', async () => {
-      if (!pipeVideo.videoWidth) return;
-      const w = pipeVideo.videoWidth;
-      const h = pipeVideo.videoHeight;
-      syncOverlaySize(w, h);
-
-      const sCtx = pipeSnapshotCanvas.getContext('2d');
-      sCtx.drawImage(pipeVideo, 0, 0, w, h);
-
-      stopPipeCameraStream();
-      pipeVideo.style.display = 'none';
-      pipeSnapshotCanvas.style.display = 'block';
-      capturePipeFrameBtn.style.display = 'none';
-      retakePipeFrameBtn.style.display = 'inline-flex';
-      hasCapturedImage = true;
-
-      if (cocoModel) {
-        try {
-          const preds = await cocoModel.detect(pipeSnapshotCanvas);
-          aiDetections = preds.filter(p => p.score >= 0.42);
-          updateDetectedLabelFromPredictions(aiDetections);
-        } catch (e) {}
-      }
-      drawPipeOverlay();
+    btnClearHistory.addEventListener('click', () => {
+      savedMeasurements = [];
+      renderHistory();
     });
-
-    retakePipeFrameBtn.addEventListener('click', () => {
-      startPipeCamBtn.click();
-    });
-
-    pipePhotoUploadInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const img = new Image();
-      img.onload = async () => {
-        stopPipeCameraStream();
-        const maxW = 1280;
-        const scale = img.width > maxW ? maxW / img.width : 1;
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-
-        syncOverlaySize(w, h);
-        const sCtx = pipeSnapshotCanvas.getContext('2d');
-        sCtx.drawImage(img, 0, 0, w, h);
-
-        pipeStagePlaceholder.style.display = 'none';
-        pipeVideo.style.display = 'none';
-        pipeSnapshotCanvas.style.display = 'block';
-        capturePipeFrameBtn.style.display = 'none';
-        retakePipeFrameBtn.style.display = 'inline-flex';
-        hasCapturedImage = true;
-        measurePoints = { ref: [], dia: [], len: [] };
-        activeMeasureMode = 'ref';
-        updateMeasureStepUI();
-
-        await ensureCocoModelLoaded();
-        if (cocoModel) {
-          try {
-            const preds = await cocoModel.detect(pipeSnapshotCanvas);
-            aiDetections = preds.filter(p => p.score >= 0.42);
-            updateDetectedLabelFromPredictions(aiDetections);
-          } catch (err) {}
-        }
-        drawPipeOverlay();
-      };
-      img.src = URL.createObjectURL(file);
-      pipePhotoUploadInput.value = '';
-    });
-
-    // Convert client tap coordinates into actual canvas pixel coordinates (accounting for object-fit: contain)
-    function getCanvasCoordsFromEvent(evt) {
-      const rect = pipeOverlayCanvas.getBoundingClientRect();
-      const cw = pipeOverlayCanvas.width;
-      const ch = pipeOverlayCanvas.height;
-      const canvasRatio = cw / ch;
-      const elemRatio = rect.width / rect.height;
-
-      let renderW = rect.width;
-      let renderH = rect.height;
-      let offsetX = 0;
-      let offsetY = 0;
-
-      if (elemRatio > canvasRatio) {
-        renderW = rect.height * canvasRatio;
-        offsetX = (rect.width - renderW) / 2;
-      } else {
-        renderH = rect.width / canvasRatio;
-        offsetY = (rect.height - renderH) / 2;
-      }
-
-      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
-      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
-
-      const x = ((clientX - rect.left - offsetX) / renderW) * cw;
-      const y = ((clientY - rect.top - offsetY) / renderH) * ch;
-      return {
-        x: Math.max(0, Math.min(cw, x)),
-        y: Math.max(0, Math.min(ch, y))
-      };
-    }
-
-    pipeOverlayCanvas.addEventListener('pointerdown', (e) => {
-      if (!hasCapturedImage && !isPipeLiveMode) return;
-      // Auto-freeze live video on first tap so user can place points accurately
-      if (isPipeLiveMode) {
-        capturePipeFrameBtn.click();
-        return;
-      }
-
-      const pt = getCanvasCoordsFromEvent(e);
-      const pts = measurePoints[activeMeasureMode];
-      if (pts.length >= 2) {
-        measurePoints[activeMeasureMode] = [pt];
-      } else {
-        pts.push(pt);
-      }
-
-      // Auto-advance to next step after completing 2 points
-      if (measurePoints[activeMeasureMode].length === 2) {
-        if (activeMeasureMode === 'ref' && measurePoints.dia.length < 2) {
-          activeMeasureMode = 'dia';
-        } else if (activeMeasureMode === 'dia' && measurePoints.len.length < 2) {
-          activeMeasureMode = 'len';
-        }
-      }
-
-      updateMeasureStepUI();
-      drawPipeOverlay();
-      recalculatePipeMeasurements();
-    });
-
-    function pixelDist(p1, p2) {
-      return Math.hypot(p2.x - p1.x, p2.y - p1.y);
-    }
-
-    function drawPipeOverlay() {
-      const ctx = pipeOverlayCanvas.getContext('2d');
-      const w = pipeOverlayCanvas.width;
-      const h = pipeOverlayCanvas.height;
-      ctx.clearRect(0, 0, w, h);
-
-      // Draw AI bounding boxes
-      aiDetections.forEach(det => {
-        const [bx, by, bw, bh] = det.bbox;
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
-        ctx.lineWidth = Math.max(2, w / 280);
-        ctx.setLineDash([8, 6]);
-        ctx.strokeRect(bx, by, bw, bh);
-        ctx.setLineDash([]);
-
-        const label = `${mapLabelToIndustrialObject(det.class)} ${Math.round(det.score * 100)}%`;
-        ctx.font = `bold ${Math.max(13, Math.round(w / 42))}px system-ui, sans-serif`;
-        const textW = ctx.measureText(label).width + 12;
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-        ctx.fillRect(bx, Math.max(0, by - 24), textW, 22);
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillText(label, bx + 6, Math.max(16, by - 8));
-      });
-
-      const drawSegment = (pts, color, tag) => {
-        if (!pts || pts.length === 0) return;
-        const r = Math.max(6, w / 95);
-        ctx.fillStyle = color;
-        pts.forEach(p => {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-          ctx.fill();
-        });
-
-        if (pts.length === 2) {
-          ctx.strokeStyle = color;
-          ctx.lineWidth = Math.max(3, w / 210);
-          ctx.beginPath();
-          ctx.moveTo(pts[0].x, pts[0].y);
-          ctx.lineTo(pts[1].x, pts[1].y);
-          ctx.stroke();
-
-          const midX = (pts[0].x + pts[1].x) / 2;
-          const midY = (pts[0].y + pts[1].y) / 2;
-          ctx.font = `bold ${Math.max(13, Math.round(w / 40))}px system-ui, sans-serif`;
-          const tw = ctx.measureText(tag).width + 12;
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-          ctx.fillRect(midX - tw / 2, midY - 22, tw, 20);
-          ctx.fillStyle = color;
-          ctx.fillText(tag, midX - tw / 2 + 6, midY - 7);
-        }
-      };
-
-      drawSegment(measurePoints.ref, '#38bdf8', `REF (${customRefMmInput.value || 85.6} mm)`);
-      drawSegment(measurePoints.dia, '#22c55e', 'DIAMETER');
-      drawSegment(measurePoints.len, '#fb923c', 'LENGTH');
-    }
-
-    function snapToNearestStandardPipe(odMm) {
-      let best = STANDARD_PIPES[0];
-      let minDiff = Infinity;
-      for (const p of STANDARD_PIPES) {
-        const d = Math.abs(p.odMm - odMm);
-        if (d < minDiff) {
-          minDiff = d;
-          best = p;
-        }
-      }
-      const errPct = minDiff / best.odMm;
-      const confidence = Math.max(0, Math.round((1 - errPct) * 100));
-      return { pipe: best, diffMm: minDiff, confidence };
-    }
-
-    function parseInchFractionVal(str) {
-      const clean = String(str).trim();
-      if (clean.includes('-')) {
-        const [whole, frac] = clean.split('-');
-        return parseFloat(whole) + parseInchFractionVal(frac);
-      }
-      if (clean.includes('/')) {
-        const [n, d] = clean.split('/');
-        return parseFloat(n) / parseFloat(d);
-      }
-      return parseFloat(clean);
-    }
-
-    function matchPipeAgainstLoadedInventory(stdPipe) {
-      const allItems = [];
-      Object.values(loadedDataMap).forEach(arr => {
-        if (Array.isArray(arr)) allItems.push(...arr);
-      });
-
-      if (allItems.length === 0) {
-        pipeInventoryMatches.innerHTML = `<div style="font-size: 0.84rem; color: var(--text-muted); text-align: center;">No Excel sheets loaded yet. Go to <b>Files &amp; Import</b> to load IEOC or PTB files.</div>`;
-        searchMatchedSizeInCatalogBtn.style.display = 'none';
-        return;
-      }
-
-      const matches = allItems.filter(item => {
-        const desc = `${item.description || ''} ${item.title || ''}`;
-        const isPipeKeyword = /\b(pipe|tubing|casing|smls|erw|seamless)\b/i.test(desc);
-
-        // Match DN metric (e.g. DN100)
-        const dnMatch = desc.match(/\bdn\s*(\d{2,3})\b/i);
-        if (dnMatch && parseInt(dnMatch[1], 10) === stdPipe.dn) return true;
-
-        // Match Inch / NPS (e.g. 4", 4 INCH, 1-1/2")
-        const inchMatch = desc.match(/(?:nps\s*)?(\d+(?:-\d+\/\d+|\s+\d+\/\d+|\/\d+)?)\s*(?:"|''|inch|inches|\bin\b)/i);
-        if (inchMatch) {
-          const val = parseInchFractionVal(inchMatch[1].replace(/\s+/, '-'));
-          if (!isNaN(val) && Math.abs(val - stdPipe.npsVal) < 0.02) {
-            return isPipeKeyword || true;
-          }
-        }
-        return false;
-      });
-
-      searchMatchedSizeInCatalogBtn.style.display = 'inline-block';
-      searchMatchedSizeInCatalogBtn.onclick = () => {
-        searchInput.value = stdPipe.nps.replace('"', '');
-        switchTab(1);
-      };
-
-      if (matches.length === 0) {
-        pipeInventoryMatches.innerHTML = `<div style="font-size: 0.84rem; color: var(--text-muted); text-align: center;">No loaded inventory rows matched <b>${stdPipe.nps} (DN${stdPipe.dn})</b>.</div>`;
-        return;
-      }
-
-      pipeInventoryMatches.innerHTML = matches.slice(0, 12).map(m => `
-        <div class="pipe-match-item" data-key="${m._uniqueKey}">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
-            <strong style="color: var(--accent); font-size: 0.9rem;">SN: ${m.sn || m.itemNo || '-'} | SAP: ${m.sapCode || m.material || '-'}</strong>
-            <span style="font-size: 0.72rem; background: rgba(255,255,255,0.08); padding: 0.15rem 0.5rem; border-radius: 6px;">${m._tabName || 'Sheet'}</span>
-          </div>
-          <div style="font-size: 0.85rem; margin: 0.3rem 0; color: var(--text-main);">${m.description || '-'}</div>
-          <div style="font-size: 0.78rem; color: var(--text-muted);">
-            BIN: <b style="color: var(--text-main);">${m.bin || m.location || '-'}</b> &nbsp;|&nbsp;
-            Qty: <b style="color: var(--text-main);">${m.physicalQty || m.sapQty || m.quantity || '0'}</b>
-          </div>
-        </div>
-      `).join('');
-
-      pipeInventoryMatches.querySelectorAll('.pipe-match-item').forEach(el => {
-        el.addEventListener('click', () => {
-          const found = allItems.find(it => it._uniqueKey === el.dataset.key);
-          if (found) openModal(found);
-        });
-      });
-    }
-
-    function recalculatePipeMeasurements() {
-      const refMm = parseFloat(customRefMmInput.value);
-      if (measurePoints.ref.length < 2 || isNaN(refMm) || refMm <= 0) {
-        metricEstDia.textContent = '--';
-        metricStdPipe.textContent = '--';
-        metricEstLen.textContent = '--';
-        lastSnappedPipe = null;
-        return;
-      }
-
-      const refPx = pixelDist(measurePoints.ref[0], measurePoints.ref[1]);
-      if (refPx < 1) return;
-      const mmPerPx = refMm / refPx;
-
-      // Diameter calculation
-      if (measurePoints.dia.length === 2) {
-        const diaPx = pixelDist(measurePoints.dia[0], measurePoints.dia[1]);
-        const estDiaMm = diaPx * mmPerPx;
-        const estDiaIn = estDiaMm / 25.4;
-        metricEstDia.textContent = `${estDiaMm.toFixed(1)} mm (${estDiaIn.toFixed(2)}")`;
-
-        const snapped = snapToNearestStandardPipe(estDiaMm);
-        lastSnappedPipe = snapped.pipe;
-        metricStdPipe.textContent = `${snapped.pipe.nps} / DN${snapped.pipe.dn} (${snapped.confidence}%)`;
-        matchPipeAgainstLoadedInventory(snapped.pipe);
-      } else {
-        metricEstDia.textContent = '--';
-        metricStdPipe.textContent = '--';
-      }
-
-      // Length calculation
-      if (measurePoints.len.length === 2) {
-        const lenPx = pixelDist(measurePoints.len[0], measurePoints.len[1]);
-        const estLenMm = lenPx * mmPerPx;
-        const estLenM = estLenMm / 1000;
-        const estLenFt = estLenM * 3.28084;
-        metricEstLen.textContent = estLenMm >= 1000
-          ? `${estLenM.toFixed(2)} m (${estLenFt.toFixed(1)} ft)`
-          : `${estLenMm.toFixed(0)} mm (${(estLenMm / 25.4).toFixed(1)}")`;
-      } else {
-        metricEstLen.textContent = '--';
-      }
-    }
   </script>
 </body>
 </html>
