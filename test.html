@@ -1,55 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>AR Measure & Object Scanner</title>
+<!-- App Icons for iOS & Android Home Screen -->
+<link rel="apple-touch-icon" sizes="180x180" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
 
-  <!-- Mobile PWA Settings -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f172a">
-  <link rel="icon" type="image/png" sizes="192x192" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="https://companieslogo.com/img/orig/E-c310aaa5.png">
+<!-- Mobile App Capabilities -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Damietta yard inventory">
 
-  <!-- Inline Web App Manifest for PWABuilder (PWA-to-APK) -->
-  <link rel="manifest" href='data:application/manifest+json,{
-    "name": "AR Measure & Object ID",
-    "short_name": "AR Scanner",
-    "start_url": "./",
-    "display": "standalone",
-    "background_color": "#0f172a",
-    "theme_color": "#0f172a",
-    "icons": [
-      {
-        "src": "https://companieslogo.com/img/orig/E-c310aaa5.png",
-        "sizes": "192x192",
-        "type": "image/png",
-        "purpose": "any maskable"
-      },
-      {
-        "src": "https://companieslogo.com/img/orig/E-c310aaa5.png",
-        "sizes": "512x512",
-        "type": "image/png"
+<!-- Web App Manifest with File Handlers & Share Target -->
+<link rel="manifest" href="data:application/manifest+json,{
+  \"name\": \"Damietta yard inventory\",
+  \"short_name\": \"Inventory\",
+  \"start_url\": \"./\",
+  \"display\": \"standalone\",
+  \"background_color\": \"#0f172a\",
+  \"theme_color\": \"#0f172a\",
+  \"icons\": [
+    {
+      \"src\": \"https://companieslogo.com/img/orig/E-c310aaa5.png\",
+      \"sizes\": \"192x192\",
+      \"type\": \"image/png\",
+      \"purpose\": \"any maskable\"
+    },
+    {
+      \"src\": \"https://companieslogo.com/img/orig/E-c310aaa5.png\",
+      \"sizes\": \"512x512\",
+      \"type\": \"image/png\"
+    }
+  ],
+  \"file_handlers\": [
+    {
+      \"action\": \"./\",
+      \"accept\": {
+        \"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\": [\".xlsx\"],
+        \"application/vnd.ms-excel\": [\".xls\"]
       }
-    ]
-  }'>
-
-  <!-- TensorFlow.js & COCO-SSD Object Detection -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"></script>
+    }
+  ]
+}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Damietta yard inventory</title>
+  
+  <!-- SheetJS with Cell Styling & Comments Support -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <!-- ExcelJS for Embedding QR Label Images into Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <!-- HTML5 QR Code Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <!-- QR Code Generator Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --text: #f8fafc;
-      --muted: #94a3b8;
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
       --accent: #38bdf8;
+      --border: #334155;
+      --danger: #f43f5e;
       --success: #22c55e;
       --warning: #f59e0b;
-      --danger: #f43f5e;
-      --border: #334155;
+      --whatsapp-color: #25d366;
+      
+      /* IEOC Orange Theme */
+      --ieoc-card-bg: #1e293b;
+      --ieoc-border: #f97316;
+      --ieoc-marked-bg: #431407;
+      --ieoc-marked-border: #fb923c;
+      --ieoc-accent: #fb923c;
+
+      /* PTB Blue Theme */
+      --ptb-card-bg: #0f172a;
+      --ptb-border: #3b82f6;
+      --ptb-marked-bg: #172554;
+      --ptb-marked-border: #60a5fa;
+      --ptb-accent: #60a5fa;
     }
 
     * {
@@ -60,637 +90,3179 @@
     }
 
     body {
-      background-color: var(--bg);
-      color: var(--text);
+      background-color: var(--bg-color);
+      background-image: 
+        linear-gradient(rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.88)), 
+        url('https://companieslogo.com/img/orig/E-c310aaa5.png');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-attachment: fixed;
+      background-size: 850px auto;
+      color: var(--text-main);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       padding: 1rem;
-      padding-bottom: 5.5rem;
+      padding-top: 1rem;
+      padding-bottom: 6rem;
+    }
+
+    @media (min-width: 640px) {
+      body {
+        padding: 2rem;
+        padding-top: 1.5rem;
+        padding-bottom: 6rem;
+      }
     }
 
     header {
+      max-width: 1200px;
+      margin: 0 auto 0.75rem auto;
       text-align: center;
-      margin-bottom: 1rem;
-      width: 100%;
-      max-width: 540px;
+      position: relative;
+      padding: 0 3rem;
     }
 
-    header h1 {
+    h1 {
       font-size: 1.5rem;
+      margin-bottom: 0.15rem;
       color: var(--accent);
+    }
+
+    @media (min-width: 640px) {
+      h1 {
+        font-size: 2.25rem;
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    /* Right Side Slide Menu Toggle Button */
+    .side-menu-trigger {
+      position: fixed;
+      top: 0.85rem;
+      right: 0.85rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background-color: rgba(30, 41, 59, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1.5px solid var(--border);
+      color: var(--accent);
+      font-size: 1.35rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1050;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .side-menu-trigger:hover {
+      background-color: var(--accent);
+      color: var(--bg-color);
+      border-color: var(--accent);
+      transform: scale(1.04);
+    }
+
+    /* Right Side Slide Drawer & Backdrop */
+    .side-drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+      z-index: 1200;
+    }
+
+    .side-drawer-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .side-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 280px;
+      max-width: 82vw;
+      background-color: rgba(15, 23, 42, 0.98);
+      border-left: 1px solid var(--border);
+      box-shadow: -8px 0 30px rgba(0, 0, 0, 0.6);
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 1250;
+      display: flex;
+      flex-direction: column;
+      padding: 1.25rem 1rem;
+      gap: 0.75rem;
+    }
+
+    .side-drawer.active {
+      transform: translateX(0);
+    }
+
+    .side-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border);
       margin-bottom: 0.25rem;
     }
 
-    header p {
-      font-size: 0.85rem;
-      color: var(--muted);
+    .side-drawer-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent);
     }
 
-    .panel {
+    .side-drawer-close {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      font-size: 1.35rem;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .side-drawer-close:hover {
+      color: var(--text-main);
+      border-color: var(--accent);
+    }
+
+    .side-drawer-btn {
       width: 100%;
-      max-width: 540px;
-      background-color: var(--card);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.9rem 1rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.18s ease;
+    }
+
+    .side-drawer-btn:hover {
+      border-color: var(--accent);
+      background-color: rgba(56, 189, 248, 0.12);
+      transform: translateX(-2px);
+    }
+
+    .side-drawer-btn.active {
+      border-color: var(--accent);
+      background-color: rgba(56, 189, 248, 0.2);
+      color: var(--accent);
+    }
+
+    .side-drawer-btn.highlight-import {
+      border-color: rgba(56, 189, 248, 0.55);
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(30, 41, 59, 0.95));
+      color: var(--accent);
+    }
+
+    .side-drawer-btn.highlight-import:hover {
+      background-color: var(--accent);
+      color: var(--bg-color);
+    }
+
+    /* Fixed Bottom Navigation Tab Bar */
+    .nav-tabs {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.5rem 0.75rem;
+      z-index: 1000;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+    }
+
+    .nav-tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.5rem 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+
+    @media (min-width: 768px) {
+      .nav-tab-btn {
+        flex-direction: row;
+        justify-content: center;
+        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+        gap: 0.4rem;
+      }
+    }
+
+    .nav-tab-btn:hover {
+      color: var(--text-main);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-tab-btn.active {
+      color: var(--bg-color);
+      background-color: var(--accent);
+    }
+
+    .tab-icon-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 20px;
+    }
+
+    .tab-content {
+      display: none;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Controls & Buttons */
+    .action-panel {
+      max-width: 820px;
+      margin: 0 auto 1.5rem auto;
+      background-color: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 1.25rem;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+      padding: 1.5rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
-    .mode-switch {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+    .custom-file-upload, .qr-btn, .csv-select, .remove-btn, .export-btn, .whatsapp-btn, .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      background-color: var(--card-bg);
+      color: var(--accent);
+      border: 2px dashed var(--accent);
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      width: 100%;
+      max-width: 350px;
+      text-align: center;
     }
 
-    .btn {
-      padding: 0.85rem 1rem;
+    .qr-btn, .csv-select, .export-btn, .whatsapp-btn, .action-btn {
+      border-style: solid;
+      border-color: var(--border);
+    }
+
+    .export-btn {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .export-btn:hover {
+      background-color: var(--success);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .whatsapp-btn {
+      border-color: var(--whatsapp-color);
+      color: var(--whatsapp-color);
+    }
+
+    .whatsapp-btn:hover {
+      background-color: var(--whatsapp-color);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .remove-btn {
+      border-style: solid;
+      border-color: var(--danger);
+      color: var(--danger);
+      background: transparent;
+    }
+
+    .remove-btn:hover {
+      background-color: var(--danger);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .custom-file-upload:hover, .qr-btn:hover, .csv-select:hover, .action-btn:hover {
+      background-color: var(--accent);
+      color: var(--bg-color);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .qr-excel-btn {
+      border-color: #a855f7;
+      color: #c084fc;
+    }
+
+    .qr-excel-btn:hover {
+      background-color: #a855f7;
+      color: #ffffff;
+      border-color: #a855f7;
+    }
+
+    .qr-preview-btn {
+      border-color: #ec4899;
+      color: #f472b6;
+    }
+
+    .qr-preview-btn:hover {
+      background-color: #ec4899;
+      color: #ffffff;
+      border-color: #ec4899;
+    }
+
+    .csv-select {
+      outline: none;
+      color: var(--text-main);
+      border-style: solid;
+      background-color: var(--card-bg);
+      width: 100%;
+      max-width: 350px;
+      padding: 0.75rem;
       border-radius: 12px;
+    }
+
+    #excelFileInput {
+      display: none;
+    }
+
+    /* Loaded File Item Row in Tab 3 */
+    .file-summary-card {
+      background-color: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .file-remove-small-btn {
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--danger);
+      background: rgba(244, 63, 94, 0.12);
+      color: var(--danger);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .file-remove-small-btn:hover {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    /* Status Banner */
+    .status-banner {
+      max-width: 650px;
+      margin: 0 auto 1rem auto;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.6rem;
+      border-radius: 8px;
+      display: none;
+    }
+
+    /* Scanner Viewport */
+    .scanner-wrapper {
+      max-width: 500px;
+      margin: 0 auto 1.25rem auto;
+      display: none;
+      background-color: var(--card-bg);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    .scanner-wrapper.active {
+      display: block;
+    }
+
+    #reader {
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    /* Floating Header Controls for Tab 1 */
+    .sticky-header-container {
+      position: sticky;
+      top: 0.5rem;
+      z-index: 100;
+      background-color: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 0.5rem 0;
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 680px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .top-controls-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Hovering Search Bar */
+    .search-container {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background-color: rgba(30, 41, 59, 0.95);
+      padding: 0.35rem 0.5rem;
+      border-radius: 9999px;
+      border: 2px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: border-color 0.2s;
+    }
+
+    .search-container:focus-within {
+      border-color: var(--accent);
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 0;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      border-radius: 9999px;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .search-mode {
+      background-color: var(--card-bg);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      max-width: 48%;
+      transition: background-color 0.2s;
+    }
+
+    .search-mode:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Bulk Mark / Unmark Bar for Filtered Results */
+    .bulk-filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .bulk-count-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .bulk-actions-group {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .bulk-btn {
+      padding: 0.38rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background-color: var(--card-bg);
+      transition: all 0.15s ease;
+    }
+
+    .bulk-btn.mark-all {
+      color: var(--success);
+      border-color: rgba(34, 197, 94, 0.5);
+    }
+
+    .bulk-btn.mark-all:hover {
+      background-color: var(--success);
+      color: #ffffff;
+    }
+
+    .bulk-btn.unmark-all {
+      color: var(--warning);
+      border-color: rgba(245, 158, 11, 0.5);
+    }
+
+    .bulk-btn.unmark-all:hover {
+      background-color: var(--warning);
+      color: #0f172a;
+    }
+
+    .grid-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* Card Themes & Hover effects */
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      position: relative;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.75rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    }
+
+    /* IEOC Card Styling (Orange Theme) */
+    .card.ieoc {
+      border-color: rgba(249, 115, 22, 0.4);
+    }
+    .card.ieoc:hover {
+      border-color: var(--ieoc-border);
+    }
+    .card.ieoc.marked {
+      background-color: var(--ieoc-marked-bg);
+      border: 2px solid var(--ieoc-marked-border);
+      box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);
+    }
+    .card.ieoc .card-sn, .card.ieoc .card-source, .card.ieoc .sub-title {
+      color: var(--ieoc-accent) !important;
+    }
+
+    /* PTB Card Styling (Blue Theme) */
+    .card.ptb {
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+    .card.ptb:hover {
+      border-color: var(--ptb-border);
+    }
+    .card.ptb.marked {
+      background-color: var(--ptb-marked-bg);
+      border: 2px solid var(--ptb-marked-border);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+    }
+    .card.ptb .card-sn, .card.ptb .card-source, .card.ptb .sub-title {
+      color: var(--ptb-accent) !important;
+    }
+
+    /* Card Top Action Bar (Counter + Big Mark Button) */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .card-sn {
+      font-size: 0.95rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .card-actions-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-shrink: 0;
+      z-index: 5;
+    }
+
+    .qty-counter-group {
+      display: inline-flex;
+      align-items: center;
+      background-color: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .qty-btn {
+      width: 34px;
+      height: 36px;
+      border: none;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-main);
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s;
+      user-select: none;
+    }
+
+    .qty-btn:hover {
+      background-color: var(--accent);
+      color: var(--bg-color);
+    }
+
+    .qty-btn:active {
+      transform: scale(0.95);
+    }
+
+    .qty-input {
+      width: 42px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 700;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+
+    .qty-input::-webkit-outer-spin-button,
+    .qty-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .big-mark-btn {
+      height: 36px;
+      min-width: 44px;
+      padding: 0 0.65rem;
+      border-radius: 10px;
       border: 2px solid var(--border);
       background-color: rgba(15, 23, 42, 0.85);
-      color: var(--text);
+      color: var(--text-muted);
+      font-size: 1rem;
       font-weight: 700;
-      font-size: 0.9rem;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.45rem;
+      gap: 0.25rem;
       transition: all 0.15s ease;
     }
 
-    .btn:active {
-      transform: scale(0.97);
-    }
-
-    .btn-primary {
+    .big-mark-btn:hover {
       border-color: var(--accent);
-      color: var(--accent);
+      color: var(--text-main);
     }
 
-    .btn-primary.active, .btn-primary:hover {
-      background-color: var(--accent);
-      color: var(--bg);
-    }
-
-    .btn-success {
-      border-color: var(--success);
-      color: var(--success);
-    }
-
-    .btn-success.active, .btn-success:hover {
+    .big-mark-btn.is-marked {
       background-color: var(--success);
-      color: #fff;
+      border-color: var(--success);
+      color: #ffffff;
     }
 
-    .btn-danger {
-      border-color: var(--danger);
-      color: var(--danger);
+    .card-source {
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      display: inline-block;
+      margin-top: 0.2rem;
     }
 
-    .btn-danger:hover {
-      background-color: var(--danger);
-      color: #fff;
-    }
-
-    /* Object Detection Viewport */
-    .camera-box {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 3 / 4;
-      max-height: 62vh;
-      background: #020617;
-      border-radius: 14px;
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      border: 2px solid var(--accent);
-      display: none;
     }
 
-    .camera-box.active {
-      display: block;
-    }
-
-    video, canvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    canvas {
-      pointer-events: none;
-    }
-
-    .camera-overlay-controls {
-      position: absolute;
-      bottom: 0.75rem;
-      left: 0.75rem;
-      right: 0.75rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 10;
-      gap: 0.5rem;
-    }
-
-    .pill-badge {
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(6px);
-      border: 1px solid var(--border);
-      padding: 0.45rem 0.75rem;
-      border-radius: 999px;
+    .card-grid-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem 0.75rem;
       font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text);
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      padding-top: 0.6rem;
     }
 
-    /* AR Measurement HUD (Shown inside WebXR DOM Overlay) */
-    #arOverlayContainer {
-      display: none;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      height: 100%;
+    .card-grid-info span b {
+      color: var(--text-main);
     }
 
-    #arOverlayContainer.xr-active {
+    .part-no-badge {
+      display: inline-block;
+      margin-top: 0.3rem;
+      padding: 0.22rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
       position: fixed;
       inset: 0;
-      z-index: 9999;
-      padding: 1.25rem;
-      pointer-events: none;
+      background-color: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      z-index: 1100;
     }
 
-    .ar-top-card {
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--accent);
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
       border-radius: 16px;
-      padding: 1rem 1.25rem;
-      text-align: center;
+      max-width: 600px;
+      width: 90%;
+      position: relative;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      border-radius: 8px;
+    }
+
+    .close-btn:hover {
+      color: var(--text-main);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    .modal-description-box {
+      background-color: rgba(15, 23, 42, 0.6);
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--text-main);
+    }
+
+    .modal-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .modal-item-box {
+      background-color: rgba(15, 23, 42, 0.6);
+      padding: 0.75rem;
+      border-radius: 8px;
+    }
+
+    .modal-item-box label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    .modal-item-box div {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+      word-break: break-word;
+    }
+
+    /* WhatsApp Share Choice Modal */
+    .wa-choice-btn {
+      display: block;
       width: 100%;
+      padding: 0.85rem 1rem;
+      margin-top: 0.75rem;
+      border-radius: 10px;
+      border: none;
+      background-color: var(--whatsapp-color);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-align: center;
+      transition: opacity 0.2s;
+    }
+    .wa-choice-btn:hover {
+      opacity: 0.9;
+    }
+
+    .folder-hint-box {
+      background: rgba(37, 211, 102, 0.08);
+      border: 1px solid rgba(37, 211, 102, 0.3);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
       max-width: 420px;
-      pointer-events: auto;
+      line-height: 1.45;
+      text-align: left;
     }
 
-    .ar-readout {
-      font-size: 2rem;
+    .folder-hint-box code {
+      color: var(--whatsapp-color);
+      font-size: 0.75rem;
+      word-break: break-all;
+    }
+
+    /* QR Label Card Layout */
+    .qr-labels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .qr-label-card {
+      background-color: #ffffff;
+      color: #000000;
+      border: 2px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .qr-label-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      position: relative;
+      min-height: 190px;
+      padding-left: 24px;
+    }
+
+    /* SAP Code Rotated +90 Degrees Clockwise */
+    .qr-sap-rotated {
+      position: absolute;
+      left: -20px;
+      top: 50%;
+      transform: translateY(-50%) rotate(90deg);
+      transform-origin: center center;
       font-weight: 800;
-      color: var(--success);
-      letter-spacing: -0.02em;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      color: #000000;
+      white-space: nowrap;
+      font-family: monospace;
     }
 
-    .ar-sub-readout {
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-top: 0.25rem;
-    }
-
-    /* Center Aiming Reticle */
-    .reticle-ring {
-      width: 44px;
-      height: 44px;
-      border: 3px solid var(--muted);
-      border-radius: 50%;
+    .qr-code-box {
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: border-color 0.2s, transform 0.2s;
+      margin: 0 auto;
     }
 
-    .reticle-ring::after {
-      content: "";
-      width: 8px;
-      height: 8px;
-      background-color: var(--muted);
-      border-radius: 50%;
-      transition: background-color 0.2s;
+    .qr-center-logo {
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      background: #ffffff;
+      border-radius: 6px;
+      padding: 3px;
+      object-fit: contain;
+      box-shadow: 0 0 0 2px #ffffff;
+      pointer-events: none;
     }
 
-    .reticle-ring.locked {
-      border-color: var(--success);
-      transform: scale(1.1);
-      box-shadow: 0 0 16px rgba(34, 197, 94, 0.6);
-    }
-
-    .reticle-ring.locked::after {
-      background-color: var(--success);
-    }
-
-    .ar-bottom-controls {
-      display: flex;
-      gap: 0.75rem;
+    .qr-label-bottom {
       width: 100%;
-      max-width: 420px;
-      pointer-events: auto;
-    }
-
-    /* Measurement History */
-    .history-box {
-      background: rgba(15, 23, 42, 0.65);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 0.85rem;
-    }
-
-    .history-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.5rem;
-      font-size: 0.85rem;
-      color: var(--accent);
-      font-weight: 700;
-    }
-
-    .history-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      font-size: 0.85rem;
-      color: var(--text);
-    }
-
-    .history-list li {
-      display: flex;
       justify-content: space-between;
-      padding: 0.45rem 0.65rem;
-      background: var(--card);
-      border-radius: 8px;
-      border: 1px solid var(--border);
+      gap: 0.65rem;
+      text-align: left;
+      border-top: 1px dashed #64748b;
+      margin-top: 0.9rem;
+      padding-top: 0.55rem;
     }
 
-    .status-msg {
-      text-align: center;
+    .qr-label-desc {
+      flex: 1;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #000000;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .qr-label-sn {
+      flex-shrink: 0;
       font-size: 0.85rem;
-      color: var(--warning);
-      background: rgba(245, 158, 11, 0.12);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      padding: 0.65rem;
-      border-radius: 10px;
-      display: none;
+      font-weight: 800;
+      color: #000000;
+      white-space: nowrap;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #qrModal, #qrModal * {
+        visibility: visible;
+      }
+      #qrModal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #ffffff !important;
+        padding: 0;
+      }
+      #qrModal .modal-content {
+        box-shadow: none;
+        border: none;
+        max-width: 100%;
+        width: 100%;
+        max-height: none;
+        overflow: visible;
+        background: #ffffff !important;
+      }
+      .no-print {
+        display: none !important;
+      }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>AR Measure & Object ID</h1>
-    <p>Point-to-Point AR Ruler & Live AI Object Detection</p>
-  </header>
+  <!-- Right Side Slide Menu Trigger Button -->
+  <button type="button" id="openSideMenuBtn" class="side-menu-trigger no-print" title="Open Menu" aria-label="Open Menu">
+    ☰
+  </button>
 
-  <div class="panel">
-    <div id="statusMsg" class="status-msg"></div>
-
-    <!-- Mode Buttons -->
-    <div class="mode-switch">
-      <button id="btnIdentify" class="btn btn-primary">
-        🔍 Identify Objects
-      </button>
-      <button id="btnMeasure" class="btn btn-success">
-        📏 AR Measure
-      </button>
+  <!-- Right Side Slide Drawer Backdrop & Menu -->
+  <div id="sideDrawerBackdrop" class="side-drawer-backdrop no-print"></div>
+  <aside id="sideDrawer" class="side-drawer no-print" aria-label="Side Menu">
+    <div class="side-drawer-header">
+      <span class="side-drawer-title">Menu</span>
+      <button type="button" id="closeSideMenuBtn" class="side-drawer-close" aria-label="Close Menu">&times;</button>
     </div>
 
-    <!-- Live Object Detection Camera View -->
-    <div id="cameraBox" class="camera-box">
-      <video id="videoEl" autoplay playsinline muted></video>
-      <canvas id="canvasEl"></canvas>
-      <div class="camera-overlay-controls">
-        <span id="detectedCountBadge" class="pill-badge">Objects: 0</span>
-        <div style="display: flex; gap: 0.4rem;">
-          <button id="btnTorch" class="btn" style="padding: 0.45rem 0.75rem; font-size: 0.8rem; display: none;">
-            🔦 Light
-          </button>
-          <button id="btnStopCamera" class="btn btn-danger" style="padding: 0.45rem 0.75rem; font-size: 0.8rem;">
-            ⏹ Stop
-          </button>
+    <button type="button" id="drawerOpenFilesBtn" class="side-drawer-btn highlight-import">
+      <span>📁</span>
+      <span>Files & Import</span>
+    </button>
+
+    <button type="button" id="drawerCatalogBtn" class="side-drawer-btn active">
+      <span>📦</span>
+      <span>Catalog & Scan</span>
+    </button>
+
+    <button type="button" id="drawerCartBtn" class="side-drawer-btn">
+      <span>🚚</span>
+      <span>Cart (<span id="drawerCartCount">0</span>)</span>
+    </button>
+  </aside>
+
+  <header>
+    <h1>Damietta yard inventory</h1>
+    <p style="color: var(--text-muted)">IEOC & PTB Inventory System</p>
+  </header>
+
+  <div id="statusBanner" class="status-banner"></div>
+
+  <!-- Fixed Bottom Navigation Tab Bar -->
+  <nav class="nav-tabs">
+    <button class="nav-tab-btn active" onclick="switchTab(1)">
+      <span class="tab-icon-wrap">📦</span> Catalog & Scan
+    </button>
+    <button class="nav-tab-btn" onclick="switchTab(2)">
+      <span class="tab-icon-wrap" aria-hidden="true">
+        <!-- Truck Loaded with Tools Icon -->
+        <svg width="24" height="20" viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Tools loaded in truck bed (wrench + hammer/box) -->
+          <path d="M4.5 9V5.5a1.5 1.5 0 0 1 3 0V9" />
+          <circle cx="6" cy="4.5" r="1.5" />
+          <path d="M10.5 9V4.5H8.5V3h5v1.5h-2V9" />
+          <rect x="3" y="7.5" width="11.5" height="3" rx="0.6" />
+          <!-- Truck Bed & Cab -->
+          <path d="M2 10.5h13v6H2z" />
+          <path d="M15 8.5h4.8l2.7 3.5v4.5H15v-8z" />
+          <path d="M16.5 10h2.8l1.6 2h-4.4v-2z" />
+          <!-- Wheels -->
+          <circle cx="6.5" cy="17.5" r="2.3" fill="var(--bg-color)" />
+          <circle cx="19" cy="17.5" r="2.3" fill="var(--bg-color)" />
+        </svg>
+      </span>
+      <span>Cart <span id="markedCountBadge">0</span></span>
+    </button>
+  </nav>
+
+  <!-- TAB 1: VIEW, SEARCH, & QR SCAN -->
+  <div id="tab1" class="tab-content active">
+    <!-- Floating Header Controls -->
+    <div class="sticky-header-container">
+      <div class="top-controls-row">
+        <select id="tabSelector" class="csv-select" style="max-width: 65%; margin: 0;">
+          <option value="all">📂 View All Loaded Tabs</option>
+        </select>
+        <button id="toggleQrBtn" class="qr-btn" style="width: auto; padding: 0.75rem 1rem; margin: 0;">
+          📷 Scan QR
+        </button>
+      </div>
+
+      <!-- Search Container (Hovers / Pinned Top) -->
+      <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search (Part no, SAP, Description, out, write, sn 15, bin pyr5, ieoc, ptb)...">
+        <select id="searchMode" class="search-mode">
+          <option value="auto">⚡ Smart Auto</option>
+          <option value="sn"># Part no / SN</option>
+          <option value="sap"># SAP Code</option>
+          <option value="desc">📄 Description</option>
+        </select>
+      </div>
+
+      <!-- Bulk Mark / Unmark Controls for Filtered Results -->
+      <div class="bulk-filter-bar" id="bulkFilterBar" style="display: none;">
+        <span class="bulk-count-label" id="filteredCountLabel">0 items shown</span>
+        <div class="bulk-actions-group">
+          <button type="button" id="markFilteredBtn" class="bulk-btn mark-all">✓ Mark All Filtered</button>
+          <button type="button" id="unmarkFilteredBtn" class="bulk-btn unmark-all">✕ Unmark Filtered</button>
         </div>
       </div>
     </div>
 
-    <!-- WebXR AR Measurement Overlay -->
-    <div id="arOverlayContainer">
-      <div class="ar-top-card">
-        <div id="arReadout" class="ar-readout">0.0 cm</div>
-        <div id="arSubReadout" class="ar-sub-readout">Move phone slowly over a flat surface...</div>
-      </div>
+    <!-- Camera Container -->
+    <div id="scannerContainer" class="scanner-wrapper">
+      <div id="reader"></div>
+    </div>
 
-      <div id="reticleRing" class="reticle-ring"></div>
+    <main class="grid-container" id="gridTab1"></main>
+  </div>
 
-      <div class="ar-bottom-controls">
-        <button id="btnMarkPoint" class="btn btn-success" style="flex: 2; background: var(--success); color: #fff;">
-          📍 Mark Start (0/2)
+  <!-- TAB 2: CART (MARKED ITEMS, UNMARK ALL, EXPORT, QR EXCEL & WHATSAPP) -->
+  <div id="tab2" class="tab-content">
+    <div class="action-panel">
+      <h3>Cart Management</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Review items in your cart, adjust quantities, generate QR Excel labels, download files, or share via WhatsApp.</p>
+      
+      <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center; flex-wrap: wrap;">
+        <button id="exportExcelBtn" class="export-btn" style="max-width: 185px;">
+          📊 Download Excel
         </button>
-        <button id="btnExitAr" class="btn btn-danger" style="flex: 1; background: rgba(15,23,42,0.9);">
-          ✕ Exit
+        <button id="exportQrExcelBtn" class="action-btn qr-excel-btn" style="max-width: 215px;">
+          🏷️ QR Code Excel Sheet
+        </button>
+        <button id="generateQrLabelsBtn" class="action-btn qr-preview-btn" style="max-width: 195px;">
+          🖨️ Print QR Labels
+        </button>
+        <button id="whatsappShareBtn" class="whatsapp-btn" style="max-width: 195px;">
+          💬 Share via WhatsApp
+        </button>
+        <button id="unmarkAllBtn" class="remove-btn" style="max-width: 165px; border-color: var(--warning); color: var(--warning);">
+          🧹 Clear Cart
         </button>
       </div>
     </div>
 
-    <!-- Saved Measurements List -->
-    <div class="history-box">
-      <div class="history-header">
-        <span>Saved AR Measurements</span>
-        <button id="btnClearHistory" style="background: none; border: none; color: var(--muted); font-size: 0.75rem; cursor: pointer;">
-          Clear
+    <main class="grid-container" id="gridTab2"></main>
+  </div>
+
+  <!-- TAB 3: IMPORT & CLEAR FILES (OPENED VIA RIGHT SLIDE MENU) -->
+  <div id="tab3" class="tab-content">
+    <div class="action-panel">
+      <h3>Excel File Management</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Load new PTB ("stock file") or IEOC inventory workbooks from phone storage or WhatsApp Documents.</p>
+
+      <label for="excelFileInput" class="custom-file-upload">
+        📊 Load Excel File(s) (.xlsx)
+      </label>
+      <input type="file" id="excelFileInput" accept=".xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" multiple>
+
+      <button id="fetchWhatsappFolderBtn" class="whatsapp-btn" style="border-style: dashed;">
+        💬 Fetch from WhatsApp / Phone Folder
+      </button>
+
+      <div class="folder-hint-box">
+        <b>Quick Tip:</b> In the phone picker, open the top-left menu (☰) &rarr; select phone storage &rarr; browse to:<br>
+        <code>Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Documents</code>
+      </div>
+
+      <button id="removeExcelBtn" class="remove-btn">
+        🗑️ Clear All Loaded Data
+      </button>
+    </div>
+
+    <div style="max-width: 650px; margin: 1.5rem auto; background: var(--card-bg); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+      <h4 style="margin-bottom: 0.75rem; color: var(--accent);">Loaded File Summary</h4>
+      <div id="loadedFilesSummary" style="font-size: 0.9rem; color: var(--text-muted);">No files currently loaded.</div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeModal">&times;</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-right: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div class="modal-title" id="modalTitle">Item Details</div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <div class="qty-counter-group">
+            <button type="button" class="qty-btn" id="modalQtyMinus">−</button>
+            <input type="number" class="qty-input" id="modalQtyInput" min="1" value="1">
+            <button type="button" class="qty-btn" id="modalQtyPlus">+</button>
+          </div>
+          <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--accent);">
+            <input type="checkbox" id="modalCheckbox" style="width: 18px; height: 18px; accent-color: var(--accent);"> Add to Cart
+          </label>
+        </div>
+      </div>
+      <div id="modalSource" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; background: rgba(255, 255, 255, 0.08); padding: 0.3rem 0.6rem; border-radius: 6px; display: inline-block;"></div>
+
+      <div class="modal-description-box">
+        <label style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Description</label>
+        <div id="modalDescVal" style="font-family: system-ui;">-</div>
+      </div>
+
+      <div class="modal-details-grid" id="modalGrid"></div>
+
+      <div id="modalCommentSection" style="margin-top: 0.75rem; background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--warning); padding: 0.75rem; border-radius: 8px; display: none;">
+        <label style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--warning); display: block; margin-bottom: 0.2rem;">Quantity Column Comments / Cell Notes</label>
+        <div id="modalCommentVal" style="font-size: 0.9rem; color: var(--text-main); white-space: pre-line; line-height: 1.5;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WhatsApp Choice Modal -->
+  <div class="modal-overlay" id="whatsappModal">
+    <div class="modal-content" style="max-width: 420px; text-align: center;">
+      <button class="close-btn" id="closeWhatsappModal">&times;</button>
+      <div class="modal-title" style="margin-bottom: 0.25rem;">Share Cart via WhatsApp</div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Choose how you want to share your cart items:</p>
+      
+      <button id="waShareTextBtn" class="wa-choice-btn">
+        💬 1st Option: Share Clean Text
+      </button>
+
+      <button id="waShareExcelBtn" class="wa-choice-btn" style="background-color: #16a34a;">
+        📊 2nd Option: Share Excel File (.xlsx)
+      </button>
+    </div>
+  </div>
+
+  <!-- QR Labels Generator Modal -->
+  <div class="modal-overlay" id="qrModal">
+    <div class="modal-content" style="max-width: 820px;">
+      <button class="close-btn no-print" id="closeQrModal">&times;</button>
+      <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-right: 2rem;">
+        <div>
+          <div class="modal-title">Cart QR Code Labels</div>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Includes items from SAP Stock, Write Off, and PTB Stock tabs.</p>
+        </div>
+        <button onclick="window.print()" class="export-btn" style="width: auto; padding: 0.6rem 1.2rem;">
+          🖨️ Print Labels
         </button>
       </div>
-      <ul id="historyList" class="history-list">
-        <li style="color: var(--muted); justify-content: center;">No measurements yet</li>
-      </ul>
+      <div id="qrLabelsContainer" class="qr-labels-grid"></div>
     </div>
   </div>
 
   <script>
-    let cocoModel = null;
-    let mediaStream = null;
-    let detectFrameId = null;
-    let torchOn = false;
+    let loadedDataMap = {}; 
+    let selectedItemIds = new Set(); 
+    let markedQuantities = {}; // Stores { [uniqueKey]: number }
+    let currentFilteredItems = []; // Tracks currently filtered items in Tab 1
+    let html5QrcodeScanner = null;
+    let currentModalItemKey = null;
+    let displayedItemCount = 50; 
+    let searchTimeout = null;
+    let currentTab = 1;
 
-    let xrSession = null;
-    let xrPoints = [];
-    let latestHitPose = null;
-    let savedMeasurements = [];
+    const IEOC_TABS = ["sap stock", "write off", "ieoc out of sap", "out of sap"];
+    const ENI_LOGO_URL = "https://companieslogo.com/img/orig/E-c310aaa5.png";
+    let cachedColoredEniLogoCanvas = null;
 
-    const statusMsg = document.getElementById('statusMsg');
-    const btnIdentify = document.getElementById('btnIdentify');
-    const btnMeasure = document.getElementById('btnMeasure');
-    const cameraBox = document.getElementById('cameraBox');
-    const videoEl = document.getElementById('videoEl');
-    const canvasEl = document.getElementById('canvasEl');
-    const detectedCountBadge = document.getElementById('detectedCountBadge');
-    const btnTorch = document.getElementById('btnTorch');
-    const btnStopCamera = document.getElementById('btnStopCamera');
-
-    const arOverlayContainer = document.getElementById('arOverlayContainer');
-    const arReadout = document.getElementById('arReadout');
-    const arSubReadout = document.getElementById('arSubReadout');
-    const reticleRing = document.getElementById('reticleRing');
-    const btnMarkPoint = document.getElementById('btnMarkPoint');
-    const btnExitAr = document.getElementById('btnExitAr');
-    const historyList = document.getElementById('historyList');
-    const btnClearHistory = document.getElementById('btnClearHistory');
-
-    function showStatus(text, isError = false) {
-      statusMsg.textContent = text;
-      statusMsg.style.display = 'block';
-      statusMsg.style.color = isError ? 'var(--danger)' : 'var(--warning)';
-      statusMsg.style.borderColor = isError ? 'rgba(244, 63, 94, 0.4)' : 'rgba(245, 158, 11, 0.4)';
-      statusMsg.style.background = isError ? 'rgba(244, 63, 94, 0.12)' : 'rgba(245, 158, 11, 0.12)';
-    }
-
-    function hideStatus() {
-      statusMsg.style.display = 'none';
-    }
-
-    function stopEverything() {
-      if (detectFrameId) {
-        cancelAnimationFrame(detectFrameId);
-        detectFrameId = null;
+    // Load Eni logo in full color for QR labels
+    function getColoredEniLogoCanvas() {
+      if (cachedColoredEniLogoCanvas) {
+        return Promise.resolve(cachedColoredEniLogoCanvas);
       }
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-        mediaStream = null;
-      }
-      torchOn = false;
-      btnTorch.style.display = 'none';
-      cameraBox.classList.remove('active');
-      btnIdentify.classList.remove('active');
-
-      if (xrSession) {
-        xrSession.end().catch(() => {});
-        xrSession = null;
-      }
-      arOverlayContainer.classList.remove('xr-active');
-      arOverlayContainer.style.display = 'none';
-      btnMeasure.classList.remove('active');
-    }
-
-    btnStopCamera.addEventListener('click', () => {
-      stopEverything();
-      hideStatus();
-    });
-
-    btnExitAr.addEventListener('click', () => {
-      stopEverything();
-      hideStatus();
-    });
-
-    // ==========================================
-    // 1. OBJECT IDENTIFICATION MODE
-    // ==========================================
-    btnIdentify.addEventListener('click', async () => {
-      stopEverything();
-      btnIdentify.classList.add('active');
-      cameraBox.classList.add('active');
-
-      try {
-        showStatus('Starting rear camera...');
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false
-        });
-        videoEl.srcObject = mediaStream;
-        await videoEl.play();
-
-        // Check flashlight support
-        const track = mediaStream.getVideoTracks()[0];
-        const caps = track.getCapabilities ? track.getCapabilities() : {};
-        if (caps.torch) {
-          btnTorch.style.display = 'inline-flex';
-          btnTorch.onclick = async () => {
-            torchOn = !torchOn;
-            await track.applyConstraints({ advanced: [{ torch: torchOn }] });
-            btnTorch.textContent = torchOn ? '💡 Light On' : '🔦 Light';
-          };
-        }
-
-        if (!cocoModel) {
-          showStatus('Loading AI Object Detection model (first time takes ~3s)...');
-          cocoModel = await cocoSsd.load();
-        }
-
-        hideStatus();
-        const ctx = canvasEl.getContext('2d');
-
-        const runDetection = async () => {
-          if (!mediaStream) return;
-          if (videoEl.readyState === 4) {
-            canvasEl.width = videoEl.videoWidth;
-            canvasEl.height = videoEl.videoHeight;
-            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-
-            const predictions = await cocoModel.detect(videoEl);
-            detectedCountBadge.textContent = `Objects: ${predictions.length}`;
-
-            predictions.forEach(pred => {
-              const [x, y, w, h] = pred.bbox;
-              const score = Math.round(pred.score * 100);
-              const label = `${pred.class.toUpperCase()} ${score}%`;
-
-              // Bounding Box
-              ctx.strokeStyle = '#38bdf8';
-              ctx.lineWidth = 4;
-              ctx.strokeRect(x, y, w, h);
-
-              // Label Tag
-              ctx.font = 'bold 16px system-ui';
-              const textWidth = ctx.measureText(label).width;
-              const labelY = Math.max(0, y - 28);
-              ctx.fillStyle = '#38bdf8';
-              ctx.fillRect(x, labelY, textWidth + 14, 28);
-
-              ctx.fillStyle = '#0f172a';
-              ctx.fillText(label, x + 7, labelY + 20);
-            });
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          try {
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = img.naturalWidth || 120;
+            offCanvas.height = img.naturalHeight || 120;
+            const octx = offCanvas.getContext('2d');
+            octx.drawImage(img, 0, 0, offCanvas.width, offCanvas.height);
+            cachedColoredEniLogoCanvas = offCanvas;
+            resolve(offCanvas);
+          } catch (e) {
+            resolve(null);
           }
-          detectFrameId = requestAnimationFrame(runDetection);
         };
+        img.onerror = () => resolve(null);
+        img.src = ENI_LOGO_URL;
+      });
+    }
 
-        runDetection();
-      } catch (err) {
-        stopEverything();
-        showStatus('Camera error: ' + err.message, true);
-      }
+    const openSideMenuBtn = document.getElementById('openSideMenuBtn');
+    const closeSideMenuBtn = document.getElementById('closeSideMenuBtn');
+    const sideDrawer = document.getElementById('sideDrawer');
+    const sideDrawerBackdrop = document.getElementById('sideDrawerBackdrop');
+    const drawerOpenFilesBtn = document.getElementById('drawerOpenFilesBtn');
+    const drawerCatalogBtn = document.getElementById('drawerCatalogBtn');
+    const drawerCartBtn = document.getElementById('drawerCartBtn');
+    const drawerCartCount = document.getElementById('drawerCartCount');
+
+    const fileInput = document.getElementById('excelFileInput');
+    const fetchWhatsappFolderBtn = document.getElementById('fetchWhatsappFolderBtn');
+    const tabSelector = document.getElementById('tabSelector');
+    const removeExcelBtn = document.getElementById('removeExcelBtn');
+    const exportExcelBtn = document.getElementById('exportExcelBtn');
+    const exportQrExcelBtn = document.getElementById('exportQrExcelBtn');
+    const generateQrLabelsBtn = document.getElementById('generateQrLabelsBtn');
+    const whatsappShareBtn = document.getElementById('whatsappShareBtn');
+    const unmarkAllBtn = document.getElementById('unmarkAllBtn');
+    const searchInput = document.getElementById('searchInput');
+    const searchMode = document.getElementById('searchMode');
+    const bulkFilterBar = document.getElementById('bulkFilterBar');
+    const filteredCountLabel = document.getElementById('filteredCountLabel');
+    const markFilteredBtn = document.getElementById('markFilteredBtn');
+    const unmarkFilteredBtn = document.getElementById('unmarkFilteredBtn');
+    const gridTab1 = document.getElementById('gridTab1');
+    const gridTab2 = document.getElementById('gridTab2');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSource = document.getElementById('modalSource');
+    const modalDescVal = document.getElementById('modalDescVal');
+    const modalGrid = document.getElementById('modalGrid');
+    const modalCheckbox = document.getElementById('modalCheckbox');
+    const modalQtyMinus = document.getElementById('modalQtyMinus');
+    const modalQtyInput = document.getElementById('modalQtyInput');
+    const modalQtyPlus = document.getElementById('modalQtyPlus');
+    const modalCommentSection = document.getElementById('modalCommentSection');
+    const modalCommentVal = document.getElementById('modalCommentVal');
+    const closeModal = document.getElementById('closeModal');
+    const toggleQrBtn = document.getElementById('toggleQrBtn');
+    const scannerContainer = document.getElementById('scannerContainer');
+    const statusBanner = document.getElementById('statusBanner');
+    const loadedFilesSummary = document.getElementById('loadedFilesSummary');
+    const markedCountBadge = document.getElementById('markedCountBadge');
+
+    const whatsappModal = document.getElementById('whatsappModal');
+    const closeWhatsappModal = document.getElementById('closeWhatsappModal');
+    const waShareTextBtn = document.getElementById('waShareTextBtn');
+    const waShareExcelBtn = document.getElementById('waShareExcelBtn');
+
+    const qrModal = document.getElementById('qrModal');
+    const closeQrModal = document.getElementById('closeQrModal');
+    const qrLabelsContainer = document.getElementById('qrLabelsContainer');
+
+    // Right Slide Menu Controls
+    function openSideMenu() {
+      sideDrawer.classList.add('active');
+      sideDrawerBackdrop.classList.add('active');
+    }
+
+    function closeSideMenu() {
+      sideDrawer.classList.remove('active');
+      sideDrawerBackdrop.classList.remove('active');
+    }
+
+    openSideMenuBtn.addEventListener('click', openSideMenu);
+    closeSideMenuBtn.addEventListener('click', closeSideMenu);
+    sideDrawerBackdrop.addEventListener('click', closeSideMenu);
+
+    drawerOpenFilesBtn.addEventListener('click', () => {
+      closeSideMenu();
+      switchTab(3);
     });
 
-    // ==========================================
-    // 2. AR LENGTH MEASUREMENT MODE (WebXR)
-    // ==========================================
-    btnMeasure.addEventListener('click', async () => {
-      stopEverything();
+    drawerCatalogBtn.addEventListener('click', () => {
+      closeSideMenu();
+      switchTab(1);
+    });
 
-      if (!navigator.xr) {
-        showStatus('WebXR AR is not available. Make sure you open this over HTTPS in Chrome on Android.', true);
-        return;
+    drawerCartBtn.addEventListener('click', () => {
+      closeSideMenu();
+      switchTab(2);
+    });
+
+    // Helper: Convert worksheet to row objects while trimming/normalizing header names & locating the true header row
+    function sheetToCleanRows(worksheet) {
+      const matrix = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+      if (!matrix || matrix.length === 0) return { rows: [], headerRowIndex: 0 };
+
+      let headerRowIndex = 0;
+      const headerKeywords = [
+        'sap', 'description', 'material', 'part no', 'partno', 'part number',
+        'p/n', 'pn', 'bin', 'location', 'plant', 'concession', 'quantity', 'qty', 'sn', 's.n'
+      ];
+
+      for (let r = 0; r < Math.min(matrix.length, 10); r++) {
+        const rowCells = (matrix[r] || []).map(c => normalizeHeaderKey(c));
+        const matchCount = rowCells.filter(c => c && headerKeywords.some(kw => c.includes(kw))).length;
+        if (matchCount >= 2) {
+          headerRowIndex = r;
+          break;
+        }
       }
 
-      const supported = await navigator.xr.isSessionSupported('immersive-ar').catch(() => false);
-      if (!supported) {
-        showStatus('Your browser or device does not support WebXR immersive-ar.', true);
-        return;
-      }
+      const rawHeaders = matrix[headerRowIndex] || [];
+      const seenHeaders = {};
+      const cleanHeaders = rawHeaders.map((h, idx) => {
+        let base = String(h || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+        if (!base) base = `__EMPTY_${idx}`;
+        if (seenHeaders[base] !== undefined) {
+          seenHeaders[base] += 1;
+          return `${base}_${seenHeaders[base]}`;
+        }
+        seenHeaders[base] = 0;
+        return base;
+      });
 
-      try {
-        hideStatus();
-        btnMeasure.classList.add('active');
-        xrPoints = [];
-        latestHitPose = null;
-
-        arReadout.textContent = '0.0 cm';
-        arSubReadout.textContent = 'Scan a flat surface until the center ring turns green.';
-        btnMarkPoint.textContent = '📍 Mark Start (0/2)';
-        reticleRing.classList.remove('locked');
-
-        arOverlayContainer.style.display = 'flex';
-        arOverlayContainer.classList.add('xr-active');
-
-        const glCanvas = document.createElement('canvas');
-        const gl = glCanvas.getContext('webgl', { xrCompatible: true });
-
-        xrSession = await navigator.xr.requestSession('immersive-ar', {
-          requiredFeatures: ['hit-test'],
-          optionalFeatures: ['dom-overlay'],
-          domOverlay: { root: arOverlayContainer }
+      const rows = [];
+      for (let r = headerRowIndex + 1; r < matrix.length; r++) {
+        const vals = matrix[r] || [];
+        const obj = {};
+        let hasAnyValue = false;
+        cleanHeaders.forEach((h, cIdx) => {
+          const val = vals[cIdx] !== undefined && vals[cIdx] !== null ? String(vals[cIdx]).trim() : "";
+          obj[h] = val;
+          if (val !== "") hasAnyValue = true;
         });
+        if (hasAnyValue) {
+          rows.push({ row: obj, excelRowNumber: r + 1 });
+        }
+      }
 
-        xrSession.updateRenderState({ baseLayer: new XRWebGLLayer(xrSession, gl) });
-        const refSpace = await xrSession.requestReferenceSpace('local');
-        const viewerSpace = await xrSession.requestReferenceSpace('viewer');
-        const hitTestSource = await xrSession.requestHitTestSource({ space: viewerSpace });
+      return { rows, headerRowIndex };
+    }
 
-        btnMarkPoint.onclick = () => {
-          if (!latestHitPose) {
-            arSubReadout.textContent = 'Surface not locked yet — aim at a textured floor, table, or wall.';
+    // Parse an ArrayBuffer directly (used by both File input and incoming Intent/URL files)
+    function parseWorkbookBuffer(arrayBuffer, fileName) {
+      const fileNameLower = (fileName || 'Imported_Sheet.xlsx').toLowerCase();
+      const isPtb = fileNameLower.includes('ptb');
+      const data = new Uint8Array(arrayBuffer);
+      const workbook = XLSX.read(data, { type: 'array', cellComments: true });
+      let importedSheetsCount = 0;
+
+      workbook.SheetNames.forEach(sheetName => {
+        const cleanSheetName = sheetName.trim().toLowerCase();
+        
+        if (isPtb) {
+          if (cleanSheetName === 'stock file' || cleanSheetName.includes('stock')) {
+            const worksheet = workbook.Sheets[sheetName];
+            const { rows, headerRowIndex } = sheetToCleanRows(worksheet);
+            const tabKey = `PTB - ${sheetName} (${fileName})`;
+
+            const parsedItems = rows.map(({ row, excelRowNumber }, idx) =>
+              normalizePtbRow(row, worksheet, tabKey, sheetName, fileName, idx, headerRowIndex + 1, excelRowNumber)
+            );
+            const validItems = parsedItems.filter(item => item.sapCode || item.partNo || item.description || item.sn);
+
+            if (validItems.length > 0) {
+              loadedDataMap[tabKey] = validItems;
+              importedSheetsCount++;
+            }
+          }
+        } else {
+          if (IEOC_TABS.some(t => cleanSheetName.includes(t))) {
+            const worksheet = workbook.Sheets[sheetName];
+            const { rows, headerRowIndex } = sheetToCleanRows(worksheet);
+            
+            const tabKey = `IEOC - ${sheetName} (${fileName})`;
+            const isSapStock = cleanSheetName.includes('sap stock');
+            const isWriteOff = cleanSheetName.includes('write off');
+            const isOutOfSap = cleanSheetName.includes('out of sap');
+
+            const parsedItems = rows.map(({ row, excelRowNumber }, idx) =>
+              normalizeIeocRow(row, worksheet, tabKey, isSapStock, isWriteOff, isOutOfSap, sheetName, fileName, idx, headerRowIndex + 1, excelRowNumber)
+            );
+            const validItems = parsedItems.filter(item => item.sapCode || item.partNo || item.description || item.itemNo || item.material || item.title || item.sn);
+
+            if (validItems.length > 0) {
+              loadedDataMap[tabKey] = validItems;
+              importedSheetsCount++;
+            }
+          }
+        }
+      });
+
+      return importedSheetsCount;
+    }
+
+    // Fetch and import a file passed by URL / content URI / APK intent
+    async function loadExternalExcelUri(uri, customName) {
+      try {
+        showStatusBanner("Importing incoming Excel sheet...");
+        const response = await fetch(uri);
+        if (!response.ok) throw new Error("Could not read file URI");
+        const buffer = await response.arrayBuffer();
+        const guessedName = customName || decodeURIComponent(uri.split('/').pop().split('?')[0]) || 'Opened_Inventory.xlsx';
+        const added = parseWorkbookBuffer(buffer, guessedName);
+        if (added > 0) {
+          saveToStorage();
+          updateTabSelector();
+          updateFilesSummary();
+          displayedItemCount = 50;
+          switchTab(1);
+          showStatusBanner(`Added <strong>${guessedName}</strong>. Total records: ${getTotalItemsCount()}`);
+        } else {
+          alert(`Opened "${guessedName}", but no matching IEOC ("SAP Stock", "Write Off", "IEOC Out of SAP") or PTB ("Stock File") tabs were found.`);
+        }
+      } catch (err) {
+        console.warn("Incoming URI load failed:", err);
+      }
+    }
+
+    // Check all ways an APK / OS "Open with" intent can pass an Excel file
+    async function checkForIncomingOpenedFiles() {
+      if ('launchQueue' in window && 'files' in LaunchParams.prototype) {
+        window.launchQueue.setConsumer(async (launchParams) => {
+          if (!launchParams.files || launchParams.files.length === 0) return;
+          const files = [];
+          for (const handle of launchParams.files) {
+            files.push(await handle.getFile());
+          }
+          processExcelFiles(files);
+        });
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const incomingUri = params.get('file') || params.get('uri') || params.get('url') || params.get('path') || params.get('intent');
+      const incomingName = params.get('name') || params.get('filename');
+      if (incomingUri) {
+        window.history.replaceState({}, '', window.location.pathname);
+        await loadExternalExcelUri(incomingUri, incomingName);
+      }
+
+      if (window.incomingFileUrl) {
+        const uri = window.incomingFileUrl;
+        window.incomingFileUrl = null;
+        await loadExternalExcelUri(uri);
+      }
+    }
+
+    window.importBase64Excel = function(base64Str, fileName) {
+      try {
+        const cleanB64 = base64Str.includes(',') ? base64Str.split(',')[1] : base64Str;
+        const binary = atob(cleanB64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const added = parseWorkbookBuffer(bytes.buffer, fileName || 'WhatsApp_File.xlsx');
+        if (added > 0) {
+          saveToStorage();
+          updateTabSelector();
+          updateFilesSummary();
+          displayedItemCount = 50;
+          switchTab(1);
+          showStatusBanner(`Imported <strong>${fileName || 'Excel Sheet'}</strong>. Total records: ${getTotalItemsCount()}`);
+        }
+      } catch (e) {
+        alert("Failed to import incoming Excel data: " + e.message);
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      getColoredEniLogoCanvas();
+
+      const savedData = localStorage.getItem('inventory_excel_data_map');
+      const savedSelections = localStorage.getItem('inventory_selected_items');
+      const savedQuantities = localStorage.getItem('inventory_marked_quantities');
+      
+      if (savedQuantities) {
+        try {
+          markedQuantities = JSON.parse(savedQuantities) || {};
+        } catch(e) {}
+      }
+
+      if (savedSelections) {
+        try {
+          selectedItemIds = new Set(JSON.parse(savedSelections));
+          updateMarkedBadge();
+        } catch(e) {}
+      }
+
+      if (savedData) {
+        try {
+          loadedDataMap = JSON.parse(savedData);
+          updateTabSelector();
+          updateFilesSummary();
+          filterData();
+          const totalCount = getTotalItemsCount();
+          if (totalCount > 0) {
+            showStatusBanner(`Restored inventory containing <strong>${totalCount}</strong> records.`);
+          }
+        } catch(e) {
+          localStorage.removeItem('inventory_excel_data_map');
+        }
+      }
+
+      await checkForIncomingOpenedFiles();
+    });
+
+    function switchTab(tabNum) {
+      currentTab = tabNum;
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab-btn').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.side-drawer-btn').forEach(el => el.classList.remove('active'));
+
+      document.getElementById(`tab${tabNum}`).classList.add('active');
+      const bottomBtns = document.querySelectorAll('.nav-tab-btn');
+      if (tabNum === 1) {
+        if (bottomBtns[0]) bottomBtns[0].classList.add('active');
+        drawerCatalogBtn.classList.add('active');
+        filterData();
+      } else if (tabNum === 2) {
+        if (bottomBtns[1]) bottomBtns[1].classList.add('active');
+        drawerCartBtn.classList.add('active');
+        renderMarkedGrid();
+      } else if (tabNum === 3) {
+        drawerOpenFilesBtn.classList.add('active');
+        updateFilesSummary();
+      }
+    }
+
+    function saveSelectionsToStorage() {
+      try {
+        localStorage.setItem('inventory_selected_items', JSON.stringify(Array.from(selectedItemIds)));
+        localStorage.setItem('inventory_marked_quantities', JSON.stringify(markedQuantities));
+        updateMarkedBadge();
+      } catch(e) {}
+    }
+
+    function updateMarkedBadge() {
+      markedCountBadge.textContent = selectedItemIds.size;
+      if (drawerCartCount) {
+        drawerCartCount.textContent = selectedItemIds.size;
+      }
+    }
+
+    function showStatusBanner(msg) {
+      statusBanner.innerHTML = msg;
+      statusBanner.style.display = 'block';
+      setTimeout(() => { statusBanner.style.display = 'none'; }, 5000);
+    }
+
+    // Group loaded tabs by source file name and allow removing individual files
+    function updateFilesSummary() {
+      const keys = Object.keys(loadedDataMap);
+      if (keys.length === 0) {
+        loadedFilesSummary.innerHTML = "No files currently loaded.";
+        return;
+      }
+
+      const filesGrouped = {};
+      keys.forEach(tabKey => {
+        const items = loadedDataMap[tabKey] || [];
+        let fileName = (items[0] && items[0]._fileName) ? items[0]._fileName : null;
+        if (!fileName) {
+          const match = tabKey.match(/\(([^)]+)\)$/);
+          fileName = match ? match[1] : tabKey;
+        }
+        if (!filesGrouped[fileName]) {
+          filesGrouped[fileName] = [];
+        }
+        filesGrouped[fileName].push({ tabKey, count: items.length });
+      });
+
+      loadedFilesSummary.innerHTML = '';
+      const listContainer = document.createElement('div');
+      listContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.65rem;';
+
+      Object.entries(filesGrouped).forEach(([fileName, tabs]) => {
+        const totalFileItems = tabs.reduce((sum, t) => sum + t.count, 0);
+        const tabLabels = tabs.map(t => `${t.tabKey.replace(/\s*\([^)]+\)$/, '')} (${t.count})`).join(', ');
+
+        const card = document.createElement('div');
+        card.className = 'file-summary-card';
+
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = 'min-width: 0; flex: 1;';
+        infoDiv.innerHTML = `
+          <div style="color: var(--text-main); font-weight: 700; font-size: 0.92rem; word-break: break-word;">📄 ${fileName}</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; line-height: 1.4;">
+            <b>${totalFileItems}</b> total items &bull; Tabs: ${tabLabels}
+          </div>
+        `;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'file-remove-small-btn';
+        removeBtn.textContent = '🗑️ Remove';
+        removeBtn.addEventListener('click', () => removeSingleLoadedFile(fileName, tabs.map(t => t.tabKey)));
+
+        card.appendChild(infoDiv);
+        card.appendChild(removeBtn);
+        listContainer.appendChild(card);
+      });
+
+      loadedFilesSummary.appendChild(listContainer);
+    }
+
+    function removeSingleLoadedFile(fileName, tabKeys) {
+      if (!confirm(`Remove "${fileName}" and its loaded items?`)) return;
+
+      const keysToRemove = new Set();
+      tabKeys.forEach(tk => {
+        const items = loadedDataMap[tk] || [];
+        items.forEach(item => keysToRemove.add(item._uniqueKey));
+        delete loadedDataMap[tk];
+      });
+
+      keysToRemove.forEach(uk => {
+        selectedItemIds.delete(uk);
+        delete markedQuantities[uk];
+      });
+
+      saveToStorage();
+      saveSelectionsToStorage();
+      updateTabSelector();
+      updateFilesSummary();
+      displayedItemCount = 50;
+      filterData();
+      showStatusBanner(`Removed file <strong>${fileName}</strong>.`);
+    }
+
+    function extractQtyColumns(row) {
+      const qtyCols = {};
+      Object.keys(row).forEach(key => {
+        const lowerKey = key.trim().toLowerCase();
+        if (lowerKey.includes('qty') || lowerKey.includes('quantity')) {
+          qtyCols[key.trim()] = row[key] !== undefined ? String(row[key]).trim() : "";
+        }
+      });
+      return qtyCols;
+    }
+
+    function getAllQtyComments(worksheet, headerExcelRow, targetExcelRow) {
+      let comments = [];
+      for (let cellRef in worksheet) {
+        if (cellRef[0] === '!') continue;
+        const colLetter = cellRef.replace(/[0-9]/g, '');
+        const rowNum = parseInt(cellRef.replace(/[^0-9]/g, ''), 10);
+        
+        if (rowNum === headerExcelRow) {
+          const headerVal = String(worksheet[cellRef].v || '').trim().toLowerCase();
+          if (headerVal.includes('qty') || headerVal.includes('quantity')) {
+            const targetCellRef = colLetter + targetExcelRow;
+            const targetCell = worksheet[targetCellRef];
+            if (targetCell && targetCell.c && targetCell.c.length > 0) {
+              const headerName = String(worksheet[cellRef].v || '').trim();
+              const cellCommentText = targetCell.c.map(c => c.t).join("\n");
+              comments.push(`• [${headerName}]:\n${cellCommentText}`);
+            }
+          }
+        }
+      }
+      return comments.join("\n\n");
+    }
+
+    function processExcelFiles(files) {
+      if (!files || files.length === 0) return;
+
+      let filesProcessed = 0;
+      const totalFiles = files.length;
+
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+
+        reader.onload = function(evt) {
+          try {
+            parseWorkbookBuffer(evt.target.result, file.name);
+
+            filesProcessed++;
+            if (filesProcessed === totalFiles) {
+              saveToStorage();
+              updateTabSelector();
+              updateFilesSummary();
+              displayedItemCount = 50;
+              switchTab(1);
+              showStatusBanner(`Successfully imported ${totalFiles} file(s). Total records: ${getTotalItemsCount()}`);
+            }
+          } catch(err) {
+            alert("Error parsing Excel file: " + file.name);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    fileInput.addEventListener('change', function(e) {
+      processExcelFiles(e.target.files);
+      fileInput.value = '';
+    });
+
+    fetchWhatsappFolderBtn.addEventListener('click', async () => {
+      if ('showDirectoryPicker' in window) {
+        try {
+          const dirHandle = await window.showDirectoryPicker({
+            id: 'whatsapp_docs',
+            mode: 'read',
+            startIn: 'downloads'
+          });
+
+          const excelFiles = [];
+          for await (const entry of dirHandle.values()) {
+            if (entry.kind === 'file' && /\.(xlsx|xls)$/i.test(entry.name)) {
+              const file = await entry.getFile();
+              excelFiles.push(file);
+            }
+          }
+
+          if (excelFiles.length === 0) {
+            alert("No .xlsx or .xls files found in the selected folder.");
             return;
           }
 
-          const pos = latestHitPose.transform.position;
-          if (xrPoints.length >= 2) {
-            xrPoints = [];
-          }
-
-          xrPoints.push({ x: pos.x, y: pos.y, z: pos.z });
-
-          if (xrPoints.length === 1) {
-            arReadout.textContent = 'Start Marked';
-            arSubReadout.textContent = 'Move the green ring to the end point and tap Mark End.';
-            btnMarkPoint.textContent = '📍 Mark End (1/2)';
-          } else if (xrPoints.length === 2) {
-            const dx = xrPoints[1].x - xrPoints[0].x;
-            const dy = xrPoints[1].y - xrPoints[0].y;
-            const dz = xrPoints[1].z - xrPoints[0].z;
-            const meters = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-            const cm = (meters * 100).toFixed(1);
-            const inches = (meters * 39.3701).toFixed(1);
-            const mStr = meters.toFixed(2);
-
-            const formatted = `${cm} cm (${inches} in)`;
-            arReadout.textContent = formatted;
-            arSubReadout.textContent = `${mStr} meters — Tap below to measure again.`;
-            btnMarkPoint.textContent = '🔄 Measure Again';
-
-            addMeasurementToHistory(formatted, `${mStr} m`);
-          }
-        };
-
-        const onXRFrame = (time, frame) => {
-          if (!xrSession) return;
-          xrSession.requestAnimationFrame(onXRFrame);
-
-          const hitResults = frame.getHitTestResults(hitTestSource);
-          if (hitResults.length > 0) {
-            latestHitPose = hitResults[0].getPose(refSpace);
-            reticleRing.classList.add('locked');
-            if (xrPoints.length === 0) {
-              arSubReadout.textContent = 'Surface locked! Aim green ring at start point & tap Mark Start.';
-            }
-          } else {
-            latestHitPose = null;
-            reticleRing.classList.remove('locked');
-          }
-        };
-
-        xrSession.requestAnimationFrame(onXRFrame);
-        xrSession.addEventListener('end', () => {
-          stopEverything();
-        });
-      } catch (err) {
-        stopEverything();
-        showStatus('Failed to launch AR: ' + err.message, true);
+          processExcelFiles(excelFiles);
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
       }
+
+      fileInput.click();
     });
 
-    function addMeasurementToHistory(primaryText, meterText) {
-      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      savedMeasurements.unshift({ primaryText, meterText, timeStr });
-      renderHistory();
+    // Helper: Get the first column value in a sheet row (which always holds the SN / row count)
+    function getFirstColumnVal(row) {
+      const rowKeys = Object.keys(row);
+      if (rowKeys.length === 0) return "";
+      const firstKey = rowKeys[0];
+      return row[firstKey] !== undefined ? String(row[firstKey]).trim() : "";
     }
 
-    function renderHistory() {
-      if (savedMeasurements.length === 0) {
-        historyList.innerHTML = '<li style="color: var(--muted); justify-content: center;">No measurements yet</li>';
+    // Helper: Normalize header text (collapse newlines/spaces, remove punctuation noise) for resilient column matching
+    function normalizeHeaderKey(headerStr) {
+      return String(headerStr || '')
+        .replace(/[\r\n\t]+/g, ' ')
+        .replace(/[\\\/]+/g, '/')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    }
+
+    // Helper: Extract "Part no" column value cleanly across PTB and IEOC Out of SAP sheets
+    function extractPartNoFromRow(row) {
+      const exactNormalizedTargets = [
+        'part no',
+        'part no.',
+        'part no:',
+        'part no,',
+        'partno',
+        'part number',
+        'part numbers',
+        'part #',
+        'p/n / sn',
+        'p/n/sn',
+        'pn / sn',
+        'pn/sn',
+        'p/n sn',
+        'pn sn',
+        'part/ser. no',
+        'part/ser no',
+        'part.ser. no',
+        'part ser no',
+        'p/n',
+        'pn'
+      ];
+
+      const rowKeys = Object.keys(row);
+      for (const rk of rowKeys) {
+        const norm = normalizeHeaderKey(rk).replace(/_\d+$/, '');
+        if (exactNormalizedTargets.includes(norm)) {
+          const val = row[rk] !== undefined ? String(row[rk]).trim() : "";
+          if (val !== "") return val;
+        }
+      }
+
+      for (const rk of rowKeys) {
+        const norm = normalizeHeaderKey(rk).replace(/_\d+$/, '');
+        const isPartHeader =
+          norm.startsWith('part no') ||
+          norm.includes('part no') ||
+          norm.includes('part number') ||
+          norm.includes('p/n') ||
+          /\bpn\b/.test(norm);
+        if (isPartHeader) {
+          const val = row[rk] !== undefined ? String(row[rk]).trim() : "";
+          if (val !== "") return val;
+        }
+      }
+
+      return "";
+    }
+
+    function normalizeIeocRow(row, worksheet, sourceTabName, isSapStock, isWriteOff, isOutOfSap, sheetName, fileName, index, headerExcelRow = 1, targetExcelRow = index + 2) {
+      const getVal = (keys) => {
+        for (let k of keys) {
+          const targetNorm = normalizeHeaderKey(k);
+          const foundKey = Object.keys(row).find(rk => normalizeHeaderKey(rk).replace(/_\d+$/, '') === targetNorm);
+          if (foundKey !== undefined && row[foundKey] !== undefined) return String(row[foundKey]).trim();
+        }
+        return "";
+      };
+
+      const snVal = getFirstColumnVal(row) || getVal(['sn', 's.n.', 'serial no', 'serial number', 'item', 'item no', 'no']) || String(index + 1);
+      const partNoVal = extractPartNoFromRow(row);
+
+      const uniqueKey = `${sourceTabName}_${index}_${getVal(['sap code', 'material']) || partNoVal || snVal || index}`;
+      const qtyComments = getAllQtyComments(worksheet, headerExcelRow, targetExcelRow);
+
+      return {
+        _uniqueKey: uniqueKey,
+        _sourceTab: sourceTabName,
+        _tabName: sheetName,
+        _fileName: fileName,
+        isPtb: false,
+        isSapStock: isSapStock,
+        isWriteOff: isWriteOff,
+        isOutOfSap: isOutOfSap,
+        itemNo: getVal(['item', 'item no', 'no']),
+        sn: snVal,
+        partNo: partNoVal,
+        title: getVal(['title']),
+        material: getVal(['material']),
+        plant: getVal(['plant', 'plt']),
+        storageLocation: getVal(['storage location', 'storage loc', 'sloc', 'storage_location']),
+        sapCode: getVal(['sap code', 'sapcode', 'sap item', 'item code', 'code']),
+        description: getVal(['description', 'desc', 'material description']),
+        concession: getVal(['concession', 'concession name']),
+        um: getVal(['um', 'uom', 'unit']),
+        bin: getVal(['bin', 'bin location', 'shelf']),
+        sapQty: getVal(['sap qty', 'sap quantity', 'sap_qty', 'system qty']),
+        physicalQty: getVal(['physical qty', 'phyical qty', 'physical quantity', 'phy_qty']),
+        physicalQtyEaJt: getVal(['physical qty. ea./jt.', 'physical qty. ea.\\jt.', 'physical qty ea jt', 'qty by ea', 'physical qty ea', 'ea/jt', 'quantity jt/ea', 'quantity jt\\ea']),
+        allQtyCols: extractQtyColumns(row),
+        comment: qtyComments
+      };
+    }
+
+    function normalizePtbRow(row, worksheet, sourceTabName, sheetName, fileName, index, headerExcelRow = 1, targetExcelRow = index + 2) {
+      const getVal = (keys) => {
+        for (let k of keys) {
+          const targetNorm = normalizeHeaderKey(k);
+          const foundKey = Object.keys(row).find(rk => normalizeHeaderKey(rk).replace(/_\d+$/, '') === targetNorm);
+          if (foundKey !== undefined && row[foundKey] !== undefined) return String(row[foundKey]).trim();
+        }
+        return "";
+      };
+
+      const snVal = getFirstColumnVal(row) || getVal(['sn', 's.n.', 'serial no', 'serial number']) || String(index + 1);
+      const partNoVal = extractPartNoFromRow(row);
+
+      const uniqueKey = `${sourceTabName}_${index}_${getVal(['sap. code', 'sap code']) || partNoVal || snVal || index}`;
+      const qtyComments = getAllQtyComments(worksheet, headerExcelRow, targetExcelRow);
+
+      return {
+        _uniqueKey: uniqueKey,
+        _sourceTab: sourceTabName,
+        _tabName: sheetName,
+        _fileName: fileName,
+        isPtb: true,
+        sn: snVal,
+        sapCode: getVal(['sap. code', 'sap code', 'sapcode']),
+        description: getVal(['material description', 'description', 'desc']),
+        status: getVal(['status']),
+        vendor: getVal(['vendor']),
+        matlGroup: getVal(['matl group', 'material group']),
+        partNo: partNoVal,
+        um: getVal(['unt.', 'unt', 'uom', 'unit']),
+        quantity: getVal(['quantity', 'qty']),
+        allQtyCols: extractQtyColumns(row),
+        comment: qtyComments,
+        location: getVal(['location', 'bin', 'loc'])
+      };
+    }
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem('inventory_excel_data_map', JSON.stringify(loadedDataMap));
+      } catch(e) {}
+    }
+
+    function getTotalItemsCount() {
+      return Object.values(loadedDataMap).reduce((acc, curr) => acc + (curr ? curr.length : 0), 0);
+    }
+
+    function updateTabSelector() {
+      const currentSelection = tabSelector.value;
+      tabSelector.innerHTML = '<option value="all">📂 View All Loaded Tabs (' + getTotalItemsCount() + ' items)</option>';
+      
+      Object.keys(loadedDataMap).forEach(tabKey => {
+        const opt = document.createElement('option');
+        opt.value = tabKey;
+        opt.textContent = `📑 ${tabKey} (${loadedDataMap[tabKey].length})`;
+        tabSelector.appendChild(opt);
+      });
+
+      if (currentSelection && (currentSelection === 'all' || loadedDataMap[currentSelection])) {
+        tabSelector.value = currentSelection;
+      } else {
+        tabSelector.value = 'all';
+      }
+    }
+
+    tabSelector.addEventListener('change', () => {
+      displayedItemCount = 50;
+      filterData();
+    });
+
+    // Bulk Mark All Filtered Items
+    markFilteredBtn.addEventListener('click', () => {
+      if (!currentFilteredItems || currentFilteredItems.length === 0) return;
+      currentFilteredItems.forEach(item => {
+        selectedItemIds.add(item._uniqueKey);
+        if (!markedQuantities[item._uniqueKey] || markedQuantities[item._uniqueKey] < 1) {
+          markedQuantities[item._uniqueKey] = 1;
+        }
+      });
+      saveSelectionsToStorage();
+      renderGrid(currentFilteredItems, gridTab1);
+      showStatusBanner(`Marked all <strong>${currentFilteredItems.length}</strong> filtered item(s).`);
+    });
+
+    // Bulk Unmark All Filtered Items
+    unmarkFilteredBtn.addEventListener('click', () => {
+      if (!currentFilteredItems || currentFilteredItems.length === 0) return;
+      let removedCount = 0;
+      currentFilteredItems.forEach(item => {
+        if (selectedItemIds.has(item._uniqueKey)) {
+          selectedItemIds.delete(item._uniqueKey);
+          delete markedQuantities[item._uniqueKey];
+          removedCount++;
+        }
+      });
+      saveSelectionsToStorage();
+      renderGrid(currentFilteredItems, gridTab1);
+      showStatusBanner(`Unmarked <strong>${removedCount}</strong> filtered item(s).`);
+    });
+
+    removeExcelBtn.addEventListener('click', () => {
+      if (Object.keys(loadedDataMap).length === 0) {
+        alert("No data currently loaded.");
         return;
       }
-      historyList.innerHTML = savedMeasurements
-        .map((m, idx) => `<li><span><b>#${savedMeasurements.length - idx}</b> &nbsp; ${m.primaryText}</span><span style="color: var(--muted);">${m.timeStr}</span></li>`)
-        .join('');
+
+      if (confirm("Are you sure you want to clear all loaded inventory data?")) {
+        loadedDataMap = {};
+        selectedItemIds.clear();
+        markedQuantities = {};
+        localStorage.removeItem('inventory_excel_data_map');
+        localStorage.removeItem('inventory_selected_items');
+        localStorage.removeItem('inventory_marked_quantities');
+        updateTabSelector();
+        updateFilesSummary();
+        updateMarkedBadge();
+        displayedItemCount = 50;
+        filterData();
+        showStatusBanner("All inventory data has been cleared.");
+      }
+    });
+
+    unmarkAllBtn.addEventListener('click', () => {
+      if (selectedItemIds.size === 0) {
+        alert("Your cart is already empty.");
+        return;
+      }
+      if (confirm("Are you sure you want to clear all items from your cart?")) {
+        selectedItemIds.clear();
+        markedQuantities = {};
+        saveSelectionsToStorage();
+        renderMarkedGrid();
+        showStatusBanner("Cart has been cleared.");
+      }
+    });
+
+    function getActiveItems() {
+      const selectedTab = tabSelector.value;
+      if (selectedTab === 'all') {
+        let combined = [];
+        Object.values(loadedDataMap).forEach(tabItems => {
+          if (Array.isArray(tabItems)) combined = combined.concat(tabItems);
+        });
+        return combined;
+      } else {
+        return loadedDataMap[selectedTab] || [];
+      }
     }
 
-    btnClearHistory.addEventListener('click', () => {
-      savedMeasurements = [];
-      renderHistory();
+    function setItemMarkAndQty(uniqueKey, isMarked, qtyVal) {
+      if (isMarked) {
+        selectedItemIds.add(uniqueKey);
+        const parsedQty = parseInt(qtyVal, 10);
+        markedQuantities[uniqueKey] = (!isNaN(parsedQty) && parsedQty > 0) ? parsedQty : 1;
+      } else {
+        selectedItemIds.delete(uniqueKey);
+        delete markedQuantities[uniqueKey];
+      }
+      saveSelectionsToStorage();
+    }
+
+    function getItemPartNo(item) {
+      return String(item.partNo || item.partSerNo || item.pnSn || '').trim();
+    }
+
+    function renderCardHtml(item) {
+      const isChecked = selectedItemIds.has(item._uniqueKey);
+      const currentQty = markedQuantities[item._uniqueKey] || 1;
+      const themeClass = item.isPtb ? 'ptb' : 'ieoc';
+      const sourceBadgeHtml = item.isPtb ? '<b>Petrobel</b>' : `<b>${item._tabName || 'IEOC'}</b>`;
+      const resolvedPartNo = getItemPartNo(item);
+
+      const mainTitle = `SN: ${item.sn || 'N/A'}`;
+      let subInfo = '';
+      let infoFieldsHtml = '';
+
+      if (item.isPtb) {
+        subInfo = `
+          <div class="part-no-badge">Part no: ${resolvedPartNo || '-'}</div>
+          <div class="sub-title" style="font-size: 0.85rem; margin-top: 0.25rem; font-weight: 600;">SAP Code: ${item.sapCode || '-'}</div>
+        `;
+        infoFieldsHtml = `
+          <span>Part no: <b>${resolvedPartNo || '-'}</b></span>
+          <span>Status: <b>${item.status || '-'}</b></span>
+          <span>Vendor: <b>${item.vendor || '-'}</b></span>
+          <span>Matl Group: <b>${item.matlGroup || '-'}</b></span>
+          <span>UNT: <b>${item.um || '-'}</b></span>
+          <span>Quantity: <b>${item.quantity || '0'}</b></span>
+          <span style="grid-column: 1/-1;">Location: <b>${item.location || '-'}</b></span>
+        `;
+      } else if (item.isWriteOff) {
+        subInfo = `<div class="sub-title" style="font-size: 0.85rem; margin-top: 0.2rem; font-weight: 600;">SAP Code: ${item.sapCode || '-'} &bull; Title: ${item.title || '-'}</div>`;
+        infoFieldsHtml = `
+          <span>Plant: <b>${item.plant || '-'}</b></span>
+          <span>Storage Loc: <b>${item.storageLocation || '-'}</b></span>
+          <span>Material: <b>${item.material || '-'}</b></span>
+          <span>SAP Code: <b>${item.sapCode || '-'}</b></span>
+          <span>UoM: <b>${item.um || '-'}</b></span>
+          <span>Bin: <b>${item.bin || '-'}</b></span>
+          <span>Phy Qty: <b>${item.physicalQty || '0'}</b></span>
+        `;
+      } else if (item.isOutOfSap) {
+        subInfo = `
+          <div class="part-no-badge">Part no: ${resolvedPartNo || '-'}</div>
+          <div class="sub-title" style="font-size: 0.85rem; margin-top: 0.25rem; font-weight: 600;">SAP Code: ${item.sapCode || '-'}</div>
+        `;
+        infoFieldsHtml = `
+          <span>Part no: <b>${resolvedPartNo || '-'}</b></span>
+          <span>Concession: <b>${item.concession || '-'}</b></span>
+          <span>Bin Location: <b>${item.bin || '-'}</b></span>
+          <span>Physical Qty Ea.Jt: <b>${item.physicalQtyEaJt || '0'}</b></span>
+        `;
+      } else {
+        subInfo = `<div class="sub-title" style="font-size: 0.85rem; margin-top: 0.2rem; font-weight: 600;">SAP Code: ${item.sapCode || '-'}</div>`;
+        infoFieldsHtml = `
+          <span>Plant: <b>${item.plant || '-'}</b></span>
+          <span>Storage Loc: <b>${item.storageLocation || '-'}</b></span>
+          <span>Bin: <b>${item.bin || '-'}</b></span>
+          <span>UM: <b>${item.um || '-'}</b></span>
+          <span>SAP Qty: <b>${item.sapQty || '0'}</b></span>
+          <span>Physical QTY: <b>${item.physicalQty || '0'}</b></span>
+        `;
+      }
+
+      const card = document.createElement('div');
+      card.className = isChecked ? `card ${themeClass} marked` : `card ${themeClass}`;
+      card.innerHTML = `
+        <div>
+          <div class="card-header">
+            <div class="card-sn">${mainTitle}</div>
+            <div class="card-actions-bar">
+              <div class="qty-counter-group">
+                <button type="button" class="qty-btn qty-minus" title="Decrease Quantity">−</button>
+                <input type="number" class="qty-input" min="1" value="${currentQty}" title="Cart Quantity">
+                <button type="button" class="qty-btn qty-plus" title="Increase Quantity">+</button>
+              </div>
+              <button type="button" class="big-mark-btn ${isChecked ? 'is-marked' : ''}" title="Add / Remove from Cart">
+                ${isChecked ? '✓' : 'Add'}
+              </button>
+            </div>
+          </div>
+          <div class="card-source" title="${item._sourceTab}">${sourceBadgeHtml}</div>
+          ${subInfo}
+          <div class="card-desc" style="margin-top: 0.3rem;">${item.description || 'No description provided'}</div>
+        </div>
+        <div class="card-grid-info">
+          ${infoFieldsHtml}
+        </div>
+      `;
+
+      const actionsBar = card.querySelector('.card-actions-bar');
+      const minusBtn = card.querySelector('.qty-minus');
+      const plusBtn = card.querySelector('.qty-plus');
+      const qtyInput = card.querySelector('.qty-input');
+      const markBtn = card.querySelector('.big-mark-btn');
+
+      actionsBar.addEventListener('click', (e) => e.stopPropagation());
+
+      const syncCardUI = (marked, qty) => {
+        qtyInput.value = qty;
+        if (marked) {
+          card.classList.add('marked');
+          markBtn.classList.add('is-marked');
+          markBtn.textContent = '✓';
+        } else {
+          card.classList.remove('marked');
+          markBtn.classList.remove('is-marked');
+          markBtn.textContent = 'Add';
+        }
+      };
+
+      minusBtn.addEventListener('click', () => {
+        let val = parseInt(qtyInput.value, 10) || 1;
+        if (val > 1) {
+          val -= 1;
+          setItemMarkAndQty(item._uniqueKey, true, val);
+          syncCardUI(true, val);
+        } else {
+          setItemMarkAndQty(item._uniqueKey, false, 1);
+          syncCardUI(false, 1);
+          if (currentTab === 2) renderMarkedGrid();
+        }
+      });
+
+      plusBtn.addEventListener('click', () => {
+        let val = parseInt(qtyInput.value, 10) || 0;
+        if (!selectedItemIds.has(item._uniqueKey)) {
+          val = Math.max(1, val);
+        } else {
+          val += 1;
+        }
+        setItemMarkAndQty(item._uniqueKey, true, val);
+        syncCardUI(true, val);
+      });
+
+      qtyInput.addEventListener('input', () => {
+        let val = parseInt(qtyInput.value, 10);
+        if (!isNaN(val) && val > 0) {
+          setItemMarkAndQty(item._uniqueKey, true, val);
+          card.classList.add('marked');
+          markBtn.classList.add('is-marked');
+          markBtn.textContent = '✓';
+        }
+      });
+
+      qtyInput.addEventListener('blur', () => {
+        let val = parseInt(qtyInput.value, 10);
+        if (isNaN(val) || val < 1) {
+          qtyInput.value = markedQuantities[item._uniqueKey] || 1;
+        }
+      });
+
+      markBtn.addEventListener('click', () => {
+        const currentlyMarked = selectedItemIds.has(item._uniqueKey);
+        if (currentlyMarked) {
+          setItemMarkAndQty(item._uniqueKey, false, 1);
+          syncCardUI(false, 1);
+          if (currentTab === 2) renderMarkedGrid();
+        } else {
+          const val = parseInt(qtyInput.value, 10) || 1;
+          setItemMarkAndQty(item._uniqueKey, true, val);
+          syncCardUI(true, val);
+        }
+      });
+
+      card.addEventListener('click', () => openModal(item));
+      return card;
+    }
+
+    function renderGrid(data, containerEl) {
+      if (containerEl === gridTab1) {
+        currentFilteredItems = data || [];
+        if (currentFilteredItems.length > 0) {
+          bulkFilterBar.style.display = 'flex';
+          filteredCountLabel.textContent = `${currentFilteredItems.length} item(s) shown`;
+        } else {
+          bulkFilterBar.style.display = 'none';
+        }
+      }
+
+      containerEl.innerHTML = '';
+      if (!data || data.length === 0) {
+        const emptyMsg = containerEl === gridTab2 ? 'Your cart is empty.' : 'No inventory records found.';
+        containerEl.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">${emptyMsg}</div>`;
+        return;
+      }
+
+      const itemsToRender = data.slice(0, displayedItemCount);
+      itemsToRender.forEach(item => {
+        containerEl.appendChild(renderCardHtml(item));
+      });
+
+      if (data.length > displayedItemCount) {
+        const loadMoreDiv = document.createElement('div');
+        loadMoreDiv.style.gridColumn = '1 / -1';
+        loadMoreDiv.style.textAlign = 'center';
+        loadMoreDiv.style.padding = '1.5rem';
+        loadMoreDiv.innerHTML = `<button id="loadMoreBtn" style="padding: 0.75rem 1.5rem; background: var(--accent); color: var(--bg-color); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: opacity 0.2s;">Load More Results (${data.length - displayedItemCount} remaining)</button>`;
+        containerEl.appendChild(loadMoreDiv);
+
+        document.getElementById('loadMoreBtn').addEventListener('click', () => {
+          displayedItemCount += 50;
+          renderGrid(data, containerEl);
+        });
+      }
+    }
+
+    function getSelectedItemsList() {
+      let selectedItemsList = [];
+      Object.values(loadedDataMap).forEach(tabItems => {
+        tabItems.forEach(item => {
+          if (selectedItemIds.has(item._uniqueKey)) {
+            selectedItemsList.push(item);
+          }
+        });
+      });
+      return selectedItemsList;
+    }
+
+    function renderMarkedGrid() {
+      renderGrid(getSelectedItemsList(), gridTab2);
+    }
+
+    function openModal(item) {
+      currentModalItemKey = item._uniqueKey;
+      const resolvedPartNo = getItemPartNo(item);
+      modalTitle.textContent = `SN: ${item.sn || 'N/A'}`;
+      modalSource.textContent = `📑 Source Tab: ${item._sourceTab}`;
+      modalDescVal.textContent = item.description || '-';
+      modalCheckbox.checked = selectedItemIds.has(item._uniqueKey);
+      modalQtyInput.value = markedQuantities[item._uniqueKey] || 1;
+      
+      let fields = [];
+      if (item.isPtb) {
+        fields = [
+          { label: 'SN', val: item.sn },
+          { label: 'Part no', val: resolvedPartNo },
+          { label: 'SAP. CODE', val: item.sapCode },
+          { label: 'Status', val: item.status },
+          { label: 'Vendor', val: item.vendor },
+          { label: 'Matl Group', val: item.matlGroup },
+          { label: 'UNT.', val: item.um },
+          { label: 'Quantity', val: item.quantity },
+          { label: 'Location', val: item.location }
+        ];
+      } else if (item.isWriteOff) {
+        fields = [
+          { label: 'SN', val: item.sn },
+          { label: 'SAP Code', val: item.sapCode },
+          { label: 'Title', val: item.title },
+          { label: 'Plant', val: item.plant },
+          { label: 'Storage Location', val: item.storageLocation },
+          { label: 'Material', val: item.material },
+          { label: 'UM', val: item.um },
+          { label: 'BIN', val: item.bin },
+          { label: 'Physical QTY', val: item.physicalQty },
+          { label: 'Physical Qty. Ea.Jt.', val: item.physicalQtyEaJt }
+        ];
+      } else if (item.isOutOfSap) {
+        fields = [
+          { label: 'SN / Item', val: item.sn },
+          { label: 'Part no', val: resolvedPartNo },
+          { label: 'SAP Code', val: item.sapCode },
+          { label: 'Concession', val: item.concession },
+          { label: 'Bin Location', val: item.bin },
+          { label: 'Physical Qty. Ea.Jt.', val: item.physicalQtyEaJt }
+        ];
+      } else {
+        fields = [
+          { label: 'SN', val: item.sn },
+          { label: 'Plant', val: item.plant },
+          { label: 'Storage Location', val: item.storageLocation },
+          { label: 'Sap Code', val: item.sapCode },
+          { label: 'UM', val: item.um },
+          { label: 'BIN', val: item.bin },
+          { label: 'SAP Qty', val: item.sapQty },
+          { label: 'Physical QTY', val: item.physicalQty },
+          { label: 'Physical Qty. Ea.Jt.', val: item.physicalQtyEaJt }
+        ];
+      }
+
+      modalGrid.innerHTML = '';
+      fields.forEach(f => {
+        const box = document.createElement('div');
+        box.className = 'modal-item-box';
+        box.innerHTML = `<label>${f.label}</label><div>${f.val || '-'}</div>`;
+        modalGrid.appendChild(box);
+      });
+
+      if (item.comment && item.comment.trim() !== '') {
+        modalCommentVal.textContent = item.comment;
+        modalCommentSection.style.display = 'block';
+      } else {
+        modalCommentSection.style.display = 'none';
+      }
+
+      modal.classList.add('active');
+    }
+
+    function refreshCurrentTabView() {
+      if (currentTab === 1) filterData();
+      if (currentTab === 2) renderMarkedGrid();
+    }
+
+    modalQtyMinus.addEventListener('click', () => {
+      if (!currentModalItemKey) return;
+      let val = parseInt(modalQtyInput.value, 10) || 1;
+      if (val > 1) {
+        val -= 1;
+        modalQtyInput.value = val;
+        modalCheckbox.checked = true;
+        setItemMarkAndQty(currentModalItemKey, true, val);
+      } else {
+        modalCheckbox.checked = false;
+        setItemMarkAndQty(currentModalItemKey, false, 1);
+      }
+      refreshCurrentTabView();
     });
+
+    modalQtyPlus.addEventListener('click', () => {
+      if (!currentModalItemKey) return;
+      let val = parseInt(modalQtyInput.value, 10) || 0;
+      if (!selectedItemIds.has(currentModalItemKey)) {
+        val = Math.max(1, val);
+      } else {
+        val += 1;
+      }
+      modalQtyInput.value = val;
+      modalCheckbox.checked = true;
+      setItemMarkAndQty(currentModalItemKey, true, val);
+      refreshCurrentTabView();
+    });
+
+    modalQtyInput.addEventListener('input', () => {
+      if (!currentModalItemKey) return;
+      let val = parseInt(modalQtyInput.value, 10);
+      if (!isNaN(val) && val > 0) {
+        modalCheckbox.checked = true;
+        setItemMarkAndQty(currentModalItemKey, true, val);
+        refreshCurrentTabView();
+      }
+    });
+
+    modalCheckbox.addEventListener('change', (e) => {
+      if (!currentModalItemKey) return;
+      const val = parseInt(modalQtyInput.value, 10) || 1;
+      setItemMarkAndQty(currentModalItemKey, e.target.checked, val);
+      refreshCurrentTabView();
+    });
+
+    closeModal.addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+
+    // Helper: Render composite label image with colored Eni logo
+    async function createQrLabelDataUrl(sapText, descText, snText) {
+      const coloredLogoCanvas = await getColoredEniLogoCanvas();
+
+      return new Promise((resolve) => {
+        const tempDiv = document.createElement('div');
+        tempDiv.style.position = 'fixed';
+        tempDiv.style.left = '-9999px';
+        document.body.appendChild(tempDiv);
+
+        const qrSize = 225;
+        new QRCode(tempDiv, {
+          text: String(sapText).trim(),
+          width: qrSize,
+          height: qrSize,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+
+        setTimeout(() => {
+          const qrCanvas = tempDiv.querySelector('canvas');
+          const qrImg = tempDiv.querySelector('img');
+
+          const canvas = document.createElement('canvas');
+          const width = 360;
+          const height = 315;
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(2, 2, width - 4, height - 4);
+
+          ctx.save();
+          ctx.translate(28, 120);
+          ctx.rotate(Math.PI / 2);
+          ctx.fillStyle = '#000000';
+          ctx.font = 'bold 18px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(String(sapText), 0, 0);
+          ctx.restore();
+
+          const qrX = 62;
+          const qrY = 8;
+          if (qrCanvas) {
+            ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+          } else if (qrImg) {
+            ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+          }
+
+          const logoBoxSize = 50;
+          const logoBoxX = qrX + (qrSize - logoBoxSize) / 2;
+          const logoBoxY = qrY + (qrSize - logoBoxSize) / 2;
+
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          if (ctx.roundRect) {
+            ctx.roundRect(logoBoxX, logoBoxY, logoBoxSize, logoBoxSize, 7);
+          } else {
+            ctx.rect(logoBoxX, logoBoxY, logoBoxSize, logoBoxSize);
+          }
+          ctx.fill();
+
+          if (coloredLogoCanvas) {
+            const pad = 4;
+            ctx.drawImage(coloredLogoCanvas, logoBoxX + pad, logoBoxY + pad, logoBoxSize - pad * 2, logoBoxSize - pad * 2);
+          } else {
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(logoBoxX + 4, logoBoxY + 4, logoBoxSize - 8, logoBoxSize - 8);
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 15px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('eni', logoBoxX + logoBoxSize / 2, logoBoxY + logoBoxSize / 2);
+          }
+
+          const dividerY = 242;
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 4]);
+          ctx.beginPath();
+          ctx.moveTo(14, dividerY);
+          ctx.lineTo(width - 14, dividerY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          const textRowTopY = 264;
+          ctx.fillStyle = '#000000';
+          ctx.textBaseline = 'middle';
+
+          const snFullText = `SN: ${snText}`;
+          ctx.font = 'bold 14px system-ui, sans-serif';
+          ctx.textAlign = 'right';
+          const snMeasuredWidth = ctx.measureText(snFullText).width;
+          ctx.fillText(snFullText, width - 14, textRowTopY + 8);
+
+          const descMaxWidth = width - snMeasuredWidth - 38;
+          ctx.font = 'bold 13px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          const words = String(descText || 'No Description').split(' ');
+          let line = '';
+          let lines = [];
+          for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            if (ctx.measureText(testLine).width > descMaxWidth && n > 0) {
+              lines.push(line.trim());
+              line = words[n] + ' ';
+            } else {
+              line = testLine;
+            }
+          }
+          lines.push(line.trim());
+
+          const displayLines = lines.slice(0, 2);
+          if (lines.length > 2) {
+            displayLines[1] = displayLines[1].slice(0, -3) + '...';
+          }
+
+          let descY = displayLines.length === 1 ? textRowTopY + 8 : textRowTopY;
+          displayLines.forEach((l) => {
+            ctx.fillText(l, 14, descY);
+            descY += 18;
+          });
+
+          document.body.removeChild(tempDiv);
+          resolve(canvas.toDataURL('image/png'));
+        }, 40);
+      });
+    }
+
+    // Export Excel Workbook with Embedded QR Code Labels
+    exportQrExcelBtn.addEventListener('click', async () => {
+      const selectedItemsList = getSelectedItemsList();
+      if (selectedItemsList.length === 0) {
+        alert("Your cart is empty. Please add items first.");
+        return;
+      }
+
+      const eligibleItems = selectedItemsList.filter(item =>
+        item.isSapStock || item.isWriteOff || item.isPtb
+      );
+
+      if (eligibleItems.length === 0) {
+        alert("None of the items in your cart belong to the Stock or Write Off tabs.");
+        return;
+      }
+
+      const originalBtnText = exportQrExcelBtn.innerHTML;
+      exportQrExcelBtn.innerHTML = '⏳ Generating...';
+      exportQrExcelBtn.disabled = true;
+
+      try {
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet('QR Code Labels');
+
+        sheet.columns = [
+          { header: 'QR Label', key: 'qrLabel', width: 42 },
+          { header: 'SN', key: 'sn', width: 14 },
+          { header: 'Part no', key: 'partNo', width: 22 },
+          { header: 'SAP Code / Material', key: 'sap', width: 20 },
+          { header: 'Bin Location', key: 'bin', width: 16 },
+          { header: 'Physical Qty', key: 'physicalQty', width: 15 },
+          { header: 'Quantity Ea.Jt.', key: 'qtyEaJt', width: 17 },
+          { header: 'Description', key: 'desc', width: 35 },
+          { header: 'Source Tab', key: 'tab', width: 20 }
+        ];
+
+        const headerRow = sheet.getRow(1);
+        headerRow.height = 30;
+        headerRow.eachCell((cell) => {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFF97316' }
+          };
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+          cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        });
+
+        for (let i = 0; i < eligibleItems.length; i++) {
+          const item = eligibleItems[i];
+          const sapValue = (item.isWriteOff ? (item.sapCode || item.material) : item.sapCode) || 'NO-SAP';
+          const descValue = item.description || 'No Description';
+          const snValue = item.sn || 'N/A';
+          const partNoValue = getItemPartNo(item) || '-';
+          const binValue = item.bin || item.location || '-';
+          const physicalQtyValue = item.physicalQty || item.quantity || '0';
+          const qtyEaJtValue = item.physicalQtyEaJt || '-';
+          const tabValue = item._tabName || (item.isPtb ? 'PTB Stock File' : '');
+
+          const rowIndex = i + 2;
+          const row = sheet.addRow({
+            qrLabel: '',
+            sn: snValue,
+            partNo: partNoValue,
+            sap: sapValue,
+            bin: binValue,
+            physicalQty: physicalQtyValue,
+            qtyEaJt: qtyEaJtValue,
+            desc: descValue,
+            tab: tabValue
+          });
+
+          const estimatedTextLines = Math.ceil(String(descValue).length / 38);
+          const dynamicTextHeight = Math.max(244, estimatedTextLines * 18 + 24);
+          row.height = dynamicTextHeight;
+
+          row.eachCell((cell) => {
+            cell.font = { bold: true, color: { argb: 'FF000000' }, size: 11 };
+            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            cell.border = {
+              top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+              left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+              bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+              right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
+            };
+          });
+
+          const imgDataUrl = await createQrLabelDataUrl(sapValue, descValue, snValue);
+          const imageId = workbook.addImage({
+            base64: imgDataUrl,
+            extension: 'png'
+          });
+
+          sheet.addImage(imageId, {
+            tl: { col: 0.1, row: rowIndex - 0.96 },
+            ext: { width: 274, height: 240 }
+          });
+        }
+
+        sheet.columns.forEach((column, colIdx) => {
+          if (colIdx === 0) {
+            column.width = 40;
+            return;
+          }
+          let maxLen = String(column.header || '').length;
+          column.eachCell({ includeEmpty: false }, (cell) => {
+            const val = cell.value ? String(cell.value) : '';
+            maxLen = Math.max(maxLen, val.length);
+          });
+          column.width = Math.min(Math.max(maxLen + 5, 12), 55);
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Cart_QR_Labels_${dateStr}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showStatusBanner(`Exported QR Excel sheet with <strong>${eligibleItems.length}</strong> QR label(s).`);
+      } catch (err) {
+        alert("Failed to generate QR Excel sheet: " + err.message);
+      } finally {
+        exportQrExcelBtn.innerHTML = originalBtnText;
+        exportQrExcelBtn.disabled = false;
+      }
+    });
+
+    // Browser Print Modal for QR Labels
+    generateQrLabelsBtn.addEventListener('click', () => {
+      const selectedItemsList = getSelectedItemsList();
+      if (selectedItemsList.length === 0) {
+        alert("Your cart is empty. Please add items first.");
+        return;
+      }
+
+      const eligibleItems = selectedItemsList.filter(item => 
+        item.isSapStock || item.isWriteOff || item.isPtb
+      );
+
+      if (eligibleItems.length === 0) {
+        alert("None of the items in your cart belong to the Stock or Write Off tabs.");
+        return;
+      }
+
+      qrLabelsContainer.innerHTML = '';
+
+      eligibleItems.forEach((item, index) => {
+        const sapValue = (item.isWriteOff ? (item.sapCode || item.material) : item.sapCode) || 'NO-SAP';
+        const descValue = item.description || 'No Description';
+        const snValue = item.sn || 'N/A';
+
+        const labelCard = document.createElement('div');
+        labelCard.className = 'qr-label-card';
+
+        const qrBoxId = `qr-code-target-${index}`;
+        labelCard.innerHTML = `
+          <div class="qr-label-top">
+            <div class="qr-sap-rotated">${sapValue}</div>
+            <div id="${qrBoxId}" class="qr-code-box">
+              <img src="${ENI_LOGO_URL}" alt="Eni" class="qr-center-logo">
+            </div>
+          </div>
+          <div class="qr-label-bottom">
+            <div class="qr-label-desc">${descValue}</div>
+            <div class="qr-label-sn">SN: ${snValue}</div>
+          </div>
+        `;
+
+        qrLabelsContainer.appendChild(labelCard);
+
+        new QRCode(document.getElementById(qrBoxId), {
+          text: String(sapValue).trim(),
+          width: 185,
+          height: 185,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      });
+
+      qrModal.classList.add('active');
+    });
+
+    closeQrModal.addEventListener('click', () => qrModal.classList.remove('active'));
+    qrModal.addEventListener('click', (e) => {
+      if (e.target === qrModal) qrModal.classList.remove('active');
+    });
+
+    // Build Styled Excel Workbook
+    function buildExportWorkbook(selectedItemsList) {
+      const dynamicQtyHeaders = new Set();
+      selectedItemsList.forEach(item => {
+        if (item.allQtyCols) {
+          Object.keys(item.allQtyCols).forEach(colName => {
+            const lower = colName.trim().toLowerCase();
+            if (lower !== 'physical qty' && lower !== 'phyical qty' && !lower.includes('ea') && !lower.includes('jt')) {
+              dynamicQtyHeaders.add(colName);
+            }
+          });
+        }
+      });
+
+      if (dynamicQtyHeaders.size === 0) {
+        dynamicQtyHeaders.add("Quantity");
+      }
+
+      const exportRows = selectedItemsList.map(i => {
+        const sapOrMaterial = i.isWriteOff ? (i.sapCode || i.material || "") : (i.sapCode || "");
+        const markedQty = markedQuantities[i._uniqueKey] || 1;
+        const resolvedPartNo = getItemPartNo(i);
+
+        const rowObj = {
+          "SN": i.sn || "",
+          "Part no": resolvedPartNo,
+          "SAP Code / Material": sapOrMaterial,
+          "Cart Qty": markedQty,
+          "Description": i.description || ""
+        };
+
+        dynamicQtyHeaders.forEach(qtyHeader => {
+          if (i.allQtyCols && i.allQtyCols[qtyHeader] !== undefined) {
+            rowObj[qtyHeader] = i.allQtyCols[qtyHeader];
+          } else {
+            rowObj[qtyHeader] = i.quantity || i.sapQty || "";
+          }
+        });
+
+        rowObj["Physical QTY"] = i.physicalQty || "";
+        rowObj["Physical Qty. Ea.Jt."] = i.physicalQtyEaJt || "";
+        rowObj["Plant"] = i.plant || "";
+        rowObj["Storage Location"] = i.storageLocation || i.location || "";
+        rowObj["Tab Name"] = i._tabName || "";
+        rowObj["Sheet / File Name"] = i._fileName || i._sourceTab || "";
+
+        return rowObj;
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportRows);
+
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      const colWidths = [];
+
+      const headerStyle = {
+        fill: { patternType: "solid", fgColor: { rgb: "F97316" } },
+        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: {
+          top: { style: "thin", color: { rgb: "D1D5DB" } },
+          bottom: { style: "thin", color: { rgb: "D1D5DB" } },
+          left: { style: "thin", color: { rgb: "D1D5DB" } },
+          right: { style: "thin", color: { rgb: "D1D5DB" } }
+        }
+      };
+
+      const bodyCellStyle = {
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: {
+          top: { style: "thin", color: { rgb: "E5E7EB" } },
+          bottom: { style: "thin", color: { rgb: "E5E7EB" } },
+          left: { style: "thin", color: { rgb: "E5E7EB" } },
+          right: { style: "thin", color: { rgb: "E5E7EB" } }
+        }
+      };
+
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        let maxWidth = 14;
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+          const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
+          if (!ws[cellRef]) {
+            ws[cellRef] = { t: "s", v: "" };
+          }
+          ws[cellRef].s = (R === 0) ? headerStyle : bodyCellStyle;
+          const valStr = String(ws[cellRef].v || "");
+          maxWidth = Math.max(maxWidth, Math.min(valStr.length + 4, 45));
+        }
+        colWidths.push({ wch: maxWidth });
+      }
+      ws['!cols'] = colWidths;
+      ws['!rows'] = [{ hpt: 28 }];
+
+      XLSX.utils.book_append_sheet(wb, ws, "Cart Inventory");
+      return wb;
+    }
+
+    function generateFormattedTextSummary(selectedItemsList) {
+      let textLines = ["*Inventory Cart Items* 🚚\n"];
+      selectedItemsList.forEach((item, idx) => {
+        const sn = item.sn || 'N/A';
+        const resolvedPartNo = getItemPartNo(item);
+        const partTag = resolvedPartNo ? ` | Part no: *${resolvedPartNo}*` : '';
+        const markedQty = markedQuantities[item._uniqueKey] || 1;
+        const qty = item.quantity || item.sapQty || item.physicalQty || 'N/A';
+        const physQtyEaJt = item.physicalQtyEaJt || 'N/A';
+        const sapCode = item.isWriteOff ? (item.sapCode || item.material || 'N/A') : (item.sapCode || 'N/A');
+        const desc = item.description || 'N/A';
+        const bin = item.bin || item.location || 'N/A';
+
+        textLines.push(
+          `${idx + 1}. SN: *${sn}*${partTag} | Cart Qty: *${markedQty}* | Quantity: ${qty} | Physical Qty. Ea.Jt.: ${physQtyEaJt} | SAP Code: *${sapCode}* | Description: ${desc} | BIN: *${bin}*`
+        );
+      });
+      return textLines.join("\n");
+    }
+
+    exportExcelBtn.addEventListener('click', () => {
+      const selectedItemsList = getSelectedItemsList();
+      if (selectedItemsList.length === 0) {
+        alert("Your cart is empty. Please add items first.");
+        return;
+      }
+
+      const wb = buildExportWorkbook(selectedItemsList);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const fileName = `Cart_Inventory_${dateStr}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+    });
+
+    whatsappShareBtn.addEventListener('click', () => {
+      if (selectedItemIds.size === 0) {
+        alert("Your cart is empty. Please add items first.");
+        return;
+      }
+      whatsappModal.classList.add('active');
+    });
+
+    closeWhatsappModal.addEventListener('click', () => whatsappModal.classList.remove('active'));
+    whatsappModal.addEventListener('click', (e) => {
+      if (e.target === whatsappModal) whatsappModal.classList.remove('active');
+    });
+
+    waShareTextBtn.addEventListener('click', () => {
+      whatsappModal.classList.remove('active');
+      const selectedItemsList = getSelectedItemsList();
+      const finalMessage = generateFormattedTextSummary(selectedItemsList);
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(finalMessage)}`;
+      window.open(whatsappUrl, '_blank');
+    });
+
+    waShareExcelBtn.addEventListener('click', async () => {
+      whatsappModal.classList.remove('active');
+      const selectedItemsList = getSelectedItemsList();
+      const wb = buildExportWorkbook(selectedItemsList);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const fileName = `Cart_Inventory_${dateStr}.xlsx`;
+
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const file = new File(
+        [wbout],
+        fileName,
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'Inventory Excel Export',
+            text: 'Here is the cart inventory Excel file:',
+            files: [file]
+          });
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      alert("Direct file sharing is not supported on this browser/device. The Excel (.xlsx) file has been downloaded so you can attach it manually in WhatsApp.");
+      XLSX.writeFile(wb, fileName);
+    });
+
+    function filterData() {
+      let activeItems = getActiveItems();
+      let term = searchInput.value.toLowerCase().trim();
+      const mode = searchMode.value;
+      let exactSnMatch = null;
+      let binSearchTerm = null;
+      let partNoSearchTerm = null;
+
+      // Tab prefix filters: "ieoc", "ptb", "stock", "write", "out"
+      if (/^ieoc(?:\s+|$)/.test(term)) {
+        activeItems = activeItems.filter(item => !item.isPtb);
+        term = term.replace(/^ieoc(?:\s+|$)/, '').trim();
+      } else if (/^ptb(?:\s+|$)/.test(term)) {
+        activeItems = activeItems.filter(item => item.isPtb);
+        term = term.replace(/^ptb(?:\s+|$)/, '').trim();
+      } else if (/^stock(?:\s+|$)/.test(term)) {
+        activeItems = activeItems.filter(item => !item.isPtb && item.isSapStock);
+        term = term.replace(/^stock(?:\s+|$)/, '').trim();
+      } else if (/^write(?:\s+|$)/.test(term)) {
+        activeItems = activeItems.filter(item => !item.isPtb && item.isWriteOff);
+        term = term.replace(/^write(?:\s+|$)/, '').trim();
+      } else if (/^out(?:\s+|$)/.test(term)) {
+        activeItems = activeItems.filter(item => !item.isPtb && item.isOutOfSap);
+        term = term.replace(/^out(?:\s+|$)/, '').trim();
+      }
+
+      // Dedicated Part no prefix shortcut (e.g., "part 1234", "part no 1234", "pn 1234")
+      const partMatch = term.match(/^(?:part\s*no\.?|part|pn)\s+(.+)$/i);
+      if (partMatch) {
+        partNoSearchTerm = partMatch[1].toLowerCase().trim();
+      }
+
+      const snRegex = /^sn\s+(\d+)$/i;
+      const snMatch = term.match(snRegex);
+      if (snMatch) {
+        exactSnMatch = snMatch[1]; 
+      }
+
+      const binRegex = /^bin\s+(.+)$/i;
+      const binMatch = term.match(binRegex);
+      if (binMatch) {
+        binSearchTerm = binMatch[1].toLowerCase().trim();
+      }
+
+      if (partNoSearchTerm !== null) {
+        const compactQuery = partNoSearchTerm.replace(/[\s\-_./\\]+/g, '');
+        let filtered = activeItems.filter(item => {
+          const pn = getItemPartNo(item).toLowerCase();
+          if (!pn) return false;
+          const compactPn = pn.replace(/[\s\-_./\\]+/g, '');
+          return pn.includes(partNoSearchTerm) || (compactQuery && compactPn.includes(compactQuery));
+        });
+        renderGrid(filtered, gridTab1);
+        return;
+      }
+
+      if (exactSnMatch !== null) {
+        let filtered = activeItems.filter(item => {
+          const itemSn = String(item.sn || '').toLowerCase().trim();
+          const itemItemNo = String(item.itemNo || '').toLowerCase().trim();
+          return itemSn === exactSnMatch || itemItemNo === exactSnMatch;
+        });
+        renderGrid(filtered, gridTab1);
+        return;
+      }
+
+      if (binSearchTerm !== null) {
+        const cleanSearchTerm = binSearchTerm.replace(/\s+/g, '');
+        let filtered = activeItems.filter(item => {
+          const binVal = String(item.bin || '').toLowerCase().trim();
+          const locationVal = String(item.location || '').toLowerCase().trim();
+          const cleanBin = binVal.replace(/\s+/g, '');
+          const cleanLoc = locationVal.replace(/\s+/g, '');
+          return cleanBin === cleanSearchTerm || cleanLoc === cleanSearchTerm ||
+                 binVal === binSearchTerm || locationVal === binSearchTerm;
+        });
+        renderGrid(filtered, gridTab1);
+        return;
+      }
+
+      if (!term) {
+        renderGrid(activeItems, gridTab1);
+        return;
+      }
+
+      const compactTerm = term.replace(/[\s\-_./\\]+/g, '');
+      const matchesPartNo = (item) => {
+        const pn = getItemPartNo(item).toLowerCase();
+        if (!pn) return false;
+        if (pn.includes(term)) return true;
+        return compactTerm.length >= 2 && pn.replace(/[\s\-_./\\]+/g, '').includes(compactTerm);
+      };
+
+      let filtered = [];
+      if (mode === 'sn') {
+        filtered = activeItems.filter(item =>
+          matchesPartNo(item) ||
+          String(item.sn || '').toLowerCase().includes(term) ||
+          String(item.itemNo || '').toLowerCase().includes(term)
+        );
+      } else if (mode === 'sap') {
+        filtered = activeItems.filter(item =>
+          String(item.sapCode || '').toLowerCase().includes(term) ||
+          String(item.material || '').toLowerCase().includes(term)
+        );
+      } else if (mode === 'desc') {
+        filtered = activeItems.filter(item => 
+          String(item.description || '').toLowerCase().includes(term) || 
+          String(item.bin || '').toLowerCase().includes(term) ||
+          String(item.title || '').toLowerCase().includes(term) ||
+          String(item.location || '').toLowerCase().includes(term)
+        );
+      } else {
+        filtered = activeItems.filter(item => {
+          return (
+            matchesPartNo(item) ||
+            String(item.sapCode || '').toLowerCase().includes(term) ||
+            String(item.itemNo || '').toLowerCase().includes(term) ||
+            String(item.material || '').toLowerCase().includes(term) ||
+            String(item.sn || '').toLowerCase().includes(term) ||
+            String(item.title || '').toLowerCase().includes(term) ||
+            String(item.description || '').toLowerCase().includes(term) ||
+            String(item.bin || '').toLowerCase().includes(term) ||
+            String(item.plant || '').toLowerCase().includes(term) ||
+            String(item.storageLocation || '').toLowerCase().includes(term) ||
+            String(item.concession || '').toLowerCase().includes(term) ||
+            String(item.vendor || '').toLowerCase().includes(term) ||
+            String(item.location || '').toLowerCase().includes(term)
+          );
+        });
+      }
+
+      renderGrid(filtered, gridTab1);
+    }
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        displayedItemCount = 50;
+        filterData();
+      }, 300);
+    });
+
+    searchMode.addEventListener('change', () => {
+      displayedItemCount = 50;
+      filterData();
+    });
+
+    toggleQrBtn.addEventListener('click', () => {
+      if (scannerContainer.classList.contains('active')) {
+        stopScanner();
+      } else {
+        startScanner();
+      }
+    });
+
+    function startScanner() {
+      scannerContainer.classList.add('active');
+      html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+        fps: 10, 
+        qrbox: { width: 220, height: 220 } 
+      });
+
+      html5QrcodeScanner.render((decodedText) => {
+        searchInput.value = decodedText;
+        displayedItemCount = 50;
+        filterData();
+        stopScanner();
+      }, (errorMessage) => {});
+    }
+
+    function stopScanner() {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear().then(() => {
+          scannerContainer.classList.remove('active');
+        }).catch(() => {
+          scannerContainer.classList.remove('active');
+        });
+      } else {
+        scannerContainer.classList.remove('active');
+      }
+    }
   </script>
 </body>
 </html>
