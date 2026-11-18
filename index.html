@@ -336,6 +336,203 @@
       color: #ffffff;
     }
 
+    .side-drawer-btn.highlight-tutorial {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .side-drawer-btn.highlight-tutorial:hover {
+      background-color: var(--warning);
+      color: #ffffff;
+    }
+
+    /* Interactive Tutorial Coach Card & Spotlight */
+    .tutorial-highlight-target {
+      position: relative !important;
+      z-index: 1290 !important;
+      box-shadow: 0 0 0 4px var(--warning), 0 0 24px rgba(245, 158, 11, 0.65) !important;
+      border-radius: 14px !important;
+      transition: box-shadow 0.25s ease;
+    }
+
+    .tutorial-overlay-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.62);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 1rem;
+      padding-bottom: 5.5rem;
+      z-index: 1300;
+    }
+
+    @media (min-width: 640px) {
+      .tutorial-overlay-backdrop {
+        align-items: center;
+        padding-bottom: 1rem;
+      }
+    }
+
+    .tutorial-overlay-backdrop.active {
+      display: flex;
+    }
+
+    .tutorial-card {
+      background-color: var(--card-bg);
+      border: 2px solid var(--accent);
+      border-radius: 18px;
+      max-width: 470px;
+      width: 100%;
+      padding: 1.35rem;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      animation: tutorialSlideUp 0.24s ease-out;
+    }
+
+    @keyframes tutorialSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .tutorial-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .tutorial-step-badge {
+      background: rgba(56, 189, 248, 0.16);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      letter-spacing: 0.03em;
+    }
+
+    .tutorial-skip-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      border-radius: 8px;
+    }
+
+    .tutorial-skip-btn:hover {
+      color: var(--text-main);
+      background: var(--badge-bg);
+    }
+
+    .tutorial-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tutorial-body {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .tutorial-body b {
+      color: var(--text-main);
+    }
+
+    .tutorial-tip-box {
+      background: var(--surface-subtle);
+      border-left: 3px solid var(--warning);
+      padding: 0.65rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      line-height: 1.45;
+    }
+
+    .tutorial-dots {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      margin-top: 0.15rem;
+    }
+
+    .tutorial-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 9999px;
+      background-color: var(--border);
+      transition: all 0.2s ease;
+    }
+
+    .tutorial-dot.active {
+      width: 22px;
+      background-color: var(--accent);
+    }
+
+    .tutorial-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      margin-top: 0.25rem;
+    }
+
+    .tutorial-nav-btn {
+      flex: 1;
+      padding: 0.72rem 1rem;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: all 0.18s ease;
+    }
+
+    .tutorial-nav-btn.prev {
+      background-color: var(--surface-subtle);
+      color: var(--text-main);
+    }
+
+    .tutorial-nav-btn.prev:hover:not(:disabled) {
+      border-color: var(--accent);
+    }
+
+    .tutorial-nav-btn.prev:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .tutorial-nav-btn.next {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .tutorial-nav-btn.next:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
     /* Theme Switcher Controls */
     .theme-toggle-group {
       display: flex;
@@ -1264,6 +1461,11 @@
       <span>Settings</span>
     </button>
 
+    <button type="button" id="drawerTutorialBtn" class="side-drawer-btn highlight-tutorial">
+      <span>📖</span>
+      <span>App Tutorial</span>
+    </button>
+
     <button type="button" id="drawerCatalogBtn" class="side-drawer-btn active">
       <span>📦</span>
       <span>Catalog & Scan</span>
@@ -1275,6 +1477,24 @@
     </button>
   </aside>
 
+  <!-- Interactive App Tutorial Overlay -->
+  <div id="tutorialOverlay" class="tutorial-overlay-backdrop no-print" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+    <div class="tutorial-card">
+      <div class="tutorial-card-top">
+        <span class="tutorial-step-badge" id="tutorialStepBadge">Step 1 of 6</span>
+        <button type="button" id="tutorialCloseBtn" class="tutorial-skip-btn">Skip Tutorial ✕</button>
+      </div>
+      <div class="tutorial-title" id="tutorialTitle">Welcome</div>
+      <div class="tutorial-body" id="tutorialBody"></div>
+      <div class="tutorial-tip-box" id="tutorialTipBox"></div>
+      <div class="tutorial-dots" id="tutorialDots"></div>
+      <div class="tutorial-footer">
+        <button type="button" id="tutorialPrevBtn" class="tutorial-nav-btn prev">← Previous</button>
+        <button type="button" id="tutorialNextBtn" class="tutorial-nav-btn next">Next →</button>
+      </div>
+    </div>
+  </div>
+
   <header>
     <h1>Damietta yard inventory</h1>
     <p style="color: var(--text-muted)">IEOC & PTB Inventory System</p>
@@ -1283,7 +1503,7 @@
   <div id="statusBanner" class="status-banner"></div>
 
   <!-- Fixed Bottom Navigation Tab Bar -->
-  <nav class="nav-tabs">
+  <nav class="nav-tabs" id="bottomNavTabs">
     <button class="nav-tab-btn active" onclick="switchTab(1)">
       <span class="tab-icon-wrap">📦</span> Catalog & Scan
     </button>
@@ -1312,7 +1532,7 @@
   <!-- TAB 1: VIEW, SEARCH, & QR SCAN -->
   <div id="tab1" class="tab-content active">
     <!-- Floating Header Controls -->
-    <div class="sticky-header-container">
+    <div class="sticky-header-container" id="catalogControlsPanel">
       <div class="top-controls-row">
         <select id="tabSelector" class="csv-select" style="max-width: 65%; margin: 0;">
           <option value="all">📂 View All Loaded Tabs</option>
@@ -1323,8 +1543,8 @@
       </div>
 
       <!-- Search Container (Hovers / Pinned Top) -->
-      <div class="search-container">
-        <input type="text" id="searchInput" class="search-input" placeholder="Search (Part no, SAP, Description, out, write, sn 15, bin pyr5, ieoc, ptb)...">
+      <div class="search-container" id="catalogSearchBar">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search (e.g. csg , 523 , 3/8 or part no, SAP, description)...">
         <select id="searchMode" class="search-mode">
           <option value="auto">⚡ Smart Auto</option>
           <option value="sn"># Part no / SN</option>
@@ -1333,7 +1553,7 @@
         </select>
       </div>
 
-      <!-- Bulk Mark / Unmark Controls for Filtered Results -->
+      <!-- Bulk Mark / Unmark Bar for Filtered Results -->
       <div class="bulk-filter-bar" id="bulkFilterBar" style="display: none;">
         <span class="bulk-count-label" id="filteredCountLabel">0 items shown</span>
         <div class="bulk-actions-group">
@@ -1353,7 +1573,7 @@
 
   <!-- TAB 2: CART (MARKED ITEMS, UNMARK ALL, EXPORT, QR EXCEL & WHATSAPP) -->
   <div id="tab2" class="tab-content">
-    <div class="action-panel">
+    <div class="action-panel" id="cartActionsPanel">
       <h3>Cart Management</h3>
       <p style="font-size: 0.85rem; color: var(--text-muted);">Review items in your cart, adjust quantities, generate QR Excel labels, download files, or share via WhatsApp.</p>
       
@@ -1382,7 +1602,7 @@
   <!-- TAB 3: SETTINGS (APPEARANCE THEME & EXCEL FILE MANAGEMENT) -->
   <div id="tab3" class="tab-content">
     <!-- Appearance / Theme Panel -->
-    <div class="action-panel">
+    <div class="action-panel" id="settingsThemePanel">
       <h3>⚙️ Settings</h3>
       <p style="font-size: 0.85rem; color: var(--text-muted);">Switch between Dark and Light appearance for the entire site.</p>
       
@@ -1397,7 +1617,7 @@
     </div>
 
     <!-- File Import & Clear Panel -->
-    <div class="action-panel">
+    <div class="action-panel" id="settingsImportPanel">
       <h3>Excel File Management</h3>
       <p style="font-size: 0.85rem; color: var(--text-muted);">Load new PTB ("stock file") or IEOC inventory workbooks from phone storage or WhatsApp Documents.</p>
 
@@ -1539,9 +1759,20 @@
     const sideDrawer = document.getElementById('sideDrawer');
     const sideDrawerBackdrop = document.getElementById('sideDrawerBackdrop');
     const drawerSettingsBtn = document.getElementById('drawerSettingsBtn');
+    const drawerTutorialBtn = document.getElementById('drawerTutorialBtn');
     const drawerCatalogBtn = document.getElementById('drawerCatalogBtn');
     const drawerCartBtn = document.getElementById('drawerCartBtn');
     const drawerCartCount = document.getElementById('drawerCartCount');
+
+    const tutorialOverlay = document.getElementById('tutorialOverlay');
+    const tutorialStepBadge = document.getElementById('tutorialStepBadge');
+    const tutorialTitle = document.getElementById('tutorialTitle');
+    const tutorialBody = document.getElementById('tutorialBody');
+    const tutorialTipBox = document.getElementById('tutorialTipBox');
+    const tutorialDots = document.getElementById('tutorialDots');
+    const tutorialPrevBtn = document.getElementById('tutorialPrevBtn');
+    const tutorialNextBtn = document.getElementById('tutorialNextBtn');
+    const tutorialCloseBtn = document.getElementById('tutorialCloseBtn');
 
     const darkThemeBtn = document.getElementById('darkThemeBtn');
     const lightThemeBtn = document.getElementById('lightThemeBtn');
@@ -1589,6 +1820,129 @@
     const qrModal = document.getElementById('qrModal');
     const closeQrModal = document.getElementById('closeQrModal');
     const qrLabelsContainer = document.getElementById('qrLabelsContainer');
+
+    // Interactive Step-by-Step App Tutorial Steps
+    const TUTORIAL_STEPS = [
+      {
+        title: "1. Side Menu & Settings",
+        tab: 3,
+        highlightId: "openSideMenuBtn",
+        body: "Tap the pulsing <b>☰ Menu button</b> at the top-right anytime to switch between <b>Settings</b>, <b>Catalog & Scan</b>, <b>Cart</b>, or reopen this tutorial.",
+        tip: "💡 Your imported files and cart items stay saved automatically on your device even after closing the app."
+      },
+      {
+        title: "2. Import Excel Inventory Files",
+        tab: 3,
+        highlightId: "settingsImportPanel",
+        body: "In <b>Settings</b>, tap <b>📊 Load Excel File(s)</b> or <b>💬 Fetch from WhatsApp / Phone Folder</b> to import IEOC (<i>SAP Stock, Write Off, Out of SAP</i>) and PTB (<i>Stock File</i>) sheets.",
+        tip: "💡 You can load multiple Excel files at once and remove individual files anytime from the Loaded File Summary below."
+      },
+      {
+        title: "3. Comma-Separated Multi-Term Search",
+        tab: 1,
+        highlightId: "catalogSearchBar",
+        body: "Filter precisely by typing multiple terms separated by commas (e.g. <b>csg , 523 , 3/8</b>). Every comma-separated term must match for the item to appear!<br>• <b>sn 15</b> — exact SN match<br>• <b>bin pyr5</b> — exact Bin location<br>• <b>ieoc</b> / <b>ptb</b> — filter by source tab",
+        tip: "💡 You can also switch the dropdown on the right between Smart Auto, Part no / SN, SAP Code, or Description."
+      },
+      {
+        title: "4. Scan QR Codes with Camera",
+        tab: 1,
+        highlightId: "toggleQrBtn",
+        body: "Tap <b>📷 Scan QR</b> to open your camera and scan any item's QR label. The scanned SAP code automatically fills the search box and finds the item.",
+        tip: "💡 Tap any item card in the catalog to view full details, storage location, and Excel cell comments."
+      },
+      {
+        title: "5. Add Items & Set Quantities",
+        tab: 1,
+        highlightId: "catalogControlsPanel",
+        body: "On any item card, use the <b>− / +</b> counter to set the quantity and tap <b>Add</b> (it turns green <b>✓</b>). When filtering items, you can also use <b>Mark All Filtered</b>.",
+        tip: "💡 Orange borders indicate IEOC items, and Blue borders indicate Petrobel (PTB) items."
+      },
+      {
+        title: "6. Export, QR Labels & WhatsApp",
+        tab: 2,
+        highlightId: "cartActionsPanel",
+        body: "Open the <b>🚚 Cart</b> tab at the bottom to review your selected items, download a styled <b>Excel Sheet</b>, generate printable or Excel <b>QR Code Labels</b>, or share directly via <b>WhatsApp</b>.",
+        tip: "🎉 You're ready! Tap Finish below to start managing your yard inventory."
+      }
+    ];
+
+    let currentTutorialIndex = 0;
+    let activeHighlightedEl = null;
+
+    function clearTutorialHighlight() {
+      if (activeHighlightedEl) {
+        activeHighlightedEl.classList.remove('tutorial-highlight-target');
+        activeHighlightedEl = null;
+      }
+    }
+
+    function renderTutorialStep(index) {
+      currentTutorialIndex = Math.max(0, Math.min(index, TUTORIAL_STEPS.length - 1));
+      const step = TUTORIAL_STEPS[currentTutorialIndex];
+
+      if (step.tab && currentTab !== step.tab) {
+        switchTab(step.tab);
+      }
+
+      tutorialStepBadge.textContent = `Step ${currentTutorialIndex + 1} of ${TUTORIAL_STEPS.length}`;
+      tutorialTitle.innerHTML = step.title;
+      tutorialBody.innerHTML = step.body;
+      tutorialTipBox.innerHTML = step.tip;
+
+      tutorialDots.innerHTML = '';
+      TUTORIAL_STEPS.forEach((_, idx) => {
+        const dot = document.createElement('span');
+        dot.className = idx === currentTutorialIndex ? 'tutorial-dot active' : 'tutorial-dot';
+        tutorialDots.appendChild(dot);
+      });
+
+      tutorialPrevBtn.disabled = currentTutorialIndex === 0;
+      tutorialNextBtn.textContent = currentTutorialIndex === TUTORIAL_STEPS.length - 1 ? 'Finish ✓' : 'Next →';
+
+      clearTutorialHighlight();
+      if (step.highlightId) {
+        const target = document.getElementById(step.highlightId);
+        if (target) {
+          target.classList.add('tutorial-highlight-target');
+          activeHighlightedEl = target;
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }
+
+    function openTutorial() {
+      tutorialOverlay.classList.add('active');
+      renderTutorialStep(0);
+    }
+
+    function closeTutorial() {
+      clearTutorialHighlight();
+      tutorialOverlay.classList.remove('active');
+    }
+
+    drawerTutorialBtn.addEventListener('click', () => {
+      closeSideMenu();
+      openTutorial();
+    });
+
+    tutorialPrevBtn.addEventListener('click', () => {
+      renderTutorialStep(currentTutorialIndex - 1);
+    });
+
+    tutorialNextBtn.addEventListener('click', () => {
+      if (currentTutorialIndex < TUTORIAL_STEPS.length - 1) {
+        renderTutorialStep(currentTutorialIndex + 1);
+      } else {
+        closeTutorial();
+        switchTab(1);
+      }
+    });
+
+    tutorialCloseBtn.addEventListener('click', closeTutorial);
+    tutorialOverlay.addEventListener('click', (e) => {
+      if (e.target === tutorialOverlay) closeTutorial();
+    });
 
     // Theme Management (Light & Dark)
     function applySiteTheme(themeName) {
@@ -3230,135 +3584,95 @@
 
     function filterData() {
       let activeItems = getActiveItems();
-      let term = searchInput.value.toLowerCase().trim();
+      let rawTerm = searchInput.value.toLowerCase().trim();
       const mode = searchMode.value;
-      let exactSnMatch = null;
-      let binSearchTerm = null;
-      let partNoSearchTerm = null;
 
       // Tab prefix filters: "ieoc", "ptb", "stock", "write", "out"
-      if (/^ieoc(?:\s+|$)/.test(term)) {
+      if (/^ieoc(?:\s+|$)/.test(rawTerm)) {
         activeItems = activeItems.filter(item => !item.isPtb);
-        term = term.replace(/^ieoc(?:\s+|$)/, '').trim();
-      } else if (/^ptb(?:\s+|$)/.test(term)) {
+        rawTerm = rawTerm.replace(/^ieoc(?:\s+|$)/, '').trim();
+      } else if (/^ptb(?:\s+|$)/.test(rawTerm)) {
         activeItems = activeItems.filter(item => item.isPtb);
-        term = term.replace(/^ptb(?:\s+|$)/, '').trim();
-      } else if (/^stock(?:\s+|$)/.test(term)) {
+        rawTerm = rawTerm.replace(/^ptb(?:\s+|$)/, '').trim();
+      } else if (/^stock(?:\s+|$)/.test(rawTerm)) {
         activeItems = activeItems.filter(item => !item.isPtb && item.isSapStock);
-        term = term.replace(/^stock(?:\s+|$)/, '').trim();
-      } else if (/^write(?:\s+|$)/.test(term)) {
+        rawTerm = rawTerm.replace(/^stock(?:\s+|$)/, '').trim();
+      } else if (/^write(?:\s+|$)/.test(rawTerm)) {
         activeItems = activeItems.filter(item => !item.isPtb && item.isWriteOff);
-        term = term.replace(/^write(?:\s+|$)/, '').trim();
-      } else if (/^out(?:\s+|$)/.test(term)) {
+        rawTerm = rawTerm.replace(/^write(?:\s+|$)/, '').trim();
+      } else if (/^out(?:\s+|$)/.test(rawTerm)) {
         activeItems = activeItems.filter(item => !item.isPtb && item.isOutOfSap);
-        term = term.replace(/^out(?:\s+|$)/, '').trim();
+        rawTerm = rawTerm.replace(/^out(?:\s+|$)/, '').trim();
       }
 
-      // Dedicated Part no prefix shortcut (e.g., "part 1234", "part no 1234", "pn 1234")
-      const partMatch = term.match(/^(?:part\s*no\.?|part|pn)\s+(.+)$/i);
-      if (partMatch) {
-        partNoSearchTerm = partMatch[1].toLowerCase().trim();
-      }
-
-      const snRegex = /^sn\s+(\d+)$/i;
-      const snMatch = term.match(snRegex);
-      if (snMatch) {
-        exactSnMatch = snMatch[1]; 
-      }
-
-      const binRegex = /^bin\s+(.+)$/i;
-      const binMatch = term.match(binRegex);
-      if (binMatch) {
-        binSearchTerm = binMatch[1].toLowerCase().trim();
-      }
-
-      if (partNoSearchTerm !== null) {
-        const compactQuery = partNoSearchTerm.replace(/[\s\-_./\\]+/g, '');
-        let filtered = activeItems.filter(item => {
-          const pn = getItemPartNo(item).toLowerCase();
-          if (!pn) return false;
-          const compactPn = pn.replace(/[\s\-_./\\]+/g, '');
-          return pn.includes(partNoSearchTerm) || (compactQuery && compactPn.includes(compactQuery));
-        });
-        renderGrid(filtered, gridTab1);
-        return;
-      }
-
-      if (exactSnMatch !== null) {
-        let filtered = activeItems.filter(item => {
-          const itemSn = String(item.sn || '').toLowerCase().trim();
-          const itemItemNo = String(item.itemNo || '').toLowerCase().trim();
-          return itemSn === exactSnMatch || itemItemNo === exactSnMatch;
-        });
-        renderGrid(filtered, gridTab1);
-        return;
-      }
-
-      if (binSearchTerm !== null) {
-        const cleanSearchTerm = binSearchTerm.replace(/\s+/g, '');
-        let filtered = activeItems.filter(item => {
-          const binVal = String(item.bin || '').toLowerCase().trim();
-          const locationVal = String(item.location || '').toLowerCase().trim();
-          const cleanBin = binVal.replace(/\s+/g, '');
-          const cleanLoc = locationVal.replace(/\s+/g, '');
-          return cleanBin === cleanSearchTerm || cleanLoc === cleanSearchTerm ||
-                 binVal === binSearchTerm || locationVal === binSearchTerm;
-        });
-        renderGrid(filtered, gridTab1);
-        return;
-      }
-
-      if (!term) {
+      if (!rawTerm) {
         renderGrid(activeItems, gridTab1);
         return;
       }
 
-      const compactTerm = term.replace(/[\s\-_./\\]+/g, '');
-      const matchesPartNo = (item) => {
-        const pn = getItemPartNo(item).toLowerCase();
-        if (!pn) return false;
-        if (pn.includes(term)) return true;
-        return compactTerm.length >= 2 && pn.replace(/[\s\-_./\\]+/g, '').includes(compactTerm);
-      };
-
-      let filtered = [];
-      if (mode === 'sn') {
-        filtered = activeItems.filter(item =>
-          matchesPartNo(item) ||
-          String(item.sn || '').toLowerCase().includes(term) ||
-          String(item.itemNo || '').toLowerCase().includes(term)
-        );
-      } else if (mode === 'sap') {
-        filtered = activeItems.filter(item =>
-          String(item.sapCode || '').toLowerCase().includes(term) ||
-          String(item.material || '').toLowerCase().includes(term)
-        );
-      } else if (mode === 'desc') {
-        filtered = activeItems.filter(item => 
-          String(item.description || '').toLowerCase().includes(term) || 
-          String(item.bin || '').toLowerCase().includes(term) ||
-          String(item.title || '').toLowerCase().includes(term) ||
-          String(item.location || '').toLowerCase().includes(term)
-        );
-      } else {
-        filtered = activeItems.filter(item => {
-          return (
-            matchesPartNo(item) ||
-            String(item.sapCode || '').toLowerCase().includes(term) ||
-            String(item.itemNo || '').toLowerCase().includes(term) ||
-            String(item.material || '').toLowerCase().includes(term) ||
-            String(item.sn || '').toLowerCase().includes(term) ||
-            String(item.title || '').toLowerCase().includes(term) ||
-            String(item.description || '').toLowerCase().includes(term) ||
-            String(item.bin || '').toLowerCase().includes(term) ||
-            String(item.plant || '').toLowerCase().includes(term) ||
-            String(item.storageLocation || '').toLowerCase().includes(term) ||
-            String(item.concession || '').toLowerCase().includes(term) ||
-            String(item.vendor || '').toLowerCase().includes(term) ||
-            String(item.location || '').toLowerCase().includes(term)
-          );
-        });
+      // Split search terms by comma (e.g. "csg , 523 , 3/8" -> ["csg", "523", "3/8"])
+      const searchTerms = rawTerm.split(',').map(t => t.trim()).filter(t => t.length > 0);
+      if (searchTerms.length === 0) {
+        renderGrid(activeItems, gridTab1);
+        return;
       }
+
+      let filtered = activeItems.filter(item => {
+        // Build a searchable haystack combining all item properties
+        const partNo = getItemPartNo(item).toLowerCase();
+        const sapCode = String(item.sapCode || '').toLowerCase();
+        const material = String(item.material || '').toLowerCase();
+        const sn = String(item.sn || '').toLowerCase();
+        const itemNo = String(item.itemNo || '').toLowerCase();
+        const title = String(item.title || '').toLowerCase();
+        const desc = String(item.description || '').toLowerCase();
+        const bin = String(item.bin || '').toLowerCase();
+        const plant = String(item.plant || '').toLowerCase();
+        const sloc = String(item.storageLocation || '').toLowerCase();
+        const concession = String(item.concession || '').toLowerCase();
+        const vendor = String(item.vendor || '').toLowerCase();
+        const location = String(item.location || '').toLowerCase();
+        const status = String(item.status || '').toLowerCase();
+        const matlGroup = String(item.matlGroup || '').toLowerCase();
+
+        // Check if every comma-separated term matches at least one of the item's attributes
+        return searchTerms.every(term => {
+          const compactTerm = term.replace(/[\s\-_./\\]+/g, '');
+          
+          const matchesField = (val) => {
+            if (!val) return false;
+            if (val.includes(term)) return true;
+            if (compactTerm.length >= 2 && val.replace(/[\s\-_./\\]+/g, '').includes(compactTerm)) return true;
+            return false;
+          };
+
+          if (mode === 'sn') {
+            return matchesField(partNo) || matchesField(sn) || matchesField(itemNo);
+          } else if (mode === 'sap') {
+            return matchesField(sapCode) || matchesField(material);
+          } else if (mode === 'desc') {
+            return matchesField(desc) || matchesField(bin) || matchesField(title) || matchesField(location);
+          } else {
+            return (
+              matchesField(partNo) ||
+              matchesField(sapCode) ||
+              matchesField(itemNo) ||
+              matchesField(material) ||
+              matchesField(sn) ||
+              matchesField(title) ||
+              matchesField(desc) ||
+              matchesField(bin) ||
+              matchesField(plant) ||
+              matchesField(sloc) ||
+              matchesField(concession) ||
+              matchesField(vendor) ||
+              matchesField(location) ||
+              matchesField(status) ||
+              matchesField(matlGroup)
+            );
+          }
+        });
+      });
 
       renderGrid(filtered, gridTab1);
     }
