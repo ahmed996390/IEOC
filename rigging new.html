@@ -789,6 +789,21 @@
       </label>
       <input type="file" id="excelFileInput" accept=".xlsx, .xls">
 
+      <div style="width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem; text-align: left;">
+        <label for="driveLinkInput" style="font-size: 0.82rem; font-weight: 600; color: var(--accent);">
+          🔗 Or Paste Google Drive / Sheets Link ("Anyone with the link")
+        </label>
+        <input
+          type="url"
+          id="driveLinkInput"
+          placeholder="https://drive.google.com/file/d/... or https://docs.google.com/spreadsheets/d/..."
+          style="width: 100%; padding: 0.65rem 0.85rem; border-radius: 10px; border: 1px solid var(--border); background-color: var(--bg-color); color: var(--text-main); font-size: 0.88rem; outline: none;"
+        >
+        <button type="button" id="loadDriveLinkBtn" class="log-btn" style="max-width: 100%;">
+          ☁️ Import from Google Drive Link
+        </button>
+      </div>
+
       <button id="clearDataBtn" class="danger-btn">
         🗑️ Clear Loaded Data
       </button>
@@ -966,44 +981,7 @@
       const reader = new FileReader();
       reader.onload = function(evt) {
         try {
-          const data = new Uint8Array(evt.target.result);
-          const workbook = XLSX.read(data, { type: 'array', cellDates: false });
-
-          const parsed = [];
-          const importedSheetNames = [];
-
-          workbook.SheetNames.forEach(sheetName => {
-            const cleanSheet = sheetName.trim().toLowerCase();
-            if (ALLOWED_TABS.includes(cleanSheet)) {
-              importedSheetNames.push(sheetName.trim());
-              const worksheet = workbook.Sheets[sheetName];
-              const sheetItems = parseWorksheet(worksheet, sheetName.trim(), cleanSheet);
-              parsed.push(...sheetItems);
-            }
-          });
-
-          if (importedSheetNames.length === 0) {
-            alert('No "Wire slings" or "Webbing slings" tabs were found in this Excel file.');
-            return;
-          }
-
-          items = parsed;
-          markedItems = [];
-          inventoryRenderLimit = BATCH_SIZE;
-          markedRenderLimit = BATCH_SIZE;
-
-          try {
-            localStorage.setItem('rigging_excel_items', JSON.stringify(items));
-            localStorage.setItem('rigging_excel_filename', file.name);
-            localStorage.removeItem('rigging_marked_keys');
-          } catch (err) {}
-
-          updateMarkedBadge();
-          updateSummaryBox(file.name);
-          switchTab(1);
-          showStatusBanner(
-            `Successfully loaded <strong>${file.name}</strong> — Tabs: <strong>${importedSheetNames.join(', ')}</strong> (${items.length} items)`
-          );
+          applyWorkbookBuffer(evt.target.result, file.name);
         } catch (err) {
           alert('Error reading Excel file: ' + err.message);
         }
@@ -1684,6 +1662,116 @@
         alert("Failed to copy text.");
       });
     });
+
+    function applyWorkbookBuffer(arrayBuffer, fileName) {
+      const data = new Uint8Array(arrayBuffer);
+      const workbook = XLSX.read(data, { type: 'array', cellDates: false });
+
+      const parsed = [];
+      const importedSheetNames = [];
+
+      workbook.SheetNames.forEach(sheetName => {
+        const cleanSheet = sheetName.trim().toLowerCase();
+        if (ALLOWED_TABS.includes(cleanSheet)) {
+          importedSheetNames.push(sheetName.trim());
+          const worksheet = workbook.Sheets[sheetName];
+          const sheetItems = parseWorksheet(worksheet, sheetName.trim(), cleanSheet);
+          parsed.push(...sheetItems);
+        }
+      });
+
+      if (importedSheetNames.length === 0) {
+        alert('No "Wire slings" or "Webbing slings" tabs were found in this Excel file.');
+        return false;
+      }
+
+      items = parsed;
+      markedItems = [];
+      inventoryRenderLimit = BATCH_SIZE;
+      markedRenderLimit = BATCH_SIZE;
+
+      try {
+        localStorage.setItem('rigging_excel_items', JSON.stringify(items));
+        localStorage.setItem('rigging_excel_filename', fileName);
+        localStorage.removeItem('rigging_marked_keys');
+      } catch (err) {}
+
+      updateMarkedBadge();
+      updateSummaryBox(fileName);
+      switchTab(1);
+      showStatusBanner(
+        `Successfully loaded <strong>${fileName}</strong> — Tabs: <strong>${importedSheetNames.join(', ')}</strong> (${items.length} items)`
+      );
+      return true;
+    }
+
+    function parseGoogleDriveLink(rawUrl) {
+      const trimmed = String(rawUrl || '').trim();
+      if (!trimmed) return null;
+
+      // Match /d/FILE_ID or ?id=FILE_ID or open?id=FILE_ID
+      const dMatch = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      const qMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      const fileId = (dMatch && dMatch[1]) || (qMatch && qMatch[1]) || '';
+      if (!fileId) return null;
+
+      const isGoogleSheet = /docs\.google\.com\/spreadsheets/i.test(trimmed);
+      const downloadUrl = isGoogleSheet
+        ? `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`
+        : `https://drive.google.com/uc?export=download&id=${fileId}`;
+
+      return { fileId, isGoogleSheet, downloadUrl };
+    }
+
+    const driveLinkInput = document.getElementById('driveLinkInput');
+    const loadDriveLinkBtn = document.getElementById('loadDriveLinkBtn');
+
+    if (loadDriveLinkBtn && driveLinkInput) {
+      loadDriveLinkBtn.addEventListener('click', async () => {
+        const parsedLink = parseGoogleDriveLink(driveLinkInput.value);
+        if (!parsedLink) {
+          alert('Please paste a valid Google Drive file link or Google Sheets link containing a file ID.');
+          return;
+        }
+
+        if (items.length > 0) {
+          if (!confirm(`Importing from Google Drive link will overwrite your currently loaded inventory (${items.length} items). Continue?`)) {
+            return;
+          }
+        }
+
+        const originalBtnText = loadDriveLinkBtn.innerHTML;
+        loadDriveLinkBtn.innerHTML = '⏳ Fetching from Google Drive...';
+        loadDriveLinkBtn.disabled = true;
+
+        try {
+          const response = await fetch(parsedLink.downloadUrl, { mode: 'cors' });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const buffer = await response.arrayBuffer();
+          const bytes = new Uint8Array(buffer);
+          // Check if Google returned an HTML warning/login page instead of a spreadsheet
+          const firstChar = String.fromCharCode(bytes[0] || 0);
+          if (firstChar === '<') {
+            throw new Error('Google Drive returned a webpage instead of a spreadsheet. Confirm the file is set to "Anyone with the link" (Viewer) and not a large-file confirmation prompt.');
+          }
+          const fileName = parsedLink.isGoogleSheet
+            ? `Google_Sheet_${parsedLink.fileId.slice(0, 8)}.xlsx`
+            : `Drive_File_${parsedLink.fileId.slice(0, 8)}.xlsx`;
+          applyWorkbookBuffer(buffer, fileName);
+        } catch (err) {
+          alert(
+            'Could not fetch the file directly in the browser (often caused by Google Drive CORS restrictions or link permissions). ' +
+            'Make sure sharing is set to "Anyone with the link" (Viewer), or open the link, download the .xlsx file, and load it with "Load / Overwrite Excel File (.xlsx)".\n\nDetails: ' + err.message
+          );
+        } finally {
+          loadDriveLinkBtn.innerHTML = originalBtnText;
+          loadDriveLinkBtn.disabled = false;
+        }
+      });
+    }
+
   </script>
 </body>
 </html>
