@@ -4982,6 +4982,7 @@ async function handleDownloadManifestExcel() {
       let rawTerm = searchInput.value.toLowerCase().trim();
       const mode = searchMode.value;
 
+      let binFilterOnly = false;
       if (/^ieoc(?:\s+|$)/.test(rawTerm)) {
         activeItems = activeItems.filter(item => !item.isPtb);
         rawTerm = rawTerm.replace(/^ieoc(?:\s+|$)/, '').trim();
@@ -4997,6 +4998,19 @@ async function handleDownloadManifestExcel() {
       } else if (/^out(?:\s+|$)/.test(rawTerm)) {
         activeItems = activeItems.filter(item => !item.isPtb && item.isOutOfSap);
         rawTerm = rawTerm.replace(/^out(?:\s+|$)/, '').trim();
+      } else if (/^bin(?:\s+|$)/.test(rawTerm)) {
+        rawTerm = rawTerm.replace(/^bin(?:\s+|$)/, '').trim();
+        binFilterOnly = true;
+      }
+
+      if (binFilterOnly && !rawTerm) {
+        const itemsWithBin = activeItems.filter(item => {
+          const b = String(item.bin || '').trim();
+          const l = String(item.location || '').trim();
+          return b !== '' || l !== '';
+        });
+        renderGrid(itemsWithBin, gridTab1);
+        return;
       }
 
       if (!rawTerm) {
@@ -5041,8 +5055,28 @@ async function handleDownloadManifestExcel() {
             });
           };
 
+          const matchesExactBin = (val) => {
+            if (!val) return false;
+            const normVal = String(val).toLowerCase().trim();
+            const tokens = normVal.split(/[\s,;/|]+/).map(t => t.trim()).filter(Boolean);
+            return expandedTerms.some(exTerm => {
+              const t = String(exTerm).toLowerCase().trim();
+              if (!t) return false;
+              if (normVal === t) return true;
+              if (tokens.includes(t)) return true;
+              const compactVal = normVal.replace(/[\s\-_./\\]+/g, '');
+              const compactT = t.replace(/[\s\-_./\\]+/g, '');
+              if (compactT && compactVal === compactT) return true;
+              return false;
+            });
+          };
+
+          if (binFilterOnly) {
+            return matchesExactBin(bin) || matchesExactBin(location);
+          }
+
           if (hasComma) {
-            return matchesField(desc) || matchesField(title);
+            return matchesField(desc) || matchesField(title) || matchesField(bin) || matchesField(location);
           }
 
           if (mode === 'sn') {
