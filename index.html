@@ -158,7 +158,7 @@
       margin: 0 auto 0.75rem auto;
       text-align: center;
       position: relative;
-      padding: 0 3.25rem;
+      padding: 0 0.75rem;
     }
 
     h1 {
@@ -190,16 +190,15 @@
     }
 
     .side-menu-trigger {
-      position: fixed;
-      top: 0.85rem;
-      right: 0.85rem;
-      width: 46px;
-      height: 46px;
-      border-radius: 14px;
+      flex: 0 0 auto;
+      width: 52px;
+      height: 52px;
+      margin: -0.95rem 0.35rem -0.25rem 0.35rem;
+      border-radius: 16px;
       background: linear-gradient(135deg, var(--accent), #0ea5e9);
       border: 2px solid #ffffff;
       color: #ffffff;
-      font-size: 1.4rem;
+      font-size: 1.45rem;
       font-weight: 800;
       display: flex;
       align-items: center;
@@ -212,7 +211,7 @@
 
     .side-menu-trigger:hover {
       animation: none;
-      transform: scale(1.08);
+      transform: translateY(-2px) scale(1.06);
       box-shadow: 0 0 18px var(--accent-glow);
     }
 
@@ -235,27 +234,36 @@
 
     .side-drawer {
       position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: 285px;
-      max-width: 82vw;
+      left: 50%;
+      bottom: 4.55rem;
+      width: max-content;
+      min-width: 240px;
+      max-width: calc(100vw - 1.5rem);
+      max-height: calc(100vh - 6rem);
+      overflow-y: auto;
       background-color: var(--surface-glass);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      border-left: 1px solid var(--border);
-      box-shadow: -8px 0 30px rgba(0, 0, 0, 0.45);
-      transform: translateX(100%);
-      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.48);
+      transform: translate(-50%, 24px) scale(0.96);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease, visibility 0.22s ease, background-color 0.25s ease;
       z-index: 1250;
       display: flex;
       flex-direction: column;
-      padding: 1.25rem 1rem;
-      gap: 0.75rem;
+      padding: 1rem;
+      gap: 0.65rem;
     }
 
     .side-drawer.active {
-      transform: translateX(0);
+      transform: translate(-50%, 0) scale(1);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
 
     .side-drawer-header {
@@ -314,7 +322,7 @@
     .side-drawer-btn:hover {
       border-color: var(--accent);
       background-color: rgba(56, 189, 248, 0.12);
-      transform: translateX(-2px);
+      transform: translateY(-1px);
     }
 
     .side-drawer-btn.active {
@@ -1648,10 +1656,6 @@
 </head>
 <body>
 
-  <button type="button" id="openSideMenuBtn" class="side-menu-trigger no-print" title="Open Menu" aria-label="Open Menu">
-    ☰
-  </button>
-
   <div id="sideDrawerBackdrop" class="side-drawer-backdrop no-print"></div>
   <aside id="sideDrawer" class="side-drawer no-print" aria-label="Side Menu">
     <div class="side-drawer-header">
@@ -1712,6 +1716,9 @@
   <nav class="nav-tabs" id="bottomNavTabs">
     <button class="nav-tab-btn active" onclick="switchTab(1)">
       <span class="tab-icon-wrap">📦</span> Catalog & Scan
+    </button>
+    <button type="button" id="openSideMenuBtn" class="side-menu-trigger no-print" title="Open Menu" aria-label="Open Menu">
+      ☰
     </button>
     <button class="nav-tab-btn" onclick="switchTab(2)">
       <span class="tab-icon-wrap" aria-hidden="true">
@@ -3148,7 +3155,7 @@ async function handleDownloadManifestExcel() {
         title: "1. Side Menu, Create CM & Settings",
         tab: 3,
         highlightId: "openSideMenuBtn",
-        body: "Tap the pulsing <b>☰ Menu button</b> at the top-right anytime to open <b>Create CM</b>, <b>Settings</b>, <b>Catalog & Scan</b>, <b>Cart</b>, or reopen this tutorial.",
+        body: "Tap the pulsing <b>☰ Menu button</b> in the middle of the bottom bar anytime to open <b>Create CM</b>, <b>Settings</b>, <b>Catalog & Scan</b>, <b>Cart</b>, or reopen this tutorial.",
         tip: "💡 Your imported files, manifest template, manifest fields, and cart items stay saved automatically on your device."
       },
       {
@@ -3294,7 +3301,13 @@ async function handleDownloadManifestExcel() {
       sideDrawerBackdrop.classList.remove('active');
     }
 
-    openSideMenuBtn.addEventListener('click', openSideMenu);
+    openSideMenuBtn.addEventListener('click', () => {
+      if (sideDrawer.classList.contains('active')) {
+        closeSideMenu();
+      } else {
+        openSideMenu();
+      }
+    });
     closeSideMenuBtn.addEventListener('click', closeSideMenu);
     sideDrawerBackdrop.addEventListener('click', closeSideMenu);
 
